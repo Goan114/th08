@@ -53,7 +53,7 @@ async function launch(){
  applyOptions();launched=true;first=false;lastPresented=0;lastHealth=performance.now();lastFrame=0;frames=0;maxGap=0;
  const audio=Module.SDL3?.audioContext;audio?.resume().catch(()=>{});
  canvas.focus({preventScroll:true});core.sdl_loop_pause(document.hidden?1:0);if(query.get('manual')!=='1')core.sdl_loop_start();
- emit('runtime-info',{renderer:'SDL3 / WebGL2 / C++',architecture:'eagler-touhou/1',version:'3.4.0-sdl3'});
+ emit('runtime-info',{renderer:'SDL3 / WebGL2 / C++',architecture:'eagler-touhou/1',version:'3.4.1-sdl3'});
 }
 async function command(message){
  switch(message.command){
