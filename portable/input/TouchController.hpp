@@ -30,11 +30,11 @@ public:
             if(tap.active&&tap.id==id){const float dx=px-tap.x,dy=py-tap.y;tap_armed=double_tap&&s.context==1&&now-tap.start<=220&&!tap_moved&&dx*dx+dy*dy<=576;tap_x=px;tap_y=py;tap_time=now;tap={};}
             if(primary==id)clear_motion();return;
         }
-        if(type==0){fingers.insert(id);if(s.context!=1||!s.ready){tap_armed=false;if(s.context==2){if(!dialogue.active)dialogue={true,id,1,px,py,px,py,now};}else if(!menu.active)menu={true,id,1,px,py,px,py,now};else menu.count++;return;}
+        if(type==0){fingers.insert(id);if(s.context!=1){tap_armed=false;if(s.context==2){if(!dialogue.active)dialogue={true,id,1,px,py,px,py,now};}else if(!menu.active)menu={true,id,1,px,py,px,py,now};else menu.count++;return;}
             if(fingers.size()>=4){escape_ticks=3;cancel();return;}const float dx=px-tap_x,dy=py-tap_y;
             if(double_tap&&tap_armed&&now-tap_time<=320&&dx*dx+dy*dy<=38.4f*38.4f){bomb_ticks=3;tap_armed=false;tap={};return;}
             tap_armed=false;if(double_tap){tap={true,id,1,px,py,px,py,now};tap_moved=false;}
-            if(mode>=2||dragging)return;dragging=true;primary=id;previous_x=x;previous_y=y;target_x=s.x;target_y=s.y;instance=s.instance;return;
+            if(!s.ready||mode>=2||dragging)return;dragging=true;primary=id;previous_x=x;previous_y=y;target_x=s.x;target_y=s.y;instance=s.instance;return;
         }
         if(menu.active&&menu.id==id){menu.last_x=px;menu.last_y=py;return;}
         if(tap.active&&tap.id==id){const float dx=px-tap.x,dy=py-tap.y;if(dx*dx+dy*dy>576)tap_moved=true;}
@@ -47,14 +47,18 @@ public:
     TouchSample sample(const TouchState& s,std::uint64_t now,bool key_slow,bool arrows){
         TouchSample out;if(context!=s.context){cancel();context=s.context;}if(!s.ready||arrows)clear_motion();
         if(confirm_ticks>0){out.keys[90]=true;--confirm_ticks;}if(escape_ticks>0){out.keys[27]=true;--escape_ticks;}
+        // Actions remain available while movement is blocked (deathbomb).
+        // Consume the pulse every tick so a late press cannot wait for respawn.
+        const bool bomb=bomb_ticks>0;if(bomb_ticks>0)--bomb_ticks;
         if(!enabled)return out;
         if(s.context==2&&dialogue.active&&now-dialogue.start>=500)out.keys[17]=true;
         if(s.context!=1&&menu.active){const float dx=menu.last_x-menu.x,dy=menu.last_y-menu.y;if(std::abs(dx)>24||std::abs(dy)>24){if(std::abs(dx)>std::abs(dy))out.keys[dx>0?39:37]=true;else out.keys[dy>0?40:38]=true;}}
-        if(s.context==1&&s.ready){out.keys[90]=fire||out.keys[90];out.keys[16]=focus||(two_finger&&fingers.size()>1);
-            if(bomb_ticks>0){out.keys[88]=true;--bomb_ticks;}
+        if(s.context==1){out.keys[90]=fire||out.keys[90];out.keys[16]=focus||(two_finger&&fingers.size()>1);out.keys[88]=bomb;
+          if(s.ready){
             if(!arrows&&mode==3&&(stick_x||stick_y)){const float speed=key_slow||out.keys[16]?s.slow:s.fast;out.motion=1;out.x=s.x+stick_x*speed;out.y=s.y+stick_y*speed;}
             else if(mode>=2){out.keys[37]=stick_x<-.25f;out.keys[39]=stick_x>.25f;out.keys[38]=stick_y<-.25f;out.keys[40]=stick_y>.25f;}
             if(dragging&&instance==s.instance){out.motion=unlimited?2:1;out.x=target_x;out.y=target_y;}
+          }
         }else if(s.context!=3){out.keys[37]=out.keys[37]||stick_x<-.25f;out.keys[39]=out.keys[39]||stick_x>.25f;out.keys[38]=out.keys[38]||stick_y<-.25f;out.keys[40]=out.keys[40]||stick_y>.25f;}
         return out;
     }
