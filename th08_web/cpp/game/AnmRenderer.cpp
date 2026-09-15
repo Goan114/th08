@@ -191,11 +191,13 @@ i32 AnmRenderer::draw_inner(AnmVm& vm, u32 flags) {
         vertex.pos.y = Scalar::add(vertex.pos.y,shake.y);
     }
     if (flags & 1) {
-        const auto round = [](float value) { return (number(value).round_to_integer() - number(.5f)).to_float(); };
-        quad[0].pos.x = quad[2].pos.x = round(quad[0].pos.x);
-        quad[1].pos.x = quad[3].pos.x = round(quad[1].pos.x);
-        quad[0].pos.y = quad[1].pos.y = round(quad[0].pos.y);
-        quad[2].pos.y = quad[3].pos.y = round(quad[2].pos.y);
+        // Preserve subpixel motion for all sprites while retaining the original
+        // half-pixel raster convention and the current quad's depth.
+        const auto raster_position = [](float value) { return (number(value) - number(.5f)).to_float(); };
+        quad[0].pos.x = quad[2].pos.x = raster_position(quad[0].pos.x);
+        quad[1].pos.x = quad[3].pos.x = raster_position(quad[1].pos.x);
+        quad[0].pos.y = quad[1].pos.y = raster_position(quad[0].pos.y);
+        quad[2].pos.y = quad[3].pos.y = raster_position(quad[2].pos.y);
     }
     const auto& sprite = *vm.loadedSprite;
     quad[0].uv.x = quad[2].uv.x = Scalar::add(sprite.uvStart.x,vm.uvScrollPos.x);

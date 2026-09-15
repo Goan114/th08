@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 const workspace=resolve(fileURLToPath(new URL('../',import.meta.url))),game=process.argv.includes('--th08')?'th08':'th10',root=resolve(workspace,game+'_web'),out=resolve(root,'artifacts/sdl3');mkdirSync(out,{recursive:true});
 const sdk=process.env.EMSDK??resolve(workspace,'tools/emsdk'),emcc=resolve(sdk,'install/emscripten/emcc.py');
 if(!existsSync(emcc))throw Error('Install the pinned Emscripten SDK first (tools/download-emscripten.py).');
-const env={...process.env,EM_CONFIG:resolve(sdk,'.emscripten'),EMSDK:sdk,EMCC_CORES:'4'};
+const env={...process.env,EM_CONFIG:process.env.EM_CONFIG??resolve(sdk,'.emscripten'),EMSDK:sdk,EMCC_CORES:'4'};
 const python=process.env.TH_PYTHON??'python';
 const run=(args)=>new Promise((done,reject)=>{const p=spawn(python,[emcc,...args],{cwd:root,env,windowsHide:true,stdio:['ignore','pipe','pipe']});let log='';p.stdout.on('data',x=>{log+=x;process.stdout.write(x);});p.stderr.on('data',x=>{log+=x;process.stderr.write(x);});p.on('error',reject);p.on('exit',code=>code?reject(Error('emcc failed '+code+'\n'+log)):done());});
 const common=['-O2','-g0','-fno-strict-aliasing','-ffp-contract=off','-DTH_SDL3=1','-DTH_NATIVE_PLATFORM=1','--use-port=sdl3','--use-port=sdl3_ttf','-I'+resolve(workspace,'portable/sdl')];
