@@ -1,0 +1,88 @@
+#ifdef TH_NATIVE_PLATFORM
+#include "PlatformHost.hpp"
+#include "GraphicsHost.hpp"
+#include "FrameCadence.hpp"
+#include "Renderer.hpp"
+#include "../../../portable/input/TouchController.hpp"
+#include <SDL3/SDL.h>
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#include <memory>
+EM_JS(int, th08_frame_ready, (), {return Module['runtimePrepare']?Module['runtimePrepare']():1;});
+EM_JS(void, th08_frame_finished, (int result,double ms), {if(Module['runtimeFinish'])Module['runtimeFinish'](result,ms);});
+namespace th08 {
+void sdl_validate_capture();
+namespace {
+std::unique_ptr<BrowserRuntime> runtime;touhou::input::TouchController touch;
+struct Key{const char* code;const char* sdl;u32 scan,vk;bool hosted=false;SDL_Scancode native=SDL_SCANCODE_UNKNOWN;};
+#include "../../../portable/input/KeyboardMap.inc"
+SDL_Joystick* joystick=nullptr;u32 prepared=0;bool running=false,suspended=false;double elapsed=0,last=-1,frame_begin=0;u32 frames=0,loop_epoch=0,warm_mask=0;touhou::sdl::FrameCadence cadence;
+constexpr const char* warmAnimations[]={"etama.anm","enemy.anm","front.anm","times.anm","stg1bg.anm","stg1enm.anm","eff01.anm","stg1txt.anm","stg2bg.anm","stg2enm.anm","eff02.anm","stg2txt.anm","player00.anm","player01.anm","player02.anm","player03.anm","staff01.anm"};
+constexpr u32 warmCount=sizeof(warmAnimations)/sizeof(*warmAnimations);
+touhou::input::TouchState touch_state(){touhou::input::TouchState s;if(!runtime)return s;const auto& a=runtime->app;const auto& g=a.game;const auto& p=g.player_state;
+    if(a.in_game()&&(g.globals.game_flags&8)){s.context=3;return s;}
+    if(!a.in_game()||a.loading_game()||!g.ready()||g.paused||g.menus.context.pause_state||p.context.game_over||(g.globals.game_flags&0x60))return s;
+    s.context=g.dialogue.present()?2:1;s.ready=p.life.state!=1&&p.life.state!=2;s.instance=g.globals.stage+1;
+    s.x=p.motion.movement.position.x;s.y=p.motion.movement.position.y;s.fast=g.shots[0].settings().normal_speed*g.player.timing.rate;s.slow=g.shots[1].settings().focus_speed*g.player.timing.rate;
+    s.min_x=p.input.minimum.x;s.min_y=p.input.minimum.y;s.max_x=s.min_x+p.input.extent.x;s.max_y=s.min_y+p.input.extent.y;return s;
+}
+void pointer(int type,int id,float x,float y){touch.pointer(type,id,x,y,SDL_GetTicks(),touch_state(),runtime&&runtime->keyboard_state()[16]);}
+void poll(){if(!runtime)return;SDL_Event event;while(SDL_PollEvent(&event)){
+    if(event.type==SDL_EVENT_FINGER_CANCELED)touch.cancel();
+    if(event.type==SDL_EVENT_FINGER_DOWN||event.type==SDL_EVENT_FINGER_MOTION||event.type==SDL_EVENT_FINGER_UP)pointer(event.type==SDL_EVENT_FINGER_DOWN?0:event.type==SDL_EVENT_FINGER_MOTION?1:2,int(event.tfinger.fingerID),event.tfinger.x,event.tfinger.y);
+    if(event.type==SDL_EVENT_JOYSTICK_ADDED&&!joystick)joystick=SDL_OpenJoystick(event.jdevice.which);
+    if(event.type==SDL_EVENT_JOYSTICK_REMOVED&&joystick&&SDL_GetJoystickID(joystick)==event.jdevice.which){SDL_CloseJoystick(joystick);joystick=nullptr;}
+    }
+    auto* keys=runtime->keyboard_state();std::memset(keys,0,256);const bool* physical=SDL_GetKeyboardState(nullptr);
+    for(const auto& k:keyboard_map)if(k.hosted||(k.native!=SDL_SCANCODE_UNKNOWN&&physical[k.native])){keys[k.vk]=128;if(k.vk>=160&&k.vk<=165)keys[16+(k.vk-160)/2]=128;}
+    if(joystick&&SDL_JoystickConnected(joystick)){u8 buttons[128]{};for(int i=0;i<std::min(128,SDL_GetNumJoystickButtons(joystick));i++)buttons[i]=SDL_GetJoystickButton(joystick,i)?128:0;
+        runtime->controller_state(SDL_GetJoystickAxis(joystick,0)*1000/32767,SDL_GetJoystickAxis(joystick,1)*1000/32767,buttons,128,true);
+    }else runtime->controller_state(0,0,nullptr,0,false);
+    const auto input=touch.sample(touch_state(),SDL_GetTicks(),keys[16],keys[37]||keys[38]||keys[39]||keys[40]);for(int i=0;i<256;i++)if(input.keys[i])keys[i]=128;
+    runtime->motion.target(input.motion,input.x,input.y);
+}
+int tick(){poll();if(!runtime||!runtime->step(true))return runtime&&(runtime->status(2)||runtime->status(4))?2:1;
+    ++frames;return runtime->audio_tick(u32(elapsed*1000))?0:2;}
+EM_BOOL frame(double now,void* epoch){if(!running||uintptr_t(epoch)!=loop_epoch)return EM_FALSE;const double delta=last<0?0:std::max(0.,(now-last)/1000.);last=now;frame_begin=emscripten_get_now();
+    if(suspended||!th08_frame_ready()){sdl_audio_pause(true);cadence.reset();return EM_TRUE;}sdl_audio_pause(false);int result=0;
+    const auto ticks=cadence.advance(delta);sdl_defer(1);
+    for(unsigned i=0;i<ticks&&!result;++i){elapsed+=touhou::sdl::FrameCadence::interval;result=tick();}
+    sdl_commit();sdl_defer(0);
+    sdl_audio_pump();th08_frame_finished(result,emscripten_get_now()-frame_begin);return running?EM_TRUE:EM_FALSE;
+}
+}
+u32 sdl_game_time(){return u32(elapsed*1000);}
+extern "C" {
+#define EX(name) __attribute__((export_name(name)))
+EX("sdl_game_open") BrowserRuntime* sdl_game_open(u32 milliseconds){if(runtime)return nullptr;prepared=frames=warm_mask=0;elapsed=double(milliseconds)/1000.;cadence.reset();last=-1;touch.reset();
+    runtime=std::make_unique<BrowserRuntime>();if(!sdl_attach(runtime.get())||!sdl_load_assets(*runtime)){runtime.reset();sdl_detach();return nullptr;}
+    SDL_InitSubSystem(SDL_INIT_JOYSTICK);for(auto& k:keyboard_map)k.native=SDL_GetScancodeFromName(k.sdl);int count=0;auto* ids=SDL_GetJoysticks(&count);if(count)joystick=SDL_OpenJoystick(ids[0]);SDL_free(ids);return runtime.get();}
+EX("sdl_prepare_total") u32 sdl_prepare_total(){return runtime?runtime->resources().size()+runtime->native_font_steps()+warmCount:0;}
+EX("sdl_prepare_next") i32 sdl_prepare_next(){if(!runtime)return -1;if(prepared>=sdl_prepare_total())return 0;const auto assets=runtime->resources().size();
+    bool ok=true;const auto fonts=runtime->native_font_steps();
+    if(prepared<assets)ok=sdl_prepare_asset(*runtime,prepared);
+    else if(prepared<assets+fonts)ok=runtime->native_font_step(prepared-assets);
+    else {const auto& bytes=runtime->file(warmAnimations[prepared-assets-fonts]);
+        // Optional bounded cache: exhaustion must never prevent launching.
+        if(!bytes.empty()&&runtime->app.library.preload(bytes.data(),bytes.size()))warm_mask|=1u<<(prepared-assets-fonts);}
+    ++prepared;return ok?i32(prepared):-1;}
+EX("sdl_warm_assets") u32 sdl_warm_assets(){return warm_mask;}
+EX("sdl_game_initialize") bool sdl_game_initialize(){if(!runtime||prepared!=sdl_prepare_total()||!runtime->initialize())return false;sdl_validate_capture();return true;}
+EX("sdl_loop_start") void sdl_loop_start(){if(running||!runtime)return;running=true;last=-1;cadence.reset();emscripten_request_animation_frame_loop(frame,reinterpret_cast<void*>(uintptr_t(++loop_epoch)));}
+EX("sdl_loop_stop") void sdl_loop_stop(){running=false;++loop_epoch;sdl_audio_pause(true);}
+EX("sdl_loop_pause") void sdl_loop_pause(u32 pause){suspended=pause!=0;last=-1;cadence.reset();sdl_audio_pause(suspended);}
+EX("sdl_loop_time") double sdl_loop_time(){return elapsed;}
+EX("sdl_loop_tick") i32 sdl_loop_tick(BrowserRuntime* r,double seconds,u32){if(running||r!=runtime.get())return -1;elapsed+=seconds;return tick();}
+EX("sdl_game_close") void sdl_game_close(){sdl_loop_stop();touch.reset();runtime.reset();if(joystick)SDL_CloseJoystick(joystick);joystick=nullptr;sdl_audio_shutdown();sdl_fonts_shutdown();sdl_detach();}
+EX("sdl_key") void sdl_key(const char* code,u32 down){for(auto& key:keyboard_map)if(!std::strcmp(key.code,code)){key.hosted=down!=0;break;}}
+EX("sdl_keys_clear") void sdl_keys_clear(){for(auto& key:keyboard_map)key.hosted=false;touch.reset();if(runtime)runtime->motion.target(0,0,0);}
+EX("sdl_touch") void sdl_touch(u32 type,i32 id,float x,float y){pointer(type,id,x,y);}
+EX("sdl_touch_cancel") void sdl_touch_cancel(){touch.cancel();if(runtime)runtime->motion.target(0,0,0);}
+EX("sdl_touch_options") void sdl_touch_options(u32 on,u32 free,float speed){touch.enabled=on;touch.unlimited=free;touch.sensitivity=std::clamp(speed,.1f,5.f);if(!on)sdl_touch_cancel();}
+EX("sdl_touch_gestures") void sdl_touch_gestures(u32 two,u32 taps){touch.two_finger=two;touch.double_tap=taps;}
+EX("sdl_touch_mode") void sdl_touch_mode(u32 mode){touch.mode=mode;sdl_touch_cancel();}
+EX("sdl_touch_controls") void sdl_touch_controls(u32 fire,u32 focus,u32 bomb,u32 escape,float x,float y){touch.controls(fire,focus,bomb,escape,x,y);}
+EX("sdl_game_status") const i32* sdl_game_status(){static i32 out[10]{};if(runtime){out[0]=runtime->status(0);out[1]=runtime->status(3);out[2]=runtime->status(2)||runtime->status(4);out[3]=number(runtime->app.session.numbers.lives).truncate_int();out[4]=runtime->app.session.numbers.power;out[5]=touch.current_context();out[6]=touch.active();out[7]=touch.fire;out[8]=touch.focus;out[9]=frames;}return out;}
+}
+}
+#endif
