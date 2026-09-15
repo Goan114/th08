@@ -12,7 +12,7 @@ assert.equal(built.status,0,built.stdout+built.stderr);
 const create=(await import(pathToFileURL(out))).default;let wasmExports;
 const runtime=await create({instantiateWasm(imports,done){WebAssembly.instantiate(readFileSync(out.replace('.mjs','.wasm')),imports).then(({instance,module})=>{wasmExports=instance.exports;done(instance,module);});return {};}});
 const layout=JSON.parse(readFileSync(resolve(root,'th08_web/assets/sdl-native/music-layout.json'),'utf8'));
-const fixtureCandidates=[process.env.EAGLER_OGG_FIXTURE,resolve(root,'th08_web/assets-ogg/bgm-ogg'),resolve(root,'../../th08-eaglertemp/assets-ogg/bgm-ogg')].filter(Boolean);
+const fixtureCandidates=[process.env.EAGLER_OGG_FIXTURE,resolve(root,'th08_web/assets-ogg/bgm-ogg'),resolve(root,'../../games/web-content/th08/bgm-ogg')].filter(Boolean);
 const fixture=fixtureCandidates.find(existsSync);assert.ok(fixture,'Set EAGLER_OGG_FIXTURE to the private th08 bgm-ogg directory.');
 try{runtime.FS.mkdir('/bgm-ogg');}catch{}
 const first=layout[0],firstPath=join(fixture,'th08_01.ogg');assert.ok(existsSync(firstPath),firstPath);
