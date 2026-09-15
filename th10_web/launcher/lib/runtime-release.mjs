@@ -18,7 +18,7 @@ function isCanonicalRelativePath(value) {
 }
 
 export function runtimeStem(game) {
-  return game === "th08" ? "th08-modern" : game;
+  return game;
 }
 
 export function validateRuntimeReleaseManifest(manifest) {

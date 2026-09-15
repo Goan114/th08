@@ -28,11 +28,11 @@ node portable/check-subpixel.mjs # TH08 添加 --th08
 浏览器测试设置：
 
 - TH_GAME：th10 或 th08。
-- TH_TEST_SITE：本地 Portable 完整 site 目录（包含私有 DATA、字体和音乐）。
+- EAGLER_LAUNCHER_ROOT：canonical Launcher 适配工作树。
+- EAGLER_SDL_FIXTURE：该 Launcher 浏览器测试的私有资源配置 JSON。
 - TH_PLAYWRIGHT：已安装的 playwright/index.mjs 绝对路径。
 - TH_BROWSER：可选的 Edge/Chromium 可执行文件路径。
 
-运行 `node portable/check-subpixel-browser.mjs`。本地报告和截图保存在对应游戏的 `artifacts/subpixel/`；这些资源和产物不进入 Git。
+运行 `node portable/check-subpixel-browser.mjs`。当前分支已切换到 canonical Launcher 验证入口；报告目录由 EAGLER_SDL_EVIDENCE 指定（默认当前目录下的 .cache/sdl-browser），历史子像素证据仍保存在 artifacts/subpixel。私有资源和产物不进入 Git。
 
 可用 TH_RENDERER_OBJECT 指向旧版 AnmRenderer 编译对象重现回归测试失败。正常测试请取消该变量。
-

@@ -1,4 +1,5 @@
 **/artifacts/
+/build-eagler/
 **/node_modules/
 **/.cache/
 **/.npm-cache/

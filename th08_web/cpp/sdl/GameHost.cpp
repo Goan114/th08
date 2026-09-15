@@ -28,7 +28,7 @@ touhou::input::TouchState touch_state(){touhou::input::TouchState s;if(!runtime)
 }
 void pointer(int type,int id,float x,float y){touch.pointer(type,id,x,y,SDL_GetTicks(),touch_state(),runtime&&runtime->keyboard_state()[16]);}
 void poll(){if(!runtime)return;SDL_Event event;while(SDL_PollEvent(&event)){
-    if(event.type==SDL_EVENT_FINGER_CANCELED)touch.cancel();
+    if(event.type==SDL_EVENT_FINGER_CANCELED){touch.cancel_transient();if(runtime)runtime->motion.target(0,0,0);}
     if(event.type==SDL_EVENT_FINGER_DOWN||event.type==SDL_EVENT_FINGER_MOTION||event.type==SDL_EVENT_FINGER_UP)pointer(event.type==SDL_EVENT_FINGER_DOWN?0:event.type==SDL_EVENT_FINGER_MOTION?1:2,int(event.tfinger.fingerID),event.tfinger.x,event.tfinger.y);
     if(event.type==SDL_EVENT_JOYSTICK_ADDED&&!joystick)joystick=SDL_OpenJoystick(event.jdevice.which);
     if(event.type==SDL_EVENT_JOYSTICK_REMOVED&&joystick&&SDL_GetJoystickID(joystick)==event.jdevice.which){SDL_CloseJoystick(joystick);joystick=nullptr;}
@@ -54,7 +54,7 @@ EM_BOOL frame(double now,void* epoch){if(!running||uintptr_t(epoch)!=loop_epoch)
 u32 sdl_game_time(){return u32(elapsed*1000);}
 extern "C" {
 #define EX(name) __attribute__((export_name(name)))
-EX("sdl_game_open") BrowserRuntime* sdl_game_open(u32 milliseconds){if(runtime)return nullptr;prepared=frames=warm_mask=0;elapsed=double(milliseconds)/1000.;cadence.reset();last=-1;touch.reset();
+EX("sdl_game_open") BrowserRuntime* sdl_game_open(u32 milliseconds){if(runtime)return nullptr;prepared=frames=warm_mask=0;elapsed=double(milliseconds)/1000.;cadence.reset();last=-1;touch.begin_session();
     runtime=std::make_unique<BrowserRuntime>();if(!sdl_attach(runtime.get())||!sdl_load_assets(*runtime)){runtime.reset();sdl_detach();return nullptr;}
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);for(auto& k:keyboard_map)k.native=SDL_GetScancodeFromName(k.sdl);int count=0;auto* ids=SDL_GetJoysticks(&count);if(count)joystick=SDL_OpenJoystick(ids[0]);SDL_free(ids);return runtime.get();}
 EX("sdl_prepare_total") u32 sdl_prepare_total(){return runtime?runtime->resources().size()+runtime->native_font_steps()+warmCount:0;}
@@ -77,10 +77,10 @@ EX("sdl_game_close") void sdl_game_close(){sdl_loop_stop();touch.reset();runtime
 EX("sdl_key") void sdl_key(const char* code,u32 down){for(auto& key:keyboard_map)if(!std::strcmp(key.code,code)){key.hosted=down!=0;break;}}
 EX("sdl_keys_clear") void sdl_keys_clear(){for(auto& key:keyboard_map)key.hosted=false;touch.reset();if(runtime)runtime->motion.target(0,0,0);}
 EX("sdl_touch") void sdl_touch(u32 type,i32 id,float x,float y){pointer(type,id,x,y);}
-EX("sdl_touch_cancel") void sdl_touch_cancel(){touch.cancel();if(runtime)runtime->motion.target(0,0,0);}
+EX("sdl_touch_cancel") void sdl_touch_cancel(){touch.cancel_transient();if(runtime)runtime->motion.target(0,0,0);}
 EX("sdl_touch_options") void sdl_touch_options(u32 on,u32 free,float speed){touch.enabled=on;touch.unlimited=free;touch.sensitivity=std::clamp(speed,.1f,5.f);if(!on)sdl_touch_cancel();}
 EX("sdl_touch_gestures") void sdl_touch_gestures(u32 two,u32 taps){touch.two_finger=two;touch.double_tap=taps;}
-EX("sdl_touch_mode") void sdl_touch_mode(u32 mode){touch.mode=mode;sdl_touch_cancel();}
+EX("sdl_touch_mode") void sdl_touch_mode(u32 mode){if(touch.set_mode(static_cast<int>(mode))&&runtime)runtime->motion.target(0,0,0);}
 EX("sdl_touch_controls") void sdl_touch_controls(u32 fire,u32 focus,u32 bomb,u32 escape,float x,float y){touch.controls(fire,focus,bomb,escape,x,y);}
 EX("sdl_game_status") const i32* sdl_game_status(){static i32 out[10]{};if(runtime){out[0]=runtime->status(0);out[1]=runtime->status(3);out[2]=runtime->status(2)||runtime->status(4);out[3]=number(runtime->app.session.numbers.lives).truncate_int();out[4]=runtime->app.session.numbers.power;out[5]=touch.current_context();out[6]=touch.active();out[7]=touch.fire;out[8]=touch.focus;out[9]=frames;}return out;}
 }

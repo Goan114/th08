@@ -2,6 +2,9 @@
 #include "BrowserRuntime.hpp"
 #include "PlatformDevices.hpp"
 namespace th08 {
+#ifdef TH_SDL3
+extern "C" u32 sdl_music_source_mode();
+#endif
 GameAudioManager::GameAudioManager(BrowserRuntime& runtime):host(runtime){control=std::make_unique<MusicControl>(host.app.session.display_config,host.app.session.statistics,*this);}
 std::vector<u8> GameAudioManager::read(const char* p){return host.read(p);}
 u32 GameAudioManager::milliseconds(){return host.milliseconds();}
@@ -23,7 +26,13 @@ void GameAudioManager::midi_reset(){midi.stop();midi_failed|=!midi.parse(30)||!m
 void GameAudioManager::start_bgm(){audio_context();stop_all();open_music(formats.get(0));}
 void GameAudioManager::process_sounds(){audio_context();commands.process();effects.process();}
 void GameAudioManager::update_audio_fades(){fades.update_all();}
-void GameAudioManager::apply_volume(const GameConfiguration& c){effects.enabled=c.sounds==1;effects.master_volume=c.sound_volume;fades.master_volume=c.music_volume;commands.context.master_volume=c.music_volume;commands.enqueue(8,0,"dummy");audio_context();}
+void GameAudioManager::apply_volume(const GameConfiguration& c){
+#ifdef TH_SDL3
+    // The Launcher selects the source independently of imported config files.
+    // OGG uses the WAV-shaped owner; none mutes BGM without disabling SFX.
+    host.app.session.display_config.music=sdl_music_source_mode();
+#endif
+    effects.enabled=c.sounds==1;effects.master_volume=c.sound_volume;fades.master_volume=c.music_volume;commands.context.master_volume=c.music_volume;commands.enqueue(8,0,"dummy");audio_context();}
 i32 GameAudioManager::stop(u32 b){return sound_device().stop(b);}
 i32 GameAudioManager::position(u32 b,u32 p){return sound_device().position(b,p);}
 i32 GameAudioManager::pan(u32 b,i32 v){return sound_device().pan(b,v);}

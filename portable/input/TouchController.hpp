@@ -19,8 +19,19 @@ public:
     float sensitivity=1,stick_x=0,stick_y=0;int mode=0;
     void clear_motion(){dragging=false;primary=instance=0;}
     void cancel(){clear_motion();fingers.clear();menu={};dialogue={};tap={};tap_armed=false;}
-    void reset(){cancel();confirm_ticks=bomb_ticks=escape_ticks=0;}
-    void controls(bool shoot,bool slow,std::uint32_t bomb,std::uint32_t escape,float x,float y){fire=shoot;focus=slow;stick_x=std::clamp(x/32767.f,-1.f,1.f);stick_y=std::clamp(y/32767.f,-1.f,1.f);if(bomb!=bomb_serial){bomb_ticks=3;bomb_serial=bomb;}if(escape!=escape_serial){escape_ticks=3;escape_serial=escape;}}
+    // Clear input owned by a transient browser gesture. The fire button is a
+    // launcher toggle and deliberately survives focus loss/runtime cleanup.
+    void cancel_transient(){cancel();focus=false;stick_x=stick_y=0;confirm_ticks=bomb_ticks=escape_ticks=0;}
+    // Reset is used by keyboard-clear/visibility cleanup and must not make the
+    // next controls snapshot look like a new bomb/escape serial stream.
+    void reset(){cancel_transient();}
+    // A newly opened Runtime starts with the launcher serial baseline. This is
+    // intentionally separate from reset(), which also runs on blur.
+    void begin_session(){reset();bomb_serial=escape_serial=0;}
+    // Runtime configuration is allowed to repeat. Only a real movement-mode
+    // change invalidates the active gesture and its transient controls.
+    bool set_mode(int value){if(mode==value)return false;mode=value;cancel_transient();return true;}
+    void controls(bool shoot,bool slow,std::uint32_t bomb,std::uint32_t escape,float x,float y){fire=shoot;focus=slow;const auto axis=[](float value){return std::isfinite(value)?std::clamp(value/32767.f,-1.f,1.f):0.f;};stick_x=axis(x);stick_y=axis(y);if(bomb!=bomb_serial){bomb_ticks=3;bomb_serial=bomb;}if(escape!=escape_serial){escape_ticks=3;escape_serial=escape;}}
     void pointer(int type,int id,float x,float y,std::uint64_t now,const TouchState& s,bool key_slow){
         if(!enabled)return;if(context!=s.context){cancel();context=s.context;}const float px=x*640,py=y*480;
         if(type==0&&fingers.count(id)){fingers.erase(id);if(primary==id)clear_motion();if(menu.id==id)menu={};if(dialogue.id==id)dialogue={};}

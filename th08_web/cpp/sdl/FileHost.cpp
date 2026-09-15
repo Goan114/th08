@@ -12,6 +12,9 @@
 EM_JS(void, th08_save_changed, (), { if(Module['runtimeFileChanged'])Module['runtimeFileChanged'](); });
 EM_JS(void, th08_replay_error, (), { if(Module['runtimeNotice'])Module['runtimeNotice']('无法读取这份永夜抄录像。'); });
 namespace th08 {
+namespace {u32 eagler_music_source=1;}
+extern "C" u32 sdl_music_source_mode(){return eagler_music_source;}
+extern "C" __attribute__((export_name("sdl_music_source"))) void sdl_music_source(u32 mode){eagler_music_source=mode==2?2:1;}
 namespace {
 struct ArchiveFile final:ArchiveSource {
     SDL_IOStream* file=SDL_IOFromFile("/game/th08.dat","rb");
@@ -29,7 +32,10 @@ bool save_name(const std::string& name){
 bool sdl_read_file(const char* name,std::vector<u8>& result){size_t size=0;auto* p=SDL_LoadFile(name,&size);if(!p)return false;result.assign(static_cast<u8*>(p),static_cast<u8*>(p)+size);SDL_free(p);return true;}
 bool sdl_load_assets(BrowserRuntime& r){
     std::vector<u8> bytes;if(!r.mount_archive(std::make_unique<ArchiveFile>())||!r.native_fonts())return false;
-    if(!sdl_read_file("/game/thbgm.dat",bytes)||!r.put("thbgm.dat",bytes.data(),bytes.size()))return false;
+    // OGG replaces the PCM archive, but the original configuration reader
+    // still uses this format marker to select its WAV-shaped music owner.
+    const u32 music_header[]{fourcc('Z','W','A','V'),1,0x800,0};
+    if(!r.put("thbgm.dat",reinterpret_cast<const u8*>(music_header),sizeof(music_header)))return false;
     for(const auto* directory:{"/savesth08","/savesth08/replay"}){
         auto* dir=opendir(directory);if(!dir)continue;while(auto* entry=readdir(dir)){
             const auto relative=std::string(directory==std::string("/savesth08")?"":"replay/")+entry->d_name;
