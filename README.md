@@ -2,8 +2,6 @@
 
 This repository contains the source-only TH08 3.4.0 C++/SDL3 portable and Web implementation.
 
-TouhouDev 原作者的完整开发包交付说明已按原文保存在 [TOUHOUDEV-开发交付原文.md](docs/TOUHOUDEV-开发交付原文.md)。原文描述完整开发包；本仓库是从中发布的 source-only 子集，因此不包含原文提到的游戏资源、工具链安装目录和既有构建产物。
-
 ## Layout
 
 - `th08_web/`: TH08 game, SDL runtime, documentation, and source tests.
