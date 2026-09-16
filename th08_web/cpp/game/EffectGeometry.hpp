@@ -9,6 +9,7 @@ public:
     explicit EffectGeometry(AnmRenderer& r):renderer(r){}
     static i32 initialize(EffectState&,EffectDraw callback,bool alternative=false);
     static void release(EffectState&);
+    i32 prepare(EffectState&);
     i32 draw(EffectState&);
 };
 }

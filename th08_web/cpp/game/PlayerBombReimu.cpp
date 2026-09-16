@@ -1,5 +1,6 @@
 #include "PlayerBombPatterns.hpp"
 #include "GameMath.hpp"
+#include "Presentation.hpp"
 #include <cmath>
 namespace th08 {
 namespace {
@@ -70,8 +71,8 @@ void PlayerBombPatterns::reimu(bool last){
     for(u32 i=0;i<16;++i){auto& o=objects.objects[i];if(o.state){if(o.state==1)move_regions(o);else if(changed){o.frame=wrapping_add(o.frame,1);if(o.frame>29)o.state=0;}actions.step_animation(o.animation[0]);}}
 }
 void PlayerBombPatterns::draw_reimu(bool last,const Vec2& offset){
-    tint(last?0x802020d0:0x80404040);for(u32 i=0;i<(last?128u:16u);++i){auto& o=objects.objects[i];if(!o.state)continue;auto& vm=o.animation[0];
-        vm.pos={Scalar::add(o.position.x,vm.pos2.x),Scalar::add(o.position.y,vm.pos2.y),Scalar::add(o.position.z,vm.pos2.z)};
+    tint(last?0x802020d0:0x80404040);for(u32 i=0;i<(last?128u:16u);++i){auto& o=objects.objects[i];if(!o.state)continue;auto& source=o.animation[0];AnmVm copy;if(presentation::render_only)copy=source;auto& vm=presentation::render_only?copy:source;const Vec3 position=presentation_position(i);
+        vm.pos={Scalar::add(position.x,vm.pos2.x),Scalar::add(position.y,vm.pos2.y),Scalar::add(position.z,vm.pos2.z)};
         vm.pos.x=Scalar::add(offset.x,vm.pos.x);vm.pos.y=Scalar::add(offset.y,vm.pos.y);vm.pos.z=0;actions.draw(vm,false);
     }
 }

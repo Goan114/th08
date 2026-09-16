@@ -1,6 +1,8 @@
 // Names and algorithms adapted from GensokyoClub/th08, MIT license.
 #include "TitleView.hpp"
 #include "GameMath.hpp"
+#include "Presentation.hpp"
+#include <array>
 namespace th08 {
 namespace {
 constexpr const char* stages[]={"Stage1 ","Stage2 ","Stage3 ","Stage4A","Stage4B","Stage5 ","Stage6A","Stage6B","StageEX"};
@@ -54,7 +56,7 @@ i32 TitleView::completion(){
         else if(clear(false,7,0)||clear(false,7,1)||clear(false,7,2)||(clear(false,7,3)&&state.cursor>3))sprite=147;
         else if(clear(true,6,0)||clear(true,6,1)||clear(true,6,2)||clear(true,6,3))sprite=145;
     }
-    if(sprite>=0){auto& vm=state.spellCardNameVms[0];menus.InitializeAndSetSprite(state.titleAnm,&vm,sprite);vm.anchor=3;vm.color1.d3dColor=0xffffffff;vm.pos={400,170,0};renderer.draw_no_rotation(vm);}return 0;
+    if(sprite>=0){AnmVm local;AnmVm* vm=&state.spellCardNameVms[0];if(presentation::render_only)vm=&local;menus.InitializeAndSetSprite(state.titleAnm,vm,sprite);vm->anchor=3;vm->color1.d3dColor=0xffffffff;vm->pos={400,170,0};renderer.draw_no_rotation(*vm);}return 0;
 }
 i32 TitleView::spell_cards(){
     reset_text();Vec3 position{16,78,0};position.x=move(position.x,318);state.spellCardNameVms[15].pos=position;renderer.draw_no_rotation(state.spellCardNameVms[15]);position.x=move(position.x,-318);position.y=move(position.y,16);
@@ -68,6 +70,7 @@ i32 TitleView::spell_cards(){
     for(i32 i=0;i<7;++i)renderer.draw_no_rotation(state.spellCardInfoVms[i]);reset_text();return 1;
 }
 i32 TitleView::spell_stages(){
+    const float saved_percentages[]{state.percentageCapturedSpellPracticePerShot,state.percentageCapturedInGamePerShot,state.percentageCapturedSpellPractice,state.percentageCapturedInGame};
     if(context.character<0||context.character>12)return 1;
     i32 totals[6]{};reset_text();Vec3 position=state.vms[141].pos;position.y=move(position.y,-152);position.x=move(position.x,-32);state.spellCardNameVms[0].pos=position;renderer.draw_no_rotation(state.spellCardNameVms[0]);position.y=move(position.y,16);
     for(i32 i=0;i<10;++i){i32 counts[6]{};ascii.state.selected=i==state.cursor;ascii.state.color=ascii.state.selected?0xffffffff:0xffa0a0a0;
@@ -86,6 +89,7 @@ i32 TitleView::spell_stages(){
         ascii.draw_percentage({all?580.0f:514.0f,all?451.0f:404.0f,.01f},(number(practice)*number(10000)).truncate_int(),0xffffffff);
         ascii.draw_percentage({all?580.0f:514.0f,all?443.0f:412.0f,.01f},(number(game)*number(10000)).truncate_int(),0x80c0c080);
     }
+    if(presentation::render_only){state.percentageCapturedSpellPracticePerShot=saved_percentages[0];state.percentageCapturedInGamePerShot=saved_percentages[1];state.percentageCapturedSpellPractice=saved_percentages[2];state.percentageCapturedInGame=saved_percentages[3];}
     return 1;
 }
 void TitleView::pie(const Vec3& position,u32 color,float fraction,float diameter){
@@ -97,9 +101,12 @@ void TitleView::pie(const Vec3& position,u32 color,float fraction,float diameter
 }
 i32 TitleView::draw(){
     if(state.state!=TitleScreenState_Ready)return 1;renderer.current_texture=0;menus.actions.background();
-    for(i32 i=0;i<state.vmCount;++i){auto& vm=state.vms[i];if(!vm.loadedSprite||!vm.anmFile||!vm.anmFile->textures)continue;const Vec3 position=vm.pos;vm.pos={move(vm.pos.x,vm.pos2.x),move(vm.pos.y,vm.pos2.y),move(vm.pos.z,vm.pos2.z)};
+    std::array<Vec3,21> saved_name_positions{};if(presentation::render_only)for(size_t i=0;i<saved_name_positions.size();++i)saved_name_positions[i]=state.spellCardNameVms[i].pos;
+    for(i32 i=0;i<state.vmCount;++i){auto& vm=state.vms[i];if(!vm.loadedSprite||!vm.anmFile||!vm.anmFile->textures)continue;const Vec3 position=vm.pos;Vec3 draw_pos=vm.pos,draw_pos2=vm.pos2;
+        if(presentation::active&&menus.presentation_valid&&i<i32(menus.presentation_previous.size())){const auto& before=menus.presentation_previous[i];if(before.script==vm.scriptIndex){draw_pos={presentation::lerp(before.pos.x,vm.pos.x),presentation::lerp(before.pos.y,vm.pos.y),presentation::lerp(before.pos.z,vm.pos.z)};draw_pos2={presentation::lerp(before.pos2.x,vm.pos2.x),presentation::lerp(before.pos2.y,vm.pos2.y),presentation::lerp(before.pos2.z,vm.pos2.z)};}}
+        vm.pos={move(draw_pos.x,draw_pos2.x),move(draw_pos.y,draw_pos2.y),move(draw_pos.z,draw_pos2.z)};
         if(vm.rotation.z!=0)renderer.draw_2d(vm);else renderer.draw_no_rotation(vm);vm.pos=position;}
-    if(state.currentHelpTextVm)renderer.draw_no_rotation(*state.currentHelpTextVm);
-    switch(state.currentScreen){case TitleCurrentScreen_CharacterSelect:completion();break;case TitleCurrentScreen_Replay:replays();break;case TitleCurrentScreen_PracticeStageSelect:practice();break;case TitleCurrentScreen_SpellStageSelect:spell_stages();break;case TitleCurrentScreen_SpellCardSelect:spell_cards();break;default:break;}return 1;
+    if(state.currentHelpTextVm){if(presentation::active&&menus.presentation_valid&&menus.presentation_help_vm==state.currentHelpTextVm&&menus.presentation_help.script==state.currentHelpTextVm->scriptIndex){auto draw=*state.currentHelpTextVm;draw.pos={presentation::lerp(menus.presentation_help.pos.x,draw.pos.x),presentation::lerp(menus.presentation_help.pos.y,draw.pos.y),presentation::lerp(menus.presentation_help.pos.z,draw.pos.z)};renderer.draw_no_rotation(draw);}else renderer.draw_no_rotation(*state.currentHelpTextVm);}
+    switch(state.currentScreen){case TitleCurrentScreen_CharacterSelect:completion();break;case TitleCurrentScreen_Replay:replays();break;case TitleCurrentScreen_PracticeStageSelect:practice();break;case TitleCurrentScreen_SpellStageSelect:spell_stages();break;case TitleCurrentScreen_SpellCardSelect:spell_cards();break;default:break;}if(presentation::render_only)for(size_t i=0;i<saved_name_positions.size();++i)state.spellCardNameVms[i].pos=saved_name_positions[i];return 1;
 }
 }

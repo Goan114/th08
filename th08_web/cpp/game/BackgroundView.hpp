@@ -1,6 +1,7 @@
 #pragma once
 #include "BackgroundObjects.hpp"
 #include "Chain.hpp"
+#include <array>
 namespace th08 {
 struct BackgroundDrawActions {
     virtual ~BackgroundDrawActions()=default;
@@ -15,6 +16,8 @@ public:
     void* callback_context=nullptr;
 private:
     BackgroundState& state;AnmRenderer& renderer;BackgroundObjects objects;BackgroundDrawActions& actions;
+    struct PresentationState {i32 spell_flag=0;ZunColor tint_color{};i32 use_tint=0,effect_visible=0;bool valid=false;} presentation;
+    struct RenderRestore {i32 spell_flag=0;ZunColor tint_color{};i32 use_tint=0,effect_visible=0,effect_flags=0;std::array<Vec3,32> effect_positions{};bool active=false;} restore;
     void layer(AnmVm& vm){renderer.draw_2d(vm);renderer.flush();}
     void rectangle(u32 color){const u32 colors[4]={color,color,color,color};renderer.draw_rectangle(32,16,416,464,colors);}
 };

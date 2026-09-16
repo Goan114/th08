@@ -44,6 +44,11 @@ public:
 private:
     GuiState& gui;GuiImplState& display;DialogueState& state;DialogueContext& context;
     GameGlobals& globals;GameValues& values;AnmExecutor& executor;TextWriter& text_writer;AnmRenderer& renderer;DialogueActions& actions;
+    struct PresentationVm {Vec3 pos{},pos2{};i16 script=-1;bool visible=false;};
+    PresentationVm presentation_portraits[4]{},presentation_lines[2]{},presentation_intro[2]{};
+    float presentation_timer=0; i32 presentation_message=-1; bool presentation_valid=false;
+    void snapshot_presentation();
+    AnmVm presentation_vm(const AnmVm&,const PresentationVm&)const;
     bool pressed(u16 mask)const{return (context.input&mask)&&(context.input&mask)!=(context.previous_input&mask);}
     bool start(AnmVm& vm,AnmLoaded* file,i32 script);
     bool sprite(AnmVm& vm,AnmLoaded* file,i32 index);

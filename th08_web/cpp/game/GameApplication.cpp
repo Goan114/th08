@@ -1,4 +1,5 @@
 #include "GameApplication.hpp"
+#include "Presentation.hpp"
 #include <algorithm>
 #include <cstdio>
 namespace th08 {
@@ -36,7 +37,7 @@ void GameApplication::bind_jobs(){
     bind(ascii_calc,1,false,[](void* p){auto& a=*static_cast<GameApplication*>(p);if(!a.game_attached){a.ascii.tick_popups(a.ascii_context,a.timing);a.ascii.tick_vms(false);}return JobResult::Continue;});
     bind(background_draw,0,true,[](void* p){auto& a=*static_cast<GameApplication*>(p);a.loading.background();return JobResult::Continue;});
     bind(loading_draw,2,true,[](void* p){static_cast<GameApplication*>(p)->loading.draw();return JobResult::Continue;});
-    bind(fps_draw,16,true,[](void* p){auto& a=*static_cast<GameApplication*>(p);a.statistics.calculate(true);return JobResult::Continue;});
+    bind(fps_draw,16,true,[](void* p){auto& a=*static_cast<GameApplication*>(p);if(presentation::render_only)a.statistics.draw_text();else a.statistics.calculate(true);return JobResult::Continue;});
     bind(ascii_draw,20,true,[](void* p){auto& a=*static_cast<GameApplication*>(p);if(!a.game_attached){a.ascii.draw_strings(a.ascii_context);a.ascii.state.string_count=0;}return JobResult::Continue;});
 }
 void GameApplication::start_effect(){if(!transition_effect)transition_effect=screen.create(ScreenEffectType::MenuFullFade,60,0,0,0,1);}
@@ -122,11 +123,15 @@ bool GameApplication::update(){
     platform.begin_frame();const i32 value=chain.run();publish_scene();synchronize();
     if(value<=0){failed|=value<0;running=false;}failed|=invalid();return running&&!failed;
 }
-bool GameApplication::draw(){
+bool GameApplication::draw(float presentation_alpha,bool presentation_active,bool presentation_only){
     if(!running||invalid())return false;if(title.modal())return true;
-    const i32 value=chain.run(true);renderer.flush();if(value<=0){failed|=value<0;running=false;}
-    if(game_attached&&!(game.globals.game_flags&8))game.recording.input.timing_level=statistics.state.replay_fps;
-    platform.process_sounds();if(!platform.present())platform.reset_device();failed|=invalid();return running&&!failed;
+    const auto string_count=ascii.state.string_count;const u32 ascii_color=ascii.state.color;const float ascii_scale_x=ascii.state.scale_x,ascii_scale_y=ascii.state.scale_y;const i32 ascii_gui=ascii.state.gui,ascii_selected=ascii.state.selected,ascii_space=ascii.state.space_width;const Vec2 saved_shake=renderer.shake;
+    if(presentation_only&&presentation_shake_valid)renderer.shake=presentation_shake;else if(!presentation_only){presentation_shake=renderer.shake;presentation_shake_valid=true;}
+    presentation::begin(presentation_alpha,presentation_active,presentation_only);
+    const i32 value=chain.run(true);renderer.flush();if(presentation_only){ascii.state.string_count=string_count;ascii.state.color=ascii_color;ascii.state.scale_x=ascii_scale_x;ascii.state.scale_y=ascii_scale_y;ascii.state.gui=ascii_gui;ascii.state.selected=ascii_selected;ascii.state.space_width=ascii_space;}
+    if(!presentation_only&&value<=0){failed|=value<0;running=false;}
+    if(!presentation_only){if(game_attached&&!(game.globals.game_flags&8))game.recording.input.timing_level=statistics.state.replay_fps;platform.process_sounds();}
+    if(!platform.present())platform.reset_device();if(presentation_only)renderer.shake=saved_shake;presentation::end();if(!presentation_only)failed|=invalid();return running&&!failed;
 }
 bool GameApplication::save_score(){auto context=game_attached?result_context():last_game;return results.attach(chain,RESULT_SCREEN_ACTION_SAVE_SCORE,context);}
 // ResultScreen indexes rows 0..14; replay filenames and the public save API use 1..15.

@@ -1,4 +1,5 @@
 #include "BulletSystem.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 BulletSystem::BulletSystem(BulletManagerState& s,EclGlobals& g,Rng& rng,PlayerSimulation& p,ItemSystem& i,EffectSystem& e,AnmRenderer& r,BulletSystemAudio& a)
  :state(s),globals(g),player(p),inventory(i),effect_system(e),renderer(r),audio(a),creation(s,rng),updater(s,creation,rng),lasers(s,rng),drawing(s,*this){
@@ -6,7 +7,7 @@ BulletSystem::BulletSystem(BulletManagerState& s,EclGlobals& g,Rng& rng,PlayerSi
 }
 void BulletSystem::synchronize(){creation.timing=updater.timing=lasers.timing=player.timing;updater.player=lasers.player=globals.player;updater.paused=globals.paused;}
 void BulletSystem::publish_collision(){const auto& p=player.status();globals.player_state=p.life.state;globals.player_state_timer=p.life.timer;globals.game_flags=p.context.game_flags;globals.paused=p.context.pause!=0;if(globals.gui)std::memcpy(&globals.gui->flags,&p.context.hud_flags,4);failed|=player.invalid();}
-bool BulletSystem::initialize(AnmLoaded& file,Rng& rng){state.animation=&file;ready=state.templates.load(file,rng,player.timing);failed=!ready;return ready;}
+bool BulletSystem::initialize(AnmLoaded& file,Rng& rng){state.animation=&file;ready=state.templates.load(file,rng,player.timing);failed=!ready;if(ready)drawing.snapshot();return ready;}
 void BulletSystem::emit(BulletEmission& parameters){
     if(!ready){failed=true;return;}synchronize();creation.emit(parameters,bullet_aim(parameters.position,globals.player),&player.status().context.replay_flags);failed|=creation.failure!=BulletCreation::Failure::None;
 }
@@ -22,9 +23,12 @@ i32 BulletSystem::collision(i32 kind,BulletState& bullet){
 }
 void BulletSystem::collision(const Vec2& center,const Vec2& size,const Vec3& origin,float angle,bool graze){if(globals.gui)std::memcpy(&player.status().context.hud_flags,&globals.gui->flags,4);player.collision().laser(center,size,origin,angle,graze);publish_collision();}
 bool BulletSystem::update(){
-    if(failed||!ready)return false;if(globals.game_flags&1024)return true;
+    if(failed||!ready)return false;drawing.snapshot();if(globals.game_flags&1024)return true;
     if(!inventory.update())return false;synchronize();if(!updater.update_bullets()||!lasers.update())return false;
     if(state.cancel_frames)state.cancel_frames=wrapping_sub(state.cancel_frames,1);state.timer.tick(player.timing);state.unknown_counter=wrapping_add(state.unknown_counter,1);return !failed;
 }
-bool BulletSystem::draw(const Vec2& origin){if(failed||!ready)return false;arcade=origin;return drawing.draw(globals.game_flags,origin)&&!failed;}
+bool BulletSystem::draw(const Vec2& origin){
+    if(failed||!ready)return false;const bool failed_before=failed;const Vec2 arcade_before=arcade;arcade=origin;const bool result=drawing.draw(globals.game_flags,origin);
+    if(presentation::render_only){failed=failed_before;arcade=arcade_before;return true;}return result&&!failed;
+}
 }

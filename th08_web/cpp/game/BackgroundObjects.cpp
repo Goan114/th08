@@ -1,5 +1,6 @@
 #include "BackgroundObjects.hpp"
 #include "GraphicsMath.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {
 Vec3 add(const Vec3& a,const Vec3& b){return {Scalar::add(a.x,b.x),Scalar::add(a.y,b.y),Scalar::add(a.z,b.z)};}
@@ -19,6 +20,11 @@ u32 BackgroundObjects::fog_color(u32 original,float amount)const{
     const auto channel=[&](u8 from,u8 to){return u8(from-u8((Extended::from_int(i32(from)-to)*number(amount)).truncate_int()));};
     result.b=channel(result.b,target.b);result.g=channel(result.g,target.g);result.r=channel(result.r,target.r);result.a=u8((Extended::from_int(result.a)*(number(1)-number(amount))).truncate_int());return u32(result.d3dColor);
 }
+void BackgroundObjects::snapshot(){
+    presentation_vms.clear();
+    if(!state.quad_vms||state.quad_count<=0)return;
+    presentation_vms.assign(state.quad_vms,state.quad_vms+state.quad_count);
+}
 void BackgroundObjects::draw(i32 layer){
     if(!state.stage_data||!state.instances)return;projection_input={};renderer.background_camera(state.camera);i32 fog_mode=255;
     Vec3 right{renderer.view_matrix.m[0][0],renderer.view_matrix.m[0][1],renderer.view_matrix.m[0][2]};GraphicsMath::normalize(right,right);
@@ -29,10 +35,11 @@ void BackgroundObjects::draw(i32 layer){
         const Vec3 center{center_component(object.position.x,instance->position.x,state.position.x,object.dimensions.x),center_component(object.position.y,instance->position.y,state.position.y,object.dimensions.y),center_component(object.position.z,instance->position.z,state.position.z,object.dimensions.z)};
         const auto relative=sub(center,eye);if(number(state.distance_limit)<dot(relative,relative))continue;
         const float distance=dot(relative,state.camera.unused24).to_float(),limit=(length(object.dimensions)/number(2)+number(960)).to_float();
-        if(!(distance<=limit&&distance>=80))continue;object.flags|=2;
-        for(auto* q=StageProgram::first(object);q->type>=0;q=StageProgram::next(*q)){auto& vm=state.quad_vms[q->vm];if(!vm.loadedSprite)continue;
-            if(q->type==0)sprite(vm,*static_cast<StageSpriteQuad*>(q),*instance,right,fog_mode);
-            else if(q->type==1)beam(vm,*static_cast<StageBeamQuad*>(q),*instance,right,fog_mode);
+        if(!(distance<=limit&&distance>=80))continue;if(!presentation::render_only)object.flags|=2;
+        for(auto* q=StageProgram::first(object);q->type>=0;q=StageProgram::next(*q)){auto& source=state.quad_vms[q->vm];if(!source.loadedSprite)continue;
+            AnmVm copy;AnmVm* vm=&source;if(presentation::render_only&&q->vm>=0&&q->vm<i32(presentation_vms.size())){copy=presentation_vms[q->vm];vm=&copy;}
+            if(q->type==0)sprite(*vm,*static_cast<StageSpriteQuad*>(q),*instance,right,fog_mode);
+            else if(q->type==1)beam(*vm,*static_cast<StageBeamQuad*>(q),*instance,right,fog_mode);
         }
     }
 }

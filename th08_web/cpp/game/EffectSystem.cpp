@@ -1,4 +1,6 @@
 #include "EffectSystem.hpp"
+#include "Presentation.hpp"
+#include "GameMath.hpp"
 namespace th08 {
 namespace {
 using E=EffectState;using S=EffectSystem;
@@ -63,7 +65,23 @@ EffectState* EffectSystem::overlay(i32 kind,Vec3 position,i32 count,u32 color){
     }replay_flags|=0x400;return &state.objects[653];
 }
 void EffectSystem::shift_glows(const Vec3& offset){for(u32 i=0;i<512;++i)if(state.objects[i].kind==51)add(state.objects[i].world_position,offset);}
+void EffectSystem::snapshot_presentation(){for(size_t i=0;i<presentation_previous.size();++i){const auto& e=state.objects[i];auto& before=presentation_previous[i];before.active=e.active!=0;if(before.active){before.position=e.position;before.center=e.center;before.radius=e.radius;before.angle=e.angle;before.width=e.width;before.height=e.height;before.angle_y=e.angle_y;before.age=e.age.current;before.kind=e.kind;}}}
+Vec3 EffectSystem::presentation_position(EffectState& e)const{
+    if(!presentation::active)return e.position;const size_t index=size_t(&e-state.objects);if(index>=presentation_previous.size())return e.position;const auto& before=presentation_previous[index];
+    const float dx=e.position.x-before.position.x,dy=e.position.y-before.position.y;if(!before.active||before.kind!=e.kind||e.age.current<before.age||dx*dx+dy*dy>=16384.0f)return e.position;
+    return {presentation::lerp(before.position.x,e.position.x),presentation::lerp(before.position.y,e.position.y),presentation::lerp(before.position.z,e.position.z)};
+}
+void EffectSystem::presentation_geometry(const EffectState& source,EffectState& draw)const{
+    const size_t index=size_t(&source-state.objects);if(index>=presentation_previous.size())return;const auto& before=presentation_previous[index];
+    const float dx=source.position.x-before.position.x,dy=source.position.y-before.position.y;if(!before.active||before.kind!=source.kind||source.age.current<before.age||dx*dx+dy*dy>=16384.0f)return;
+    draw.center={presentation::lerp(before.center.x,source.center.x),presentation::lerp(before.center.y,source.center.y),presentation::lerp(before.center.z,source.center.z)};
+    draw.radius=presentation::lerp(before.radius,source.radius);draw.width=presentation::lerp(before.width,source.width);draw.height=presentation::lerp(before.height,source.height);
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;
+    auto angle=[&](float a,float b){float d=b-a;if(d>pi)d-=tau;else if(d<-pi)d+=tau;return add_angle(a+d*presentation::alpha,0);};
+    draw.angle=angle(before.angle,source.angle);draw.angle_y=angle(before.angle_y,source.angle_y);
+}
 JobResult EffectSystem::update(){
+    snapshot_presentation();
     state.active_count=0;for(u32 i=0;i<5;++i){state.tails[i]=&state.sentinels[i];state.sentinels[i].next=nullptr;}
     for(u32 i=0;i<653;++i){auto& e=state.objects[i];if(!e.active){EffectGeometry::release(e);continue;}++state.active_count;
         if(!paused||e.ignore_pause){if((e.update&&e.update(e,*this)!=1)||anm.execute(e)){e.active=0;continue;}e.age.tick(anm.timing);}
@@ -74,18 +92,26 @@ JobResult EffectSystem::update(){
     state.frames=wrapping_add(state.frames,1);return state.frames%300==100&&values.tampered()?JobResult::Exit:JobResult::Continue;
 }
 void EffectSystem::draw_list(u32 index,float depth,bool offset_before_depth){
-    for(auto* e=state.sentinels[index].next;e;e=e->next){if(e->draw){e->draw(*e,*this);continue;}e->pos=e->position;e->pos.x=Scalar::add(arcade.x,e->pos.x);e->pos.y=Scalar::add(arcade.y,e->pos.y);
-        if(offset_before_depth){add(e->pos,e->pos2);e->pos.z=depth;}else{e->pos.z=depth;add(e->pos,e->pos2);}renderer.draw_2d(*e);
+    for(auto* e=state.sentinels[index].next;e;e=e->next){if(e->draw){
+            if(presentation::render_only){
+                EffectState copy=*e;std::array<SpriteVertex,258> vertices{};if(e->vertices){std::memcpy(vertices.data(),e->vertices,sizeof(vertices));copy.vertices=vertices.data();}
+                copy.position=presentation_position(*e);if(presentation::active)presentation_geometry(*e,copy);copy.geometry_dirty=1;const bool invalid_before=geometry.invalid;e->draw(copy,*this);geometry.invalid=invalid_before;
+            }else e->draw(*e,*this);
+            continue;
+        }EffectState copy;EffectState* draw=e;
+        if(presentation::render_only){copy=*e;copy.position=presentation_position(*e);draw=&copy;}
+        draw->pos=draw->position;draw->pos.x=Scalar::add(arcade.x,draw->pos.x);draw->pos.y=Scalar::add(arcade.y,draw->pos.y);
+        if(offset_before_depth){add(draw->pos,draw->pos2);draw->pos.z=depth;}else{draw->pos.z=depth;add(draw->pos,draw->pos2);}renderer.draw_2d(*draw);
     }
 }
-JobResult EffectSystem::draw(){draw_list(0,.07f,false);for(auto* e=state.sentinels[2].next;e;e=e->next){e->pos=e->position;renderer.draw_facing_camera(*e);}draw_list(4,.07f,false);return JobResult::Continue;}
+JobResult EffectSystem::draw(){draw_list(0,.07f,false);for(auto* e=state.sentinels[2].next;e;e=e->next){EffectState copy;EffectState* draw=e;if(presentation::render_only){copy=*e;copy.position=presentation_position(*e);draw=&copy;}draw->pos=draw->position;renderer.draw_facing_camera(*draw);}draw_list(4,.07f,false);return JobResult::Continue;}
 JobResult EffectSystem::draw_alternative(){draw_list(3,.04f,true);return JobResult::Continue;}
 void EffectSystem::projected(AnmVm& vm,Vec3& position,void* p){static_cast<EffectSystem*>(p)->space.projected(vm,position);}
 JobResult EffectSystem::draw_background(){
     // Quality 1 returns before its first object, as in 4281e0; the odd/even
     // check is a return from the loop, not a skip to the next particle.
     if(quality<2)return JobResult::Continue;
-    for(auto* e=state.sentinels[1].next;e;e=e->next){e->pos=e->position;if(e->layer==4)renderer.draw_2d(*e);else if(e->layer==1)renderer.draw_facing_camera(*e,(e->kind==51||e->kind==63)?projected:nullptr,this);else renderer.draw_world(*e);}
+    for(auto* e=state.sentinels[1].next;e;e=e->next){EffectState copy;EffectState* draw=e;if(presentation::render_only){copy=*e;copy.position=presentation_position(*e);draw=&copy;}draw->pos=draw->position;if(draw->layer==4)renderer.draw_2d(*draw);else if(draw->layer==1)renderer.draw_facing_camera(*draw,(draw->kind==51||draw->kind==63)?projected:nullptr,this);else renderer.draw_world(*draw);}
     return JobResult::Continue;
 }
 }

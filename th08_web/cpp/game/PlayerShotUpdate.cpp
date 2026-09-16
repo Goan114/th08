@@ -2,6 +2,7 @@
 #include "BulletMotion.hpp"
 #include <cmath>
 namespace th08 {
+void PlayerShots::snapshot_presentation(){for(size_t i=0;i<presentation_previous.size();++i){const auto& shot=state.shots[i];auto& before=presentation_previous[i];before.active=shot.state!=0;if(before.active){before.position=shot.position;before.angle=shot.angle;before.age=shot.timer.current;before.state=shot.state;before.kind=shot.kind;}}}
 namespace {
 Extended length(float x,float y){return number((number(x)*number(x)+number(y)*number(y)).to_float()).square_root();}
 void color(PlayerShot& shot,bool bonus){shot.animation.color1.r=255;shot.animation.color1.g=bonus?208:255;shot.animation.color1.b=bonus?176:255;}
@@ -50,7 +51,7 @@ bool PlayerShots::update_callback(PlayerShot& shot,ShotUpdate kind){
     }
 }
 bool PlayerShots::update(){
-    failure=Failure::None;if(state.game_flags&0x400)return true;
+    failure=Failure::None;snapshot_presentation();if(state.game_flags&0x400)return true;
     for(auto& shot:state.shots){if(!shot.state)continue;
         if(update_callback(shot,shot.update)){if(failure!=Failure::None)return false;shot.state=0;continue;}
         shot.position.x=(number(timing.rate)*number(shot.velocity.x)+number(shot.position.x)).to_float();shot.position.y=(number(timing.rate)*number(shot.velocity.y)+number(shot.position.y)).to_float();

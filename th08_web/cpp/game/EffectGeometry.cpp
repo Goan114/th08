@@ -17,6 +17,10 @@ i32 EffectGeometry::initialize(EffectState& e,EffectDraw callback,bool alternati
 }
 void EffectGeometry::release(EffectState& e){std::free(e.vertices);e.vertices=nullptr;}
 i32 EffectGeometry::draw(EffectState& e){
+    const i32 count=prepare(e);if(count<=0)return 0;
+    renderer.draw_vertices(e,e.vertices,count);return 1;
+}
+i32 EffectGeometry::prepare(EffectState& e){
     if(!e.vertices||e.segments<1||e.segments>128){invalid=true;return 0;}
     const i32 count=e.segments*2+2;
     if(e.geometry_dirty){
@@ -44,6 +48,6 @@ i32 EffectGeometry::draw(EffectState& e){
         }
         e.geometry_dirty=0;
     }
-    renderer.draw_vertices(e,e.vertices,count);return 1;
+    return count;
 }
 }

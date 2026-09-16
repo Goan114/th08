@@ -8,6 +8,9 @@ struct FrameCadence {
     static constexpr double interval=1./60.;
     double debt=0;
     void reset(){debt=0;}
+    double interpolation_alpha()const{
+        return std::clamp(debt/interval,0.,1.);
+    }
     unsigned advance(double seconds){
         debt=std::min(.1,debt+std::clamp(seconds,0.,.1));
         const auto ticks=std::min(4u,unsigned(std::floor((debt+1.e-9)/interval)));

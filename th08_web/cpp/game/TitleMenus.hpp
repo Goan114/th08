@@ -178,6 +178,9 @@ public:
     bool replay_stage(i32 stage,ReplayStage& out)const;
 private:
     TitleContext& context;GameConfiguration& config;AnmExecutor& executor;TextWriter& text;TitleActions& actions;
+    struct PresentationVm {Vec3 pos{},pos2{};i16 script=-1;};
+    std::vector<PresentationVm> presentation_previous;AnmVm* presentation_help_vm=nullptr;PresentationVm presentation_help{};bool presentation_valid=false;
+    void snapshot_presentation();
     void SetInterruptArray(AnmVm* vms,i32 count,i16 value);
     void ExecuteAnmIdxArray(AnmVm* vms,i32 first,i32 count);
     void DrawTextCentered(AnmVm* vm,u32 color,u32 outline,const char* message);

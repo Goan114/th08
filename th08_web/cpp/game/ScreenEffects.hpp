@@ -2,6 +2,7 @@
 #include "AnmRenderer.hpp"
 #include "Chain.hpp"
 #include "Rng.hpp"
+#include <unordered_map>
 namespace th08 {
 enum class ScreenEffectType:i32 { FadeIn,Shake,ArcadeFadeOut,Flash,FadeOut,MenuFullFade,MenuArcadeFade,EnvelopeShake };
 struct ScreenEffectState {
@@ -39,6 +40,8 @@ private:
     AnmRenderer& renderer;
     Rng& random;
     std::vector<Instance*> active;
+    struct PresentationSample {i32 alpha=0,timer=0,phase=0,a=0;ScreenEffectType type=ScreenEffectType::FadeIn;};
+    std::unordered_map<ScreenEffectState*,PresentationSample> presentation_previous;
     void shake(float amplitude);
     static JobResult calculate_callback(void*);
     static JobResult draw_callback(void*);

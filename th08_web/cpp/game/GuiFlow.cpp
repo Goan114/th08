@@ -32,7 +32,7 @@ void GuiFlow::release(){
     if(!context.keep_resources){resources.release(13);controller.gui.stage_text=nullptr;}dialogue.release();
     if(context.release_resources){for(i32 slot:{10,12,11,14})resources.release(slot);controller.gui.front=controller.gui.loading_portrait=controller.gui.times=nullptr;controller.gui.implementation=nullptr;}
 }
-void GuiFlow::update(){auto& c=controller;if(c.context.time_stopped)return;c.update_stage();dialogue.update();if((c.context.input&256)&&c.scene.hud_redraw<8)c.scene.hud_redraw=8;++c.gui.frame;}
+void GuiFlow::update(){auto& c=controller;c.snapshot_presentation();if(c.context.time_stopped)return;c.update_stage();dialogue.update();if((c.context.input&256)&&c.scene.hud_redraw<8)c.scene.hud_redraw=8;++c.gui.frame;}
 void GuiFlow::draw(){auto& c=controller;if(c.display.clear_frames)c.draw_clear();dialogue.draw();c.draw_stage();c.draw_hud();c.draw_popups();}
 bool GuiFlow::attach(Chain& owner){
     detach();chain=&owner;if(context.initial){controller.gui={};controller.gui.implementation=&controller.display;}

@@ -84,6 +84,7 @@ private:
     AnmExecutor& executor;
     AnmRenderer& renderer;
     AsciiOverlay& overlay;
+    Vec3 presentation_boss_markers[4]{};bool presentation_boss_markers_valid=false;
     void start(AnmVm& vm,AnmLoaded& file,i32 script);
     void set_sprite(AnmVm& vm,i32 sprite,bool initialize=false);
     void direct_sprite(AnmVm& vm,i32 sprite);

@@ -1,5 +1,6 @@
 // Recovered behavior cross-checked with the MIT GensokyoClub/th08 reference.
 #include "GuiController.hpp"
+#include "Presentation.hpp"
 #include <cstdio>
 namespace th08 {
 namespace {
@@ -7,6 +8,28 @@ i32 product(i32 a,i32 b){return signed_bits(u32(a)*u32(b));}
 float add(float a,float b){return Scalar::add(a,b);}
 float sub(float a,float b){return Scalar::sub(a,b);}
 Extended integer(i32 n){return Extended::from_int(n);}
+}
+void GuiController::snapshot_presentation(){
+    if(!presentation_state.display)presentation_state.display=std::make_unique<GuiImplState>();
+    *presentation_state.display=display;presentation_state.bonus=display.bonus;presentation_state.popup=display.popup;presentation_state.spell_bonus=display.spell_bonus;
+    presentation_state.boss_life=gui.boss_life;presentation_state.boss_opacity=gui.boss_opacity;presentation_state.boss_present=gui.boss_present;presentation_state.boss_life_state=display.boss_life_state;presentation_state.valid=true;
+}
+AnmVm GuiController::presentation_vm(const AnmVm& source)const{
+    AnmVm draw=source;if(!presentation::active||!presentation_state.valid||!presentation_state.display)return draw;
+    const auto* begin=reinterpret_cast<const u8*>(&display);const auto* end=begin+sizeof(display);const auto* at=reinterpret_cast<const u8*>(&source);
+    if(at<begin||at+sizeof(AnmVm)>end)return draw;const size_t offset=size_t(at-begin);const auto* before=reinterpret_cast<const AnmVm*>(reinterpret_cast<const u8*>(presentation_state.display.get())+offset);
+    if(before->scriptIndex!=source.scriptIndex||before->visible!=source.visible)return draw;
+    const float dx=source.pos.x-before->pos.x,dy=source.pos.y-before->pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp(before->pos.x,source.pos.x),presentation::lerp(before->pos.y,source.pos.y),presentation::lerp(before->pos.z,source.pos.z)};
+    const float ox=source.pos2.x-before->pos2.x,oy=source.pos2.y-before->pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp(before->pos2.x,source.pos2.x),presentation::lerp(before->pos2.y,source.pos2.y),presentation::lerp(before->pos2.z,source.pos2.z)};
+    return draw;
+}
+void GuiController::draw_presented_no_rotation(AnmVm& vm){if(presentation::render_only){auto draw=presentation_vm(vm);renderer.draw_no_rotation(draw);}else renderer.draw_no_rotation(vm);}
+void GuiController::draw_presented_2d(AnmVm& vm){if(presentation::render_only){auto draw=presentation_vm(vm);renderer.draw_2d(draw);}else renderer.draw_2d(vm);}
+void GuiController::draw_presented_world(AnmVm& vm){if(presentation::render_only){auto draw=presentation_vm(vm);renderer.draw_world(draw);}else renderer.draw_world(vm);}
+Vec3 GuiController::presentation_text_position(const GuiFormattedText& current,const GuiFormattedText& before)const{
+    if(!presentation::active||!presentation_state.valid||current.display!=before.display||current.timer.current<before.timer.current)return current.position;
+    const float dx=current.position.x-before.position.x,dy=current.position.y-before.position.y;if(dx*dx+dy*dy>=16384.0f)return current.position;
+    return {presentation::lerp(before.position.x,current.position.x),presentation::lerp(before.position.y,current.position.y),presentation::lerp(before.position.z,current.position.z)};
 }
 bool GuiController::start(AnmVm& vm,AnmLoaded* file,i32 script,bool reset_position){
     if(!file||script<0||u32(script)>=file->scriptCount)return false;
@@ -80,14 +103,14 @@ void GuiController::draw_clear(){
 }
 void GuiController::draw_popups(){
     auto& a=ascii.state;a.gui=1;
-    if(display.bonus.display){a.color=0xffffff80;ascii.add_format(display.bonus.position,software()," BONUS %8d",display.bonus.argument);a.color=-1;}
+    if(display.bonus.display){a.color=0xffffff80;ascii.add_format(presentation_text_position(display.bonus,presentation_state.bonus),software()," BONUS %8d",display.bonus.argument);a.color=-1;}
     const i32 kind=display.popup.display;const bool compressed=kind==2||kind==4||kind==5||kind==6;
     if(compressed){a.scale_x=.9f;a.scale_y=1;a.space_width=11;a.color=0xffe0b0ff;}
     else if(kind==1||kind==3)a.color=0xffc0b0ff;
     constexpr const char* formats[]={"","Full Power Mode!","Supernatural Border!!","CherryPoint Max!","Border Bonus %7d","Spell Bonus Failed","Last Spell Failed"};
-    if(kind>=1&&kind<=6){ascii.add_format(display.popup.position,software(),formats[kind],display.popup.argument);a.color=-1;}
+    if(kind>=1&&kind<=6){ascii.add_format(presentation_text_position(display.popup,presentation_state.popup),software(),formats[kind],display.popup.argument);a.color=-1;}
     if(compressed){a.scale_x=a.scale_y=1;a.space_width=13;}
-    if(display.spell_bonus.display){auto& pos=display.spell_bonus.position;pos.x=105;pos.y=80;a.color=0xffff0000;ascii.add_format(pos,software(),"Spell Card Bonus!");pos.y+=16;char text[32];std::snprintf(text,sizeof(text),"+%d",display.spell_bonus.argument);pos.x=(number(384)-Extended::from_int64(std::strlen(text))*number(28)).to_float()/2+32;a.scale_x=a.scale_y=2;a.color=0xffff8080;ascii.add_string(pos,text,software());a.scale_x=a.scale_y=1;a.color=-1;}
+    if(display.spell_bonus.display){Vec3 local=display.spell_bonus.position;auto& pos=presentation::render_only?local:display.spell_bonus.position;pos.x=105;pos.y=80;a.color=0xffff0000;ascii.add_format(pos,software(),"Spell Card Bonus!");pos.y+=16;char text[32];std::snprintf(text,sizeof(text),"+%d",display.spell_bonus.argument);pos.x=(number(384)-Extended::from_int64(std::strlen(text))*number(28)).to_float()/2+32;a.scale_x=a.scale_y=2;a.color=0xffff8080;ascii.add_string(pos,text,software());a.scale_x=a.scale_y=1;a.color=-1;}
     a.gui=0;
 }
 }

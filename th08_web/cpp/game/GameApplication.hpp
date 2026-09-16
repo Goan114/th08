@@ -161,6 +161,7 @@ class GameApplication {
     } supervisor_io{*this};
     ChainElement supervisor_job,ascii_calc,ascii_draw,background_draw,loading_draw,fps_draw;
     ScreenEffectState* transition_effect=nullptr;std::vector<u8> version;
+    Vec2 presentation_shake{};bool presentation_shake_valid=false;
     bool initialized=false,running=false,failed=false,stopping=false,game_attached=false,loading_gate=false,loading_hidden=false;
     FrameTiming timing;ResultContext last_game;
     AnmLoaded* load_animation(i32,const char*);bool enter_title(bool);bool enter_game();void leave_game();
@@ -175,7 +176,7 @@ public:
     GameApplication(ApplicationPlatform&,SpriteBackend&);
     ~GameApplication(){shutdown();}
     bool initialize(u32 performance_frequency=0);
-    bool update();bool draw();
+    bool update();bool draw(float presentation_alpha=1.0f,bool presentation_active=false,bool presentation_only=false);
     void shutdown();bool save_score();
     bool finalize_replay(i32 slot,const char* name){if(!game.recording.ready()||(game.globals.game_flags&8)||slot<1||slot>15||!name)return false;last_game=result_context();save_replay(slot,name);return !invalid();}
     bool active()const{return running;}

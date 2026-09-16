@@ -2,12 +2,23 @@
 #include "PlayerBombNames.hpp"
 #include "AnmTransitions.hpp"
 #include "GameMath.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {float raw_float(u32 bits){float value;std::memcpy(&value,&bits,4);return value;}Vec3 add(const Vec3& a,const Vec3& b){return {Scalar::add(a.x,b.x),Scalar::add(a.y,b.y),Scalar::add(a.z,b.z)};}}
+void PlayerBombPatterns::snapshot_presentation(){for(u32 i=0;i<128;++i){const auto& o=objects.objects[i];presentation_previous[i]={o.position,o.angle,o.state,o.timer.current,o.animation[0].scriptIndex};}}
+Vec3 PlayerBombPatterns::presentation_position(u32 index)const{
+    if(index>=128||!presentation::active)return index<128?objects.objects[index].position:Vec3{};const auto& o=objects.objects[index];const auto& p=presentation_previous[index];
+    const float dx=o.position.x-p.position.x,dy=o.position.y-p.position.y;if(p.state!=o.state||p.script!=o.animation[0].scriptIndex||o.timer.current<p.age||dx*dx+dy*dy>=16384.0f)return o.position;
+    return {presentation::lerp(p.position.x,o.position.x),presentation::lerp(p.position.y,o.position.y),presentation::lerp(p.position.z,o.position.z)};
+}
+float PlayerBombPatterns::presentation_angle(u32 index)const{
+    if(index>=128||!presentation::active)return index<128?objects.objects[index].angle:0;const auto& o=objects.objects[index];const auto& p=presentation_previous[index];if(p.state!=o.state||p.script!=o.animation[0].scriptIndex||o.timer.current<p.age)return o.angle;
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=o.angle-p.angle;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(p.angle+delta*presentation::alpha,0);
+}
 void PlayerBombPatterns::begin(PlayerBombKind kind,i32 sprite,i32 duration,i32 invincibility,i32 variant){begin_player_bomb(objects,bomb,life,movement.position,sprite,player_bomb_name(kind),duration,invincibility,variant,actions);}
 void PlayerBombPatterns::step(AnmVm* vm,u32 count){for(u32 i=0;i<count;++i)if(vm[i].scriptIndex>=0)actions.step_animation(vm[i]);}
-void PlayerBombPatterns::tint(u32 color){actions.background_color(player_bomb_color(color,bomb.timer,bomb.duration));}
-bool PlayerBombPatterns::update(PlayerBombKind kind){switch(kind){case PlayerBombKind::Youmu:if(!frame.main_animation)return false;youmu(false);break;case PlayerBombKind::YoumuLast:if(!frame.main_animation)return false;youmu(true);break;case PlayerBombKind::Yuyuko:yuyuko(false);break;case PlayerBombKind::YuyukoLast:yuyuko(true);break;case PlayerBombKind::Sakuya:sakuya(false);break;case PlayerBombKind::SakuyaLast:sakuya(true);break;case PlayerBombKind::Remilia:if(!frame.options)return false;remilia(false);break;case PlayerBombKind::RemiliaLast:if(!frame.options)return false;remilia(true);break;case PlayerBombKind::Alice:if(!frame.options)return false;alice(false);break;case PlayerBombKind::AliceLast:if(!frame.options)return false;alice(true);break;case PlayerBombKind::Reimu:reimu(false);break;case PlayerBombKind::ReimuLast:reimu(true);break;case PlayerBombKind::Marisa:marisa(false);break;case PlayerBombKind::MarisaLast:marisa(true);break;case PlayerBombKind::Yukari:yukari(false);break;case PlayerBombKind::YukariLast:yukari(true);break;case PlayerBombKind::LastWord:last_word();break;default:return false;}return true;}
+void PlayerBombPatterns::tint(u32 color){if(!presentation::render_only)actions.background_color(player_bomb_color(color,bomb.timer,bomb.duration));}
+bool PlayerBombPatterns::update(PlayerBombKind kind){snapshot_presentation();switch(kind){case PlayerBombKind::Youmu:if(!frame.main_animation)return false;youmu(false);break;case PlayerBombKind::YoumuLast:if(!frame.main_animation)return false;youmu(true);break;case PlayerBombKind::Yuyuko:yuyuko(false);break;case PlayerBombKind::YuyukoLast:yuyuko(true);break;case PlayerBombKind::Sakuya:sakuya(false);break;case PlayerBombKind::SakuyaLast:sakuya(true);break;case PlayerBombKind::Remilia:if(!frame.options)return false;remilia(false);break;case PlayerBombKind::RemiliaLast:if(!frame.options)return false;remilia(true);break;case PlayerBombKind::Alice:if(!frame.options)return false;alice(false);break;case PlayerBombKind::AliceLast:if(!frame.options)return false;alice(true);break;case PlayerBombKind::Reimu:reimu(false);break;case PlayerBombKind::ReimuLast:reimu(true);break;case PlayerBombKind::Marisa:marisa(false);break;case PlayerBombKind::MarisaLast:marisa(true);break;case PlayerBombKind::Yukari:yukari(false);break;case PlayerBombKind::YukariLast:yukari(true);break;case PlayerBombKind::LastWord:last_word();break;default:return false;}return true;}
 bool PlayerBombPatterns::draw(PlayerBombKind kind,const Vec2& offset){switch(kind){case PlayerBombKind::Youmu:draw_youmu(false);break;case PlayerBombKind::YoumuLast:draw_youmu(true);break;case PlayerBombKind::Yuyuko:draw_yuyuko(false,offset);break;case PlayerBombKind::YuyukoLast:draw_yuyuko(true,offset);break;case PlayerBombKind::Sakuya:draw_sakuya(false,offset);break;case PlayerBombKind::SakuyaLast:draw_sakuya(true,offset);break;case PlayerBombKind::Remilia:tint(0x80d02020);break;case PlayerBombKind::RemiliaLast:tint(0x80f00000);break;case PlayerBombKind::Alice:tint(0x80404040);break;case PlayerBombKind::AliceLast:draw_alice();break;case PlayerBombKind::Reimu:draw_reimu(false,offset);break;case PlayerBombKind::ReimuLast:draw_reimu(true,offset);break;case PlayerBombKind::Marisa:case PlayerBombKind::MarisaLast:return draw_marisa(offset);case PlayerBombKind::Yukari:tint(0x80404040);break;case PlayerBombKind::YukariLast:draw_yukari(offset);break;case PlayerBombKind::LastWord:{u32 color=0x80404040;if(bomb.timer.current>=60){const u32 component=u32(wrapping_add(signed_bits(u32(wrapping_sub(bomb.timer.current,60))*176)/60,64));color=0x80000000|(component<<16)|(component<<8)|component;}tint(color);break;}default:return false;}return true;}
 void PlayerBombPatterns::marisa(bool last){
     auto& object=objects.objects[0];
@@ -63,13 +74,13 @@ void PlayerBombPatterns::last_word(){
 }
 bool PlayerBombPatterns::draw_marisa(const Vec2& offset){
     tint(0x80404040);const float step=raw_float(0x3e567750);
-    for(i32 i=0;i<5;++i){auto& vm=objects.objects[0].animation[i];if(!vm.loadedSprite)return false;
+    for(i32 i=0;i<5;++i){auto& source=objects.objects[0].animation[i];if(!source.loadedSprite)return false;AnmVm copy;if(presentation::render_only)copy=source;auto& vm=presentation::render_only?copy:source;
         float angle=(Extended::from_int(i)*number(step)-number(raw_float(0x3fc90fdb))-(number(step)+number(step))).to_float();if(angle<-3.1415927410125732f)angle=Scalar::add(angle,6.2831854820251465f);
         vm.pos=movement.position;vm.pos.x=(cosine(angle)*number(vm.loadedSprite->widthPx)*number(vm.scale.x)/number(2)+number(vm.pos.x)).to_float();vm.pos.y=(sine(angle)*number(vm.loadedSprite->widthPx)*number(vm.scale.x)/number(2)+number(vm.pos.y)).to_float();
         vm.rotation.z=angle;vm.updateRotation=1;vm.pos.x=Scalar::add(offset.x,vm.pos.x);vm.pos.y=Scalar::add(offset.y,vm.pos.y);vm.pos.z=0;actions.draw(vm,true);
     }return true;
 }
 void PlayerBombPatterns::draw_yukari(const Vec2& offset){
-    tint(0x802020d0);auto& object=objects.objects[0];for(i32 i=0;i<2;++i){auto& vm=object.animation[i];vm.pos=add(object.position,vm.pos2);vm.pos.x=Scalar::add(offset.x,vm.pos.x);vm.pos.y=Scalar::add(offset.y,vm.pos.y);vm.pos.z=i?0:.01f;actions.draw(vm,true);}
+    tint(0x802020d0);auto& object=objects.objects[0];const Vec3 position=presentation_position(0);for(i32 i=0;i<2;++i){auto& source=object.animation[i];AnmVm copy;if(presentation::render_only)copy=source;auto& vm=presentation::render_only?copy:source;vm.pos=add(position,vm.pos2);vm.pos.x=Scalar::add(offset.x,vm.pos.x);vm.pos.y=Scalar::add(offset.y,vm.pos.y);vm.pos.z=i?0:.01f;actions.draw(vm,true);}
 }
 }

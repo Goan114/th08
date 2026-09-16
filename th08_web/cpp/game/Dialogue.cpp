@@ -1,5 +1,6 @@
 // Naming and recovered algorithms informed by GensokyoClub/th08 (MIT).
 #include "Dialogue.hpp"
+#include "Presentation.hpp"
 #include <utility>
 namespace th08 {
 namespace {
@@ -8,7 +9,18 @@ constexpr i32 songs[9][3]={{1,2,0},{3,4,0},{5,6,0},{7,8,0},{7,9,0},{10,11,0},{12
 constexpr i32 clear_bonuses[]={1000000,1500000,2000000,2500000,2500000,3000000,4000000,6000000,6660000};
 }
 bool Dialogue::load(const u8* bytes,u32 size){release();if(!program.load(bytes,size))return false;state.file=program.bytes();state.message=-1;state.instruction=nullptr;return true;}
-void Dialogue::release(){program.clear();state.file=nullptr;}
+void Dialogue::release(){program.clear();state.file=nullptr;presentation_valid=false;}
+void Dialogue::snapshot_presentation(){
+    const auto sample=[](const AnmVm& vm){return PresentationVm{vm.pos,vm.pos2,vm.scriptIndex,vm.visible};};
+    for(u32 i=0;i<4;++i)presentation_portraits[i]=sample(state.portraits[i]);for(u32 i=0;i<2;++i){presentation_lines[i]=sample(state.lines[i]);presentation_intro[i]=sample(state.intro[i]);}
+    presentation_timer=state.timer.value().to_float();presentation_message=state.message;presentation_valid=true;
+}
+AnmVm Dialogue::presentation_vm(const AnmVm& source,const PresentationVm& before)const{
+    AnmVm draw=source;if(!presentation::active||!presentation_valid||presentation_message!=state.message||before.script!=source.scriptIndex||before.visible!=source.visible)return draw;
+    const float dx=source.pos.x-before.pos.x,dy=source.pos.y-before.pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp(before.pos.x,source.pos.x),presentation::lerp(before.pos.y,source.pos.y),presentation::lerp(before.pos.z,source.pos.z)};
+    const float ox=source.pos2.x-before.pos2.x,oy=source.pos2.y-before.pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp(before.pos2.x,source.pos2.x),presentation::lerp(before.pos2.y,source.pos2.y),presentation::lerp(before.pos2.z,source.pos2.z)};
+    return draw;
+}
 bool Dialogue::start(AnmVm& vm,AnmLoaded* file,i32 script){
     if(!file||script<0||u32(script)>=file->scriptCount)return false;vm.scriptIndex=i16(script);executor.start(*file,vm,file->scripts[script]);return true;
 }
@@ -66,6 +78,7 @@ bool Dialogue::stage_results(){
 }
 i32 Dialogue::update(){
     if(state.message<0)return -1;
+    snapshot_presentation();
     if(state.ignore_wait)--state.ignore_wait;MessageInstruction instruction;if(!program.instruction(state.instruction,instruction))return invalid();
     if(state.skippable&&(context.input&256))state.timer.set(instruction.time);
     if(context.player_state!=2)actions.collect_items();
@@ -122,9 +135,11 @@ animate:
 }
 i32 Dialogue::draw(){
     if(state.message<0)return -1;
-    const float height=state.timer.current<60?(number(state.timer.value().to_float())*number(48)/number(60)).to_float():48;
-    for(i32 first:{0,2}){auto& a=state.portraits[first];auto& b=state.portraits[first+1];if(a.pos.z>=b.pos.z){renderer.draw_no_rotation(a);renderer.draw_no_rotation(b);}else{renderer.draw_no_rotation(b);renderer.draw_no_rotation(a);}}
+    float timer=state.timer.value().to_float();if(presentation::active&&presentation_valid&&presentation_message==state.message)timer=presentation::lerp(presentation_timer,timer);
+    const float height=timer<60?(number(timer)*number(48)/number(60)).to_float():48;
+    AnmVm portraits[4];for(u32 i=0;i<4;++i)portraits[i]=presentation_vm(state.portraits[i],presentation_portraits[i]);
+    for(i32 first:{0,2}){auto& a=portraits[first];auto& b=portraits[first+1];if(a.pos.z>=b.pos.z){renderer.draw_no_rotation(a);renderer.draw_no_rotation(b);}else{renderer.draw_no_rotation(b);renderer.draw_no_rotation(a);}}
     renderer.flush();if(state.textbox_visible)renderer.draw_dialogue_background(Scalar::add(context.arcade_x,16),384,(number(context.arcade_x)+number(384)-number(16)).to_float(),Scalar::add(384,height));
-    for(auto& vm:state.lines)renderer.draw_no_rotation(vm);for(auto& vm:state.intro)renderer.draw_no_rotation(vm);return 0;
+    for(u32 i=0;i<2;++i){auto vm=presentation_vm(state.lines[i],presentation_lines[i]);renderer.draw_no_rotation(vm);}for(u32 i=0;i<2;++i){auto vm=presentation_vm(state.intro[i],presentation_intro[i]);renderer.draw_no_rotation(vm);}return 0;
 }
 }

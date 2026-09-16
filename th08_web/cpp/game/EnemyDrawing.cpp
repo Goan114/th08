@@ -1,5 +1,6 @@
 #include "EnemyDrawing.hpp"
 #include "GameMath.hpp"
+#include "Presentation.hpp"
 #include <cmath>
 namespace th08 {
 namespace {
@@ -14,8 +15,28 @@ Extended middle_angle(float a,float b){
     else{direct=Scalar::sub(b,a);wrapped=(number(a)+number(6.283185482025147f)-number(b)).to_float();}
     return number(wrapped<=direct?wrapped:direct)*number(.5f)+number(a);
 }
-bool trail_strip(EclVm& enemy,EnemyDrawActions& actions){
-    auto& trail=enemy.trail;auto& vm=enemy.animation[0];
+struct RenderOnlyEnemyRestore {
+    EclVm& enemy;bool active=false,invalid=false;EclVm::Failure failure=EclVm::Failure::None;std::array<SpriteVertex,194> vertices{};
+    explicit RenderOnlyEnemyRestore(EclVm& e):enemy(e),active(presentation::render_only){if(active){invalid=e.invalid;failure=e.failure;std::memcpy(vertices.data(),e.trail.vertices,sizeof(e.trail.vertices));}}
+    ~RenderOnlyEnemyRestore(){if(active){enemy.invalid=invalid;enemy.failure=failure;std::memcpy(enemy.trail.vertices,vertices.data(),sizeof(enemy.trail.vertices));}}
+};
+void retain_enemy_draw_state(EclVm& enemy,const Vec2& offset){
+    auto& main=enemy.animation[0];const auto satellite=[&](u32 index){auto& vm=enemy.animation[index];if(vm.scriptIndex<0)return;if(vm.type)rotate(vm,index==1?enemy.direction.z:-enemy.direction.z);place(vm,enemy.resolved_position,(enemy.flags2&0x100)?main.pos2:vm.pos2,offset,.3f);};
+    satellite(1);if(enemy.flags&0x2000000)rotate(main,enemy.direction.z);place(main,enemy.resolved_position,main.pos2,offset,.25f);
+    auto& trail=enemy.trail;if(trail.flags&&trail.length<=96&&trail.step>0&&!(trail.flags&8)){
+        const Vec2 scale=main.scale;const ZunColor color=main.color1;
+        for(i32 j=trail.length-1;j>0;j-=trail.step)if(!(trail.points[j].position.x<-990)){
+            if(enemy.flags&0x2000000)rotate(main,trail.points[j].angle);
+            if(trail.flags&2)main.scale.x=(number(scale.x)-Extended::from_int(j)*number(scale.x)/Extended::from_int(trail.length)).to_float();
+            if(trail.flags&4)main.color1.a=u8(color.a-i32(color.a)*j/trail.length);
+            place(main,trail.points[j].position,main.pos2,offset,.3f);
+        }
+        main.scale=scale;main.color1=color;
+    }
+    satellite(2);
+}
+bool trail_strip(EclVm& enemy,AnmVm& vm,EnemyDrawActions& actions){
+    auto& trail=enemy.trail;
     i32 count=0;for(i32 j=0;j<trail.length&&!(trail.points[j].position.x<-990);j+=trail.step)count+=2;
     if(count<=2)return true;if(!vm.loadedSprite){enemy.invalid=true;enemy.failure=EclVm::Failure::MissingAnimation;return false;}
     const auto& sprite=*vm.loadedSprite;
@@ -46,10 +67,12 @@ bool trail_strip(EclVm& enemy,EnemyDrawActions& actions){
     if(count>2)actions.strip(vm,trail.vertices,count);return true;
 }
 bool draw_enemy(EclVm& enemy,const Vec2& offset,EnemyDrawActions& actions){
-    auto& main=enemy.animation[0];
-    const auto satellite=[&](u32 index){auto& vm=enemy.animation[index];if(vm.scriptIndex<0)return;if(vm.type)rotate(vm,index==1?enemy.direction.z:-enemy.direction.z);place(vm,enemy.resolved_position,(enemy.flags2&0x100)?main.pos2:vm.pos2,offset,.3f);actions.sprite(vm);};
-    satellite(1);if(enemy.flags&0x2000000)rotate(main,enemy.direction.z);
-    place(main,enemy.resolved_position,main.pos2,offset,.25f);
+    RenderOnlyEnemyRestore restore(enemy);
+    AnmVm copies[3];AnmVm* vms=enemy.animation;if(presentation::render_only){for(u32 i=0;i<3;++i)copies[i]=enemy.animation[i];vms=copies;}
+    auto& main=vms[0];const Vec3 draw_position=actions.position(enemy);const float draw_direction=actions.direction(enemy);
+    const auto satellite=[&](u32 index){auto& vm=vms[index];if(vm.scriptIndex<0)return;if(vm.type)rotate(vm,index==1?draw_direction:-draw_direction);place(vm,draw_position,(enemy.flags2&0x100)?main.pos2:vm.pos2,offset,.3f);actions.sprite(vm);};
+    satellite(1);if(enemy.flags&0x2000000)rotate(main,draw_direction);
+    place(main,draw_position,main.pos2,offset,.25f);
     auto& trail=enemy.trail;
     if(trail.flags){
         if(trail.length>96||trail.step<=0){enemy.invalid=true;return false;}
@@ -61,13 +84,25 @@ bool draw_enemy(EclVm& enemy,const Vec2& offset,EnemyDrawActions& actions){
                 if(trail.flags&4)main.color1.a=u8(color.a-i32(color.a)*j/trail.length);
                 place(main,trail.points[j].position,main.pos2,offset,.3f);actions.sprite(main);
             }
-        }else if(!trail_strip(enemy,actions))return false;
+        }else if(!trail_strip(enemy,main,actions))return false;
         main.scale=scale;main.color1=color;
     }
     // Position and rotation deliberately retain the final trail sample.
     if(!(trail.flags&16)&&!(enemy.flags&32))actions.sprite(main);
-    satellite(2);return true;
+    satellite(2);if(presentation::active&&!presentation::render_only)retain_enemy_draw_state(enemy,offset);return true;
 }
+}
+void EnemyDrawing::snapshot(EclVm* const* layers){
+    previous.clear();for(i32 layer=0;layer<4;++layer){u32 count=0;for(auto* enemy=layers[layer];enemy&&++count<=480;enemy=enemy->next_in_layer)previous.emplace(enemy,PresentationSample{enemy->resolved_position,enemy->direction.z,enemy->lifetime.current,enemy->main_context.subroutine,true});}
+}
+Vec3 EnemyDrawing::position(EclVm& enemy){
+    if(!presentation::active)return enemy.resolved_position;const auto found=previous.find(&enemy);if(found==previous.end())return enemy.resolved_position;
+    const auto& before=found->second;const float dx=enemy.resolved_position.x-before.position.x,dy=enemy.resolved_position.y-before.position.y;if(enemy.lifetime.current<before.age||enemy.main_context.subroutine!=before.subroutine||dx*dx+dy*dy>=16384.0f)return enemy.resolved_position;
+    return {presentation::lerp(before.position.x,enemy.resolved_position.x),presentation::lerp(before.position.y,enemy.resolved_position.y),presentation::lerp(before.position.z,enemy.resolved_position.z)};
+}
+float EnemyDrawing::direction(EclVm& enemy){
+    if(!presentation::active)return enemy.direction.z;const auto found=previous.find(&enemy);if(found==previous.end()||enemy.lifetime.current<found->second.age||enemy.main_context.subroutine!=found->second.subroutine)return enemy.direction.z;
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=enemy.direction.z-found->second.direction;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(found->second.direction+delta*presentation::alpha,0);
 }
 bool draw_enemy_layers(EclVm* const* layers,i32 first,i32 last,const Vec2& offset,EnemyDrawActions& actions){
     if(first<0||last>4)return false;

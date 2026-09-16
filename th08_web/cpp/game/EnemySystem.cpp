@@ -1,4 +1,5 @@
 #include "EnemySystem.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 EnemySystem::EnemySystem(EclProgram& program,EclExecutor& executor,const FrameTiming& timing,Rng& random,GameGlobals& numbers,GameValues& values,GameRank& rank,GameGauge& gauge,PlayerSimulation& player,EffectSystem& effects,ItemSystem& items,BulletManagerState& bullets,AsciiManager& ascii,AsciiContext& ascii_context,AnmRenderer& renderer,EnemySystemActions& actions)
     :population(executor,program),globals(executor.game_state()),numbers(numbers),values(values),player(player),effects(effects),items(items),projectiles(bullets),ascii(ascii),ascii_context(ascii_context),actions(actions),simulation(state,input,population,program,executor,timing,random,numbers,values,rank,gauge,player.status().shots.regions,player.status().frame,*this),drawing(renderer){globals.values=&numbers;globals.ascii=&ascii.state;globals.scene_actions=this;}
@@ -38,10 +39,10 @@ i32 EnemySystem::barrier(BulletState& b){publish_player();const i32 result=playe
 bool EnemySystem::cancel_projectiles(i32 maximum,bool reward,i32& score){publish_player();const bool result=cancel_projectiles_for_score(projectiles,maximum,reward,player.status().cancel_item,*this,score);failed|=!result;return result&&!failed;}
 EnemySpawnResult EnemySystem::spawn(const TimelineSpawn& request){read_player();population.initial_time_items=time_item_threshold;auto* enemy=population.spawn(request);publish_player();failed|=enemy->invalid;return {enemy,population.spawn_failed};}
 JobResult EnemySystem::update(){
-    if(failed)return JobResult::Error;read_player();population.initial_time_items=time_item_threshold;
+    if(failed)return JobResult::Error;drawing.snapshot(state.layers);read_player();population.initial_time_items=time_item_threshold;
     const auto result=simulation.update();publish_player();return failed?JobResult::Error:result;
 }
-bool EnemySystem::draw(i32 first,i32 last){failed|=!drawing.draw(state.layers,first,last,ascii_context.arcade_origin);return !failed;}
+bool EnemySystem::draw(i32 first,i32 last){const bool ok=drawing.draw(state.layers,first,last,ascii_context.arcade_origin);if(!presentation::render_only)failed|=!ok;return presentation::render_only?true:!failed;}
 void EnemySystem::screen(i32 type,i32 duration,i32 a,i32 b,i32 c,i32 priority){
     if(!native_scene){failed=true;return;}publish_player();native_scene->screen.context.timing=native_scene->timing;native_scene->screen.create(ScreenEffectType(type),duration,a,b,c,priority);
 }

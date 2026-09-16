@@ -1,5 +1,6 @@
 #pragma once
 #include "BulletState.hpp"
+#include <array>
 namespace th08 {
 struct BulletDrawingActions {
     virtual ~BulletDrawingActions()=default;
@@ -13,9 +14,13 @@ struct BulletDrawingActions {
 // laser origins and the deathbomb tint shared with the item/effect passes.
 class BulletDrawing {
     BulletManagerState& state;BulletDrawingActions& actions;
+    struct BulletPresentation {Vec3 position{};float angle=0;int age=0;u16 state=0;bool active=false;};
+    struct LaserPresentation {Vec3 position{};float angle=0,start_offset=0,end_offset=0;int age=0;bool active=false;};
+    std::array<BulletPresentation,1537> previous_bullets{};std::array<LaserPresentation,256> previous_lasers{};
     void laser(LaserState&,const Vec2&);
 public:
     BulletDrawing(BulletManagerState& s,BulletDrawingActions& a):state(s),actions(a){}
+    void snapshot();
     void bullet(BulletState&,const Vec2&);
     bool draw(u32 game_flags,const Vec2& arcade);
 };

@@ -1,4 +1,5 @@
 #include "ScreenEffects.hpp"
+#include "Presentation.hpp"
 #include <algorithm>
 namespace th08 {
 namespace {Extended integer(i32 value){return Extended::from_int(value);}}
@@ -10,6 +11,7 @@ void ScreenEffects::shake(float amplitude){
     }
 }
 JobResult ScreenEffects::calculate(ScreenEffectState& s){
+    presentation_previous[&s]={s.alpha,s.timer.current,s.phase,s.a,s.type};
     auto& t=s.timer;auto& c=context;
     switch(s.type){
     case ScreenEffectType::FadeIn:
@@ -56,7 +58,8 @@ JobResult ScreenEffects::draw(ScreenEffectState& s){
     case ScreenEffectType::MenuFullFade:full=true;break;
     default:break;
     }
-    const u32 color=(u32(s.alpha)<<24)|(s.type==ScreenEffectType::Flash?u32(s.b)&0xffffff:u32(s.a));
+    i32 draw_alpha=s.alpha;if(presentation::active){const auto found=presentation_previous.find(&s);if(found!=presentation_previous.end()){const auto& before=found->second;if(before.type==s.type&&before.phase==s.phase&&before.a==s.a&&s.timer.current>=before.timer)draw_alpha=i32(std::clamp(presentation::lerp(float(before.alpha),float(s.alpha)),0.0f,255.0f));}}
+    const u32 color=(u32(draw_alpha)<<24)|(s.type==ScreenEffectType::Flash?u32(s.b)&0xffffff:u32(s.a));
     const u32 colors[4]{color,color,color,color};renderer.draw_rectangle(full?0:32,full?0:16,full?640:416,full?480:464,colors);return JobResult::Continue;
 }
 ScreenEffectState* ScreenEffects::create(ScreenEffectType type,i32 duration,i32 a,i32 b,i32 c,i32 priority){
@@ -72,6 +75,7 @@ JobResult ScreenEffects::draw_callback(void* p){auto& i=*static_cast<Instance*>(
 i32 ScreenEffects::added_callback(void* p){static_cast<Instance*>(p)->state.timer.set(0);return 0;}
 i32 ScreenEffects::deleted_callback(void* p){
     auto* i=static_cast<Instance*>(p);auto& owner=*i->owner;i->state.calculation->deleted=nullptr;
+    owner.presentation_previous.erase(&i->state);
     owner.chain.cut(i->state.drawing);i->state.drawing=nullptr;
     owner.active.erase(std::remove(owner.active.begin(),owner.active.end(),i),owner.active.end());delete i;return 0;
 }

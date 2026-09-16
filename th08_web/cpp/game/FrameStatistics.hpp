@@ -19,9 +19,12 @@ struct FrameStatisticsContext {
 // records. This does not change the game's fixed update rate.
 class FrameStatistics {
     AsciiManager& ascii;FrameClock& clock;
+    u32 presentation_origin=0,presentation_frames=0;bool presentation_started=false;
 public:
     FrameStatisticsState state;FrameStatisticsContext context;
     FrameStatistics(AsciiManager& ascii,FrameClock& clock):ascii(ascii),clock(clock){}
     void calculate(bool draw);
+    void draw_text();
+    void presentation_frame();
 };
 }

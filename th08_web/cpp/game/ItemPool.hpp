@@ -1,6 +1,7 @@
 #pragma once
 #include "AnmLayout.hpp"
 #include "GameValues.hpp"
+#include <array>
 namespace th08 {
 struct ItemState {
     AnmVm animation;Vec3 position,velocity,target;Timer timer;
@@ -21,6 +22,8 @@ struct ItemPoolActions {
 };
 class ItemPool {
     ItemPoolState& state;Rng& rng;ItemPoolActions& actions;
+    struct PresentationSample {Vec3 position{};i32 age=0;i8 type=0;bool active=false;};
+    std::array<PresentationSample,ItemPoolState::capacity+1> previous{};
 public:
     ItemPool(ItemPoolState& s,Rng& r,ItemPoolActions& a):state(s),rng(r),actions(a){}
     ItemState* spawn(const Vec3& position,i32 type,i32 mode,i32 power,i8 player_state);
@@ -29,6 +32,7 @@ public:
     void cancel_homing();
     void convert_power(ItemState* except);
     i32 time_orb_count()const;
+    void snapshot();
     void draw(const Vec2& offset);
 };
 void point_item_extend_threshold(GameGlobals&,i32 difficulty)noexcept;

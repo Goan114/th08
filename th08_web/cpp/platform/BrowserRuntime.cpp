@@ -1,6 +1,7 @@
 #include "BrowserRuntime.hpp"
 #include "PlatformDevices.hpp"
 #include "GameAudioManager.hpp"
+#include "../game/Presentation.hpp"
 #include <algorithm>
 #include <cstdio>
 #ifdef TH_SDL3
@@ -86,7 +87,11 @@ void BrowserRuntime::flush(){app.renderer.flush();graphics_device().flush();}
 void BrowserRuntime::readback(u32 h){flush();graphics_device().read(h);}
 const BrowserTexture* BrowserRuntime::texture(u32 h){const auto* r=app.textures.get(h);if(!r)return nullptr;const auto& i=r->image;texture_result={h,i.width,i.height,i.format,i.width*TexturePixels::describe(i.format).bytes,ptr(i.pixels.data()),u32(i.pixels.size()),r->revision};return &texture_result;}
 void BrowserRuntime::begin_frame(){}
-bool BrowserRuntime::present(){flush();captured=false;const bool presented=graphics_device().present(back);finish_capture();return presented&&!capture_failed;}
+bool BrowserRuntime::present(){
+    flush();
+    if(presentation::render_only)return graphics_device().present(back)&&!capture_failed;
+    captured=false;const bool presented=graphics_device().present(back);finish_capture();return presented&&!capture_failed;
+}
 void BrowserRuntime::discard_graphics(){app.renderer.clear();graphics_device().discard();}
 void BrowserRuntime::reset_device(){
     flush();const auto options=app.session.display_config.options;

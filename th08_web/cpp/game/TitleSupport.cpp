@@ -13,9 +13,14 @@ bool TitleContext::IsExtraUnlocked()const{for(i32 i=0;i<4;++i)if(IsExtraUnlocked
 bool TitleContext::IsSpellPracticeUnlocked()const{for(i32 i=0;i<4;++i)if(IsSpellPracticeUnlockedForCharacter(i))return true;return false;}
 bool TitleContext::IsExtraUnlockedWithAllTeams()const{for(i32 i=0;i<4;++i)if(!IsExtraUnlockedForCharacter(i))return false;return true;}
 TitleMenus::~TitleMenus(){release();}
-void TitleMenus::release(){close_replay();delete[] state.vms;state.vms=nullptr;}
+void TitleMenus::release(){close_replay();delete[] state.vms;state.vms=nullptr;presentation_previous.clear();presentation_help_vm=nullptr;presentation_valid=false;}
+void TitleMenus::snapshot_presentation(){
+    presentation_previous.resize(std::max(0,state.vmCount));for(i32 i=0;i<state.vmCount;++i)presentation_previous[i]={state.vms[i].pos,state.vms[i].pos2,state.vms[i].scriptIndex};
+    presentation_help_vm=state.currentHelpTextVm;if(presentation_help_vm)presentation_help={presentation_help_vm->pos,presentation_help_vm->pos2,presentation_help_vm->scriptIndex};presentation_valid=true;
+}
 JobResult TitleMenus::update(){
     if(state.state!=TitleScreenState_Ready)return state.state==TitleScreenState_Close?JobResult::Exit:JobResult::Continue;
+    snapshot_presentation();
     i32 result=1;switch(state.currentScreen){
     case TitleCurrentScreen_StartMenu:result=OnUpdateStartMenu();break;
     case TitleCurrentScreen_Option:result=OnUpdateOptions();break;
@@ -30,7 +35,7 @@ JobResult TitleMenus::update(){
     }
     execute_animations();return JobResult(result);
 }
-void TitleMenus::initialize_vms(AnmLoaded& file){state.titleAnm=&file;delete[] state.vms;state.vmCount=142;state.vms=new AnmVm[state.vmCount];ExecuteAnmIdxArray(state.vms,0,state.vmCount);}
+void TitleMenus::initialize_vms(AnmLoaded& file){state.titleAnm=&file;delete[] state.vms;state.vmCount=142;state.vms=new AnmVm[state.vmCount];ExecuteAnmIdxArray(state.vms,0,state.vmCount);snapshot_presentation();}
 void TitleMenus::initialize_help(AnmLoaded& file){
     context.textAnm=&file;
     for(i32 i=0;i<14;++i){auto& vm=state.helpTextVms[i];vm.scriptIndex=9;executor.start(file,vm,file.scripts[9]);file.SetSprite(&vm,vm.activeSpriteIndex+i);

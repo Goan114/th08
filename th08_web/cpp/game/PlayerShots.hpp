@@ -2,6 +2,7 @@
 #include "ShotResource.hpp"
 #include "AnmLayout.hpp"
 #include "DamageRegions.hpp"
+#include <array>
 namespace th08 {
 struct PlayerShot {
     AnmVm animation;Vec3 position,history[32],size,velocity;float reserved448=0,speed=0,angle=0;
@@ -48,6 +49,9 @@ public:
     void draw_trail(PlayerShot& shot,const Vec2& screen_offset);
 private:
     PlayerShotsState& state;Rng& rng;
+    struct PresentationSample {Vec3 position{};float angle=0;i32 age=0;i16 state=0,kind=0;bool active=false;};
+    std::array<PresentationSample,128> presentation_previous{};
+    void snapshot_presentation();
     void direction(PlayerShot& shot,float angle,float speed);
 };
 }

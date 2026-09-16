@@ -1,4 +1,5 @@
 #include "GameplayControl.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {
 template<class T,u32 N>bool outside(const T (&data)[N]){for(const auto value:data)if(value<6543||value>106543)return true;return false;}
@@ -70,5 +71,5 @@ JobResult GameplayControl::update(){
         if((count>=320&&s.slow_frames%3==0)||(count<320&&count>=224&&s.slow_frames%4==0)||(count<224&&count>=128&&s.slow_frames%5==0)){s.sticky_input=true;return JobResult::Break;}if(count<128)s.slow_frames=0;}
     values.tampered();++s.play_frames;return JobResult::Continue;
 }
-JobResult GameplayControl::draw(){if(menu.pause_state)menu.pause_state=2;if(menu.supervisor_state!=2||(game.game_flags&0x60)==0x20||state.load_state)return JobResult::Break;return JobResult::Continue;}
+JobResult GameplayControl::draw(){if(!presentation::render_only&&menu.pause_state)menu.pause_state=2;if(menu.supervisor_state!=2||(game.game_flags&0x60)==0x20||state.load_state)return JobResult::Break;return JobResult::Continue;}
 }

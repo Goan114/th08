@@ -5,6 +5,7 @@
 #include "EffectBomb.hpp"
 #include "AnmExecutor.hpp"
 #include "GameValues.hpp"
+#include <array>
 namespace th08 {
 struct EffectPoolState {
     i32 cursor;u32 reserved4;i32 active_count;u32 reserved0c[4];
@@ -16,6 +17,14 @@ static_assert(offsetof(EffectPoolState,sentinels)==0x89f5c&&offsetof(EffectPoolS
 struct EffectDefinition {i32 script;EffectUpdate update,initialize;};
 class EffectSystem {
     AnmExecutor& anm;AnmRenderer& renderer;GameValues& values;u16& replay_flags;
+    struct PresentationSample {
+        Vec3 position{},center{};float radius=0,angle=0,width=0,height=0,angle_y=0;
+        i32 age=0;u8 kind=0;bool active=false;
+    };
+    std::array<PresentationSample,654> presentation_previous{};
+    void snapshot_presentation();
+    Vec3 presentation_position(EffectState&)const;
+    void presentation_geometry(const EffectState& source,EffectState& draw)const;
     void begin(EffectState&,i32 kind,u32 color,bool depth);
     void initialize(EffectState&,i32 kind);
     void draw_list(u32 index,float depth,bool offset_before_depth);

@@ -1,4 +1,5 @@
 #include "SpellDrawing.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {
 float add(float x,float delta){return Scalar::add(x,delta);}
@@ -9,13 +10,15 @@ bool SpellDrawing::digit(i32 value){
 }
 bool SpellDrawing::draw(){
     auto& v=state.spell_vms;auto& r=renderer;
+    AnmVm saved10,saved11,saved12;if(presentation::render_only){saved10=v[10];saved11=v[11];saved12=v[12];}
+    const auto restore=[&](){if(presentation::render_only){v[10]=saved10;v[11]=saved11;v[12]=saved12;}};
     if(v[0].visible){r.draw_no_rotation(v[0]);r.draw_no_rotation(v[2]);r.draw_2d(v[4]);}
     if(v[1].visible){
         const Vec3 saved=v[1].pos;v[1].pos={add(v[1].pos.x,v[1].pos2.x),add(v[1].pos.y,v[1].pos2.y),add(v[1].pos.z,v[1].pos2.z)};
         r.draw_no_rotation(v[1]);v[1].pos=saved;r.draw_no_rotation(v[3]);r.draw_2d(v[5]);
     }
     if(v[6].visible){v[10].pos=v[6].pos;v[10].pos.x=add(v[10].pos.x,-32);r.draw_no_rotation(v[10]);r.draw_2d(v[6]);}
-    if(!v[7].visible)return true;
+    if(!v[7].visible){restore();return true;}
     r.mix_enabled=true;r.mix_color=state.spell_panel_color;v[11].pos=v[7].pos;
     r.draw_no_rotation(v[11]);r.draw_2d(v[7]);r.draw_2d(v[8]);r.draw_2d(v[9]);r.draw_no_rotation(v[13]);
     bool valid=true;
@@ -36,6 +39,6 @@ bool SpellDrawing::draw(){
             pos.x=add(pos.x,32);three(signed_bits(history.captures[state.shot]));pos.x=add(pos.x,13);three(signed_bits(history.attempts[state.shot]));
         }
     }
-    r.mix_enabled=false;r.mix_color=0x80808080;return valid;
+    r.mix_enabled=false;r.mix_color=0x80808080;restore();return valid;
 }
 }

@@ -21,6 +21,11 @@ struct PlayerBombPatternActions:PlayerBombStartActions {
 class PlayerBombPatterns {
     PlayerBombObjects& objects;PlayerBombState& bomb;PlayerLifeState& life;PlayerLifeContext& context;
     PlayerMovementState& movement;PlayerBombContext& input;DamageRegions& regions;Rng& rng;PlayerBombPatternActions& actions;
+    struct PresentationSample {Vec3 position{};float angle=0;i32 state=0,age=0;i16 script=-1;};
+    PresentationSample presentation_previous[128]{};
+    void snapshot_presentation();
+    Vec3 presentation_position(u32 index)const;
+    float presentation_angle(u32 index)const;
     void begin(PlayerBombKind kind,i32 sprite,i32 duration,i32 invincibility,i32 variant);
     void step(AnmVm*,u32 count);
     void marisa(bool last);void yukari(bool last);void last_word();void reimu(bool last);void alice(bool last);void draw_alice();void remilia(bool last);

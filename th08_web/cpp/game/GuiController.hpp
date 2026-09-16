@@ -2,6 +2,7 @@
 #pragma once
 #include "Dialogue.hpp"
 #include "AsciiManager.hpp"
+#include <memory>
 namespace th08 {
 struct GuiContext {
     i32 difficulty=0;Vec3 player;
@@ -31,6 +32,17 @@ private:
     friend class GuiFlow;
     GuiState& gui;GuiImplState& display;DialogueContext& scene;GuiContext& context;
     GameGlobals& globals;GameValues& values;GameConfiguration& config;AnmExecutor& executor;AsciiManager& ascii;AnmRenderer& renderer;DialogueActions& actions;
+    struct PresentationState {
+        std::unique_ptr<GuiImplState> display;
+        GuiFormattedText bonus{},popup{},spell_bonus{};
+        float boss_life=0;u32 boss_opacity=0;bool boss_present=false;u8 boss_life_state=0;bool valid=false;
+    } presentation_state;
+    void snapshot_presentation();
+    AnmVm presentation_vm(const AnmVm&)const;
+    void draw_presented_no_rotation(AnmVm&);
+    void draw_presented_2d(AnmVm&);
+    void draw_presented_world(AnmVm&);
+    Vec3 presentation_text_position(const GuiFormattedText&,const GuiFormattedText&)const;
     bool start(AnmVm& vm,AnmLoaded* file,i32 script,bool reset_position=false);
     bool software()const{return context.graphics_options&257;}
 };
