@@ -58,4 +58,7 @@ test('managed DATA stays separate from immutable font resources',async()=>{
 test('options normalize invalid sensitivity and movement mode',()=>{
  const options=normalizeOptions({touchSensitivity:NaN,touchMovementMode:'invalid'});
  assert.equal(options.touchSensitivity,100);assert.equal(options.touchMovementMode,'touch');
+ assert.equal(normalizeOptions({touchSensitivity:50}).touchSensitivity,100);
+ assert.equal(normalizeOptions({touchSensitivity:99}).touchSensitivity,100);
+ assert.equal(normalizeOptions({touchSensitivity:350}).touchSensitivity,300);
 });

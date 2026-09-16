@@ -39,7 +39,7 @@ async function migrateSaves(){
 }
 async function mountData(){await mountManagedData(Module,{game,parentWindow:parent,query,emit});}
 async function installResources(resources=[]){return installHostResources(Module,resources,{game,emit});}
-function applyOptions(){applyTouchOptions(core,options);}
+function applyOptions(){applyTouchOptions(core,options);core.sdl_touch_display?.(options.alwaysHitbox?1:0);}
 function status(){return Array.from(new Int32Array(core.memory.buffer,core.sdl_game_status(),10));}
 function save(){if(app)core.save(app);return sync(false);}
 async function stop(){if(closing)return;closing=true;try{core.sdl_loop_stop();await save();core.sdl_game_close();window.dispatchEvent(new CustomEvent('touhou-midi-close'));await sync(false);app=0;launched=false;emit('exit',{code:0,status:'success'});}finally{closing=false;}}

@@ -9,5 +9,5 @@ struct PlayerFormActions {
     virtual void effect(i32 type,const Vec3& position,u32 color)=0;
     virtual AnmVm* focus_effect(const Vec3& position)=0;
 };
-void update_player_form(PlayerFormState&,PlayerMovementState&,PlayerOption* options,u8 character,u16 buttons,i32 bomb,i32 bomb_type,PlayerFormActions&);
+void update_player_form(PlayerFormState&,PlayerMovementState&,PlayerOption* options,u8 character,u16 buttons,i32 bomb,i32 bomb_type,bool always_hitbox,PlayerFormActions&);
 }

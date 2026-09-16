@@ -7,7 +7,7 @@ struct PlayerMotionState {
 };
 struct PlayerMotionInput {
     Vec2 minimum,extent{384,448};Vec3 enemy;i32 bomb=0,bomb_type=0;
-    u16 buttons=0;u8 character=0,gui_blocked=0,tampered=0,enemy_present=0,padding[2]{};
+    u16 buttons=0;u8 character=0,gui_blocked=0,tampered=0,enemy_present=0,always_hitbox=0,padding[1]{};
 };
 struct PlayerMotionActions:PlayerFormActions,PlayerMovementActions,PlayerOptionActions,PlayerGaugeActions {
     virtual void step_animation(AnmVm&)=0;

@@ -73,7 +73,7 @@ void GameplayScene::synchronize(){
     presentation.context.game_flags=globals.game_flags;presentation.context.current_spell=globals.current_spell;
 }
 JobResult GameplayScene::boundary(i32 phase){if(phase==11)session.stall_frames=enemies.state.frames;if(phase==15)publish_dialogue();synchronize();return invalid()?JobResult::Error:JobResult::Continue;}
-JobResult GameplayScene::update_player(){if(!player_services.prepare()||!player.update())return JobResult::Error;player_services.finish();synchronize();return invalid()?JobResult::Error:JobResult::Continue;}
+JobResult GameplayScene::update_player(){player_state.input.always_hitbox=always_hitbox;if(!player_services.prepare()||!player.update())return JobResult::Error;player_services.finish();synchronize();return invalid()?JobResult::Error:JobResult::Continue;}
 JobResult GameplayScene::update_ascii(){
     ascii.tick_popups(ascii_context,player.timing);if(menus.context.pause_state)menus.update_pause();if(menus.context.show_retry)menus.update_retry();
     globals.game_flags=menus.context.flags;globals.stage_completion=menus.context.show_retry;synchronize();ascii.tick_vms(ascii_context.demo);return animations.invalid?JobResult::Error:JobResult::Continue;

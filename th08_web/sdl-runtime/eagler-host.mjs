@@ -42,7 +42,7 @@ export function normalizeOptions(value={}) {
  const sensitivity=Number(value.touchSensitivity??100);
  return {...value,touchEnabled:!!value.touchEnabled,
   touchMovementMode:modes.includes(value.touchMovementMode)?value.touchMovementMode:'touch',
-  touchSensitivity:Number.isFinite(sensitivity)?Math.max(50,Math.min(300,sensitivity)):100};
+  touchSensitivity:Number.isFinite(sensitivity)?Math.max(100,Math.min(300,sensitivity)):100};
 }
 export function applyTouchOptions(core,options) {
  core.sdl_touch_options(!!options.touchEnabled,options.touchMovementMode==='touch-unlimited',options.touchSensitivity/100);
@@ -52,7 +52,7 @@ export function applyTouchOptions(core,options) {
 export function touchControls(core,options,message) {
  const c=message.controls??message,sensitivity=Number(c.touchSensitivity);
  // Frequent snapshots must not reconfigure the gesture/mode owner.
- if(Number.isFinite(sensitivity)&&sensitivity>=50&&sensitivity<=300&&sensitivity!==options.touchSensitivity){
+ if(Number.isFinite(sensitivity)&&sensitivity>=100&&sensitivity<=300&&sensitivity!==options.touchSensitivity){
   options.touchSensitivity=sensitivity;
   core.sdl_touch_options(!!options.touchEnabled,options.touchMovementMode==='touch-unlimited',sensitivity/100);
  }

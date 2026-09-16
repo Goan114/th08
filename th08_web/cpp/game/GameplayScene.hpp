@@ -107,7 +107,7 @@ public:
     i32 screen_counter=0;EnemyNativeScene native_scene;PlayerSceneWorld player_world;
     BackgroundFlow background_flow;BulletFlow bullet_flow;EnemyFlow enemy_flow;EffectFlow effect_flow;GuiFlow gui_flow;SpellFlow spell_flow;
     UiMenus menus;GameplayControl control;ReplayPlayback playback;ReplayRecording recording;u32 replay_stage_mask=0;
-    bool time_stopped=false,paused=false,retrying=false;
+    bool time_stopped=false,paused=false,retrying=false,always_hitbox=false;
     GameplayScene(GameplaySession&,TextureStore&,AnmLibrary&,AnmRenderer&,GameplayPlatform&,Chain* shared_chain=nullptr,AsciiManager* shared_ascii=nullptr);
     ~GameplayScene();
     bool load(const GameplayLoad&,bool initialize_values=false);void unload(bool keep_resources=false,bool release_resources=true);

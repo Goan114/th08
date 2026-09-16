@@ -2,7 +2,7 @@
 namespace th08 {
 void update_player_motion(PlayerMotionState& s,PlayerMotionInput& input,Timer& shooting,GameGauge& gauge,const ShotProfile& human,const ShotProfile& focused,const FrameTiming& timing,PlayerMotionActions& actions){
     s.movement.direction=player_direction(input.buttons);
-    update_player_form(s.form,s.movement,s.options,input.character,input.buttons,input.bomb,input.bomb_type,actions);
+    update_player_form(s.form,s.movement,s.options,input.character,input.buttons,input.bomb,input.bomb_type,input.always_hitbox!=0,actions);
     move_player(s.movement,human,focused,s.form.focused,input.character,input.buttons,input.minimum,input.extent,timing,&actions,false);
     PlayerOptionContext context{s.movement.position,s.movement.history[15],input.enemy,shooting,s.movement.direction,input.bomb,input.buttons,s.form.focused,input.enemy_present};
     PlayerOptions options(context);options.actions=&actions;

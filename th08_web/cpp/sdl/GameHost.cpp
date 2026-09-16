@@ -107,10 +107,11 @@ EX("sdl_key") void sdl_key(const char* code,u32 down){for(auto& key:keyboard_map
 EX("sdl_keys_clear") void sdl_keys_clear(){for(auto& key:keyboard_map)key.hosted=false;touch.reset();if(runtime)runtime->motion.target(0,0,0);}
 EX("sdl_touch") void sdl_touch(u32 type,i32 id,float x,float y){pointer(type,id,x,y);}
 EX("sdl_touch_cancel") void sdl_touch_cancel(){touch.cancel_transient();if(runtime)runtime->motion.target(0,0,0);}
-EX("sdl_touch_options") void sdl_touch_options(u32 on,u32 free,float speed){touch.enabled=on;touch.unlimited=free;touch.sensitivity=std::clamp(speed,.1f,5.f);if(!on)sdl_touch_cancel();}
+EX("sdl_touch_options") void sdl_touch_options(u32 on,u32 free,float speed){touch.enabled=on;touch.unlimited=free;touch.sensitivity=std::clamp(speed,1.f,3.f);if(!on)sdl_touch_cancel();}
 EX("sdl_touch_gestures") void sdl_touch_gestures(u32 two,u32 taps){touch.two_finger=two;touch.double_tap=taps;}
 EX("sdl_touch_mode") void sdl_touch_mode(u32 mode){if(touch.set_mode(static_cast<int>(mode))&&runtime)runtime->motion.target(0,0,0);}
 EX("sdl_touch_controls") void sdl_touch_controls(u32 fire,u32 focus,u32 bomb,u32 escape,float x,float y){touch.controls(fire,focus,bomb,escape,x,y);}
+EX("sdl_touch_display") void sdl_touch_display(u32 hitbox){if(runtime)runtime->app.game.always_hitbox=hitbox!=0;}
 EX("sdl_game_status") const i32* sdl_game_status(){static i32 out[10]{};if(runtime){out[0]=runtime->status(0);out[1]=runtime->status(3);out[2]=runtime->status(2)||runtime->status(4);out[3]=number(runtime->app.session.numbers.lives).truncate_int();out[4]=runtime->app.session.numbers.power;out[5]=touch.current_context();out[6]=touch.active();out[7]=touch.fire;out[8]=touch.focus;out[9]=frames;}return out;}
 }
 }
