@@ -32,6 +32,7 @@ void AsciiManager::direct_sprite(AnmVm& vm,i32 sprite){
 void AsciiManager::reset(){
     auto& s=state;
     presentation_boss_markers_valid=false;
+    std::memset(score_popup_previous,0,sizeof(score_popup_previous));for(auto& p:score_popup_previous)p.timer=-2;
     std::memset(&s.small_score_text,0,sizeof(AnmVm));std::memset(&s.popup_text,0,sizeof(AnmVm));std::memset(&s.large_text,0,sizeof(AnmVm));
     std::memset(s.strings,0,sizeof(s.strings));std::memset(&s.pause,0,sizeof(s.pause));std::memset(&s.retry,0,sizeof(s.retry));
     std::memset(s.score_popups,0,sizeof(s.score_popups));std::memset(s.time_popups,0,sizeof(s.time_popups));
@@ -57,7 +58,7 @@ void AsciiManager::set_gauge_interrupt(i32 interrupt){
 }
 void AsciiManager::tick_popups(const AsciiContext& c,const FrameTiming& timing){
     if(c.paused||c.retry||c.freeze_popups)return;
-    for(auto& p:state.score_popups)if(p.in_use){p.position.y=(number(p.position.y)-number(.5f)*number(timing.rate)).to_float();p.timer.tick(timing);if(p.timer.current>60)p.in_use=0;}
+    for(u32 i=0;i<723;++i){auto& p=state.score_popups[i];score_popup_previous[i]={p.position,p.timer.current,p.in_use,p.characters};if(p.in_use){p.position.y=(number(p.position.y)-number(.5f)*number(timing.rate)).to_float();p.timer.tick(timing);if(p.timer.current>60)p.in_use=0;}}
     for(auto& p:state.time_popups)if(p.in_use){p.timer.tick(timing);if(p.timer.current>90)p.in_use=0;}
 }
 void AsciiManager::tick_vms(bool demo){
@@ -82,7 +83,7 @@ i32 AsciiManager::add_format(const Vec3& position,bool software,const char* form
 void AsciiManager::create_score(const Vec3& position,i32 value,u32 color,const AsciiContext& c,bool player){
     auto& s=state;auto& next=player?s.next_player:s.next_score;const i32 capacity=player?3:720;
     if(next>=capacity||next<0)next=0;
-    auto& p=s.score_popups[(player?720:0)+next++];p.in_use=1;
+    const i32 index=(player?720:0)+next++;auto& p=s.score_popups[index];score_popup_previous[index]={};score_popup_previous[index].timer=-2;p.in_use=1;
     i32 count=0;
     if(value>=0){while(value){p.text[count++]=u8(value%10);value/=10;}}else p.text[count++]=10;
     if(!count)p.text[count++]=0;p.characters=u8(count);p.color=color;p.timer.set(0);p.position=position;
@@ -141,8 +142,10 @@ void AsciiManager::draw_percentage(const Vec3& position,i32 percentage,u32 color
 void AsciiManager::draw_overlays(const AsciiContext& c){
     auto& s=state;overlay.begin(!c.fog_disabled);
     AnmVm small_copy;if(presentation::render_only)small_copy=s.small_score_text;auto& small=presentation::render_only?small_copy:s.small_score_text;
-    for(const auto& p:s.score_popups)if(p.in_use){small.pos.x=(number(p.position.x)-integer(p.characters*4)).to_float();small.pos.y=p.position.y;small.color1.d3dColor=p.color;small.scale={s.scale_x,s.scale_y};
-        const i32 alpha=popup_alpha(c.player,p.position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(small,p.text[i]+(p.timer.current<52?0:p.timer.current<56?11:21));small.color1.a=u8(alpha);
+    for(u32 popup_index=0;popup_index<723;++popup_index){const auto& p=s.score_popups[popup_index];if(!p.in_use)continue;Vec3 position=p.position;
+        if(presentation::active){const auto& before=score_popup_previous[popup_index];if(before.in_use&&before.characters==p.characters&&p.timer.current>=before.timer&&p.timer.current-before.timer<=2)position={presentation::lerp_world(before.position.x,p.position.x),presentation::lerp_world(before.position.y,p.position.y),presentation::lerp_world(before.position.z,p.position.z)};}
+        small.pos.x=(number(position.x)-integer(p.characters*4)).to_float();small.pos.y=position.y;small.color1.d3dColor=p.color;small.scale={s.scale_x,s.scale_y};
+        const i32 alpha=popup_alpha(c.player,position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(small,p.text[i]+(p.timer.current<52?0:p.timer.current<56?11:21));small.color1.a=u8(alpha);
             if(small.loadedSprite)small.spriteSize.x=small.loadedSprite->widthPx;renderer.draw_no_rotation(small);small.pos.x=add(small.pos.x,8);}}
     if(s.blindness_color){
         const u32 color=(s.blindness_color&255)<<24;

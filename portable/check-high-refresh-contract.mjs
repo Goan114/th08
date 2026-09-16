@@ -7,6 +7,10 @@ const app=read('th08_web/cpp/game/GameApplication.cpp');
 const rendererH=read('portable/sdl/Renderer.hpp');
 const renderer=read('portable/sdl/Renderer.cpp');
 const presentation=read('th08_web/cpp/game/Presentation.hpp');
+const ascii=read('th08_web/cpp/game/AsciiManager.cpp');
+const background=read('th08_web/cpp/game/BackgroundView.cpp');
+const player=read('th08_web/cpp/game/PlayerSimulation.cpp');
+const bullets=read('th08_web/cpp/game/BulletDrawing.cpp');
 
 // Fixed game clock: the rAF callback may execute zero/multiple fixed ticks,
 // but a tick itself never draws and never receives display-rate delta time.
@@ -48,5 +52,19 @@ assert.match(presentation,/previous\+\(current-previous\)\*alpha/);
 assert.match(presentation,/world_alpha/);
 assert.match(presentation,/lerp_world/);
 assert.match(app,/presentation::begin\(presentation_alpha,presentation_active,presentation_only,world_interpolate\)/);
+
+// Score popups own their world position outside AnmVm. Their continuous rise
+// must publish a previous endpoint while sprite-age changes remain discrete.
+assert.match(ascii,/score_popup_previous\[i\]=\{p\.position,p\.timer\.current,p\.in_use,p\.characters\}/);
+assert.match(ascii,/presentation::lerp_world\(before\.position\.y,p\.position\.y\)/);
+assert.match(ascii,/direct_sprite\(small,p\.text\[i\]\+\(p\.timer\.current<52\?0:p\.timer\.current<56\?11:21\)\)/);
+assert.match(background,/presentation::lerp_world\(float\(s\.spell_frames-1\),float\(s\.spell_frames\)\)/);
+assert.match(player,/state\.life\.state==1\|\|state\.life\.state==2/);
+assert.match(player,/presentation_previous_script==current\.scriptIndex/);
+assert.match(player,/animation\.scale=\{presentation::lerp_world/);
+assert.match(player,/animation\.color1\.a=u8\(std::clamp\(presentation::lerp_world/);
+assert.match(bullets,/p\.width=l\.width2/);
+assert.match(bullets,/width=presentation::lerp_world\(p\.width,l\.width2\)/);
+assert.match(bullets,/body->scale\.x=Scalar::div\(width,16\)/);
 
 console.log('TH08 high-refresh contract PASS: fixed 60 Hz simulation + owner-side presentation-only interpolation');

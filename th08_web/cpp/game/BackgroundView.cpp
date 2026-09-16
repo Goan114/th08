@@ -25,7 +25,7 @@ JobResult BackgroundView::low(){
     auto& s=state;auto& r=renderer;
     if(s.spell_state<2&&!actions.stage_finished()){
         objects.draw(2);objects.draw(3);if(!r.fog_disabled)r.set_fog(false);actions.effects();
-        if(s.spell_state==1){const i32 alpha=signed_bits(u32(s.spell_frames)*255)/60;r.flush();r.set_depth_func(DepthFunc::Always);if(!r.fog_disabled)r.set_fog_state(false);rectangle(u32(alpha)<<24);}
+        if(s.spell_state==1){const float frames=presentation::active&&s.spell_frames>0?presentation::lerp_world(float(s.spell_frames-1),float(s.spell_frames)):float(s.spell_frames);const i32 alpha=std::clamp(i32(frames*255.0f/60.0f),0,255);r.flush();r.set_depth_func(DepthFunc::Always);if(!r.fog_disabled)r.set_fog_state(false);rectangle(u32(alpha)<<24);}
     }
     r.flush();r.set_depth_func(DepthFunc::Always);if(!r.fog_disabled)r.set_fog(false);
     if(s.spell_state>0){for(i32 i=0;i<s.spell_vm_count&&i<32;++i)layer(s.spell_vms[i]);if(s.callback)s.callback(s,r,callback_context);}

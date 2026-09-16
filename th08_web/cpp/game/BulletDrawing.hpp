@@ -15,7 +15,7 @@ struct BulletDrawingActions {
 class BulletDrawing {
     BulletManagerState& state;BulletDrawingActions& actions;
     struct BulletPresentation {Vec3 position{};float angle=0;int age=0;u16 state=0;bool active=false;};
-    struct LaserPresentation {Vec3 position{};float angle=0,start_offset=0,end_offset=0;int age=0;bool active=false;};
+    struct LaserPresentation {Vec3 position{};float angle=0,start_offset=0,end_offset=0,width=0;int age=0;bool active=false;};
     std::array<BulletPresentation,1537> previous_bullets{};std::array<LaserPresentation,256> previous_lasers{};
     void laser(LaserState&,const Vec2&);
 public:

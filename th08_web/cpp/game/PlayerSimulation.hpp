@@ -33,7 +33,9 @@ class PlayerSimulation:private PlayerFrameActions,private PlayerBombActions,priv
     PlayerSimulationState& state;ShotResource (&resources)[2];GameGauge& gauge;GaugeThresholds& thresholds;PlayerSimulationServices services;
     GameGlobals& values;GameRank& rank;
     PlayerLife life;PlayerShots shots;PlayerBombPatterns patterns;PlayerCollision collisions;bool failed=false,initialized=false;
-    Vec3 presentation_previous_position{};Vec3 presentation_previous_options[4]{};i32 presentation_previous_life_state=0,presentation_previous_option_state[4]{};bool presentation_valid=false;
+    Vec3 presentation_previous_position{};Vec3 presentation_previous_options[4]{};
+    Vec2 presentation_previous_scale{};ZunColor presentation_previous_color{};
+    i32 presentation_previous_life_state=0,presentation_previous_option_state[4]{};i16 presentation_previous_script=-1,presentation_previous_sprite=-1;bool presentation_valid=false;
     void synchronize_shots();
     void update_bomb()override;
     bool resolve_death()override;

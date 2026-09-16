@@ -1,5 +1,6 @@
 #include "PlayerSimulation.hpp"
 #include "Presentation.hpp"
+#include <algorithm>
 namespace th08 {
 namespace {
 Vec3 presentation_lerp(const Vec3& previous,const Vec3& current){
@@ -13,7 +14,7 @@ PlayerSimulation::PlayerSimulation(PlayerSimulationState& s,ShotResource (&r)[2]
 }
 bool PlayerSimulation::initialize(const PlayerSetupContext& context){
     failed=!initialize_player(state.motion,state.life,state.bomb,state.shots,thresholds,resources[0].settings(),context,services.setup);
-    initialized=!failed;if(initialized){state.context.character=state.input.character=context.character;state.context.extent=context.extent;synchronize_shots();presentation_previous_position=state.motion.movement.position;presentation_previous_life_state=state.life.state;for(u32 i=0;i<4;++i){presentation_previous_options[i]=state.motion.options[i].position;presentation_previous_option_state[i]=state.motion.options[i].state;}presentation_valid=true;}return initialized;
+    initialized=!failed;if(initialized){state.context.character=state.input.character=context.character;state.context.extent=context.extent;synchronize_shots();presentation_previous_position=state.motion.movement.position;presentation_previous_scale=state.motion.animation.scale;presentation_previous_color=state.motion.animation.color1;presentation_previous_script=state.motion.animation.scriptIndex;presentation_previous_sprite=state.motion.animation.activeSpriteIndex;presentation_previous_life_state=state.life.state;for(u32 i=0;i<4;++i){presentation_previous_options[i]=state.motion.options[i].position;presentation_previous_option_state[i]=state.motion.options[i].state;}presentation_valid=true;}return initialized;
 }
 void PlayerSimulation::synchronize_shots(){
     auto& s=state.shots;s.position=state.motion.movement.position;for(u32 i=0;i<4;++i)s.options[i]=state.motion.options[i].position;
@@ -22,7 +23,7 @@ void PlayerSimulation::synchronize_shots(){
     s.player_state=state.life.state;s.gui_blocked=state.input.gui_blocked;s.option_active=state.motion.options[0].state!=0;s.collision_timer=state.life.timer;s.time_spell=state.context.time_spell;s.human_bonus=gauge.human_bonus();shots.timing=timing;
 }
 bool PlayerSimulation::update(){
-    if(!initialized)return false;failed=false;presentation_previous_position=state.motion.movement.position;presentation_previous_life_state=state.life.state;for(u32 i=0;i<4;++i){presentation_previous_options[i]=state.motion.options[i].position;presentation_previous_option_state[i]=state.motion.options[i].state;}presentation_valid=true;state.context.focused=state.motion.form.focused;state.context.gauge=gauge.value();state.bomb_input.buttons=state.input.buttons;state.bomb_input.gui_blocked=state.input.gui_blocked;state.bomb_input.tampered=state.input.tampered;
+    if(!initialized)return false;failed=false;presentation_previous_position=state.motion.movement.position;presentation_previous_scale=state.motion.animation.scale;presentation_previous_color=state.motion.animation.color1;presentation_previous_script=state.motion.animation.scriptIndex;presentation_previous_sprite=state.motion.animation.activeSpriteIndex;presentation_previous_life_state=state.life.state;for(u32 i=0;i<4;++i){presentation_previous_options[i]=state.motion.options[i].position;presentation_previous_option_state[i]=state.motion.options[i].state;}presentation_valid=true;state.context.focused=state.motion.form.focused;state.context.gauge=gauge.value();state.bomb_input.buttons=state.input.buttons;state.bomb_input.gui_blocked=state.input.gui_blocked;state.bomb_input.tampered=state.input.tampered;
     synchronize_shots();update_player_frame(state.frame,state.motion,state.life,state.shots.regions,gauge,state.context.pause!=0,*this);synchronize_shots();return !failed;
 }
 void PlayerSimulation::update_bomb(){failed|=!update_player_bomb(state.bomb,state.bomb_input,state.life,state.context,state.motion.movement,state.motion.animation,resources[0].settings(),timing,*this);}
@@ -67,6 +68,15 @@ bool PlayerSimulation::draw(const Vec2& offset,bool impacts){
             if(presentation::active&&presentation_valid){
                 if(presentation_previous_life_state==state.life.state&&presentation_near(presentation_previous_position,state.motion.movement.position))draw.movement.position=presentation_lerp(presentation_previous_position,state.motion.movement.position);
                 for(u32 i=0;i<4;++i)if(presentation_previous_option_state[i]==state.motion.options[i].state&&presentation_near(presentation_previous_options[i],state.motion.options[i].position))draw.options[i].position=presentation_lerp(presentation_previous_options[i],state.motion.options[i].position);
+                // TH08's death/respawn owner directly animates the player's
+                // scale and alpha rather than using a generic ANM interpolator.
+                // Smooth only those two continuous lifecycle states; state 3's
+                // deliberate red/white invincibility blink stays discrete.
+                auto& animation=draw.animation;const auto& current=state.motion.animation;
+                if((state.life.state==1||state.life.state==2)&&presentation_previous_life_state==state.life.state&&presentation_previous_script==current.scriptIndex&&presentation_previous_sprite==current.activeSpriteIndex){
+                    if(presentation_previous_scale.x*current.scale.x>=0&&presentation_previous_scale.y*current.scale.y>=0)animation.scale={presentation::lerp_world(presentation_previous_scale.x,current.scale.x),presentation::lerp_world(presentation_previous_scale.y,current.scale.y)};
+                    animation.color1.a=u8(std::clamp(presentation::lerp_world(float(presentation_previous_color.a),float(current.color1.a)),0.0f,255.0f));
+                }
             }
             draw_player_motion(draw,offset,state.context.game_over,services.motion);
         }else draw_player_motion(state.motion,offset,state.context.game_over,services.motion);

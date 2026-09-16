@@ -81,6 +81,8 @@ public:
     void draw_overlays(const AsciiContext& context);
     void draw_percentage(const Vec3& position,i32 percentage,u32 color);
 private:
+    struct PopupPresentation {Vec3 position{};i32 timer=-2;u8 in_use=0,characters=0;};
+    PopupPresentation score_popup_previous[723]{};
     AnmExecutor& executor;
     AnmRenderer& renderer;
     AsciiOverlay& overlay;
