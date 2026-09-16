@@ -17,8 +17,8 @@ void Dialogue::snapshot_presentation(){
 }
 AnmVm Dialogue::presentation_vm(const AnmVm& source,const PresentationVm& before)const{
     AnmVm draw=source;if(!presentation::active||!presentation_valid||presentation_message!=state.message||before.script!=source.scriptIndex||before.visible!=source.visible)return draw;
-    const float dx=source.pos.x-before.pos.x,dy=source.pos.y-before.pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp(before.pos.x,source.pos.x),presentation::lerp(before.pos.y,source.pos.y),presentation::lerp(before.pos.z,source.pos.z)};
-    const float ox=source.pos2.x-before.pos2.x,oy=source.pos2.y-before.pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp(before.pos2.x,source.pos2.x),presentation::lerp(before.pos2.y,source.pos2.y),presentation::lerp(before.pos2.z,source.pos2.z)};
+    const float dx=source.pos.x-before.pos.x,dy=source.pos.y-before.pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp_world(before.pos.x,source.pos.x),presentation::lerp_world(before.pos.y,source.pos.y),presentation::lerp_world(before.pos.z,source.pos.z)};
+    const float ox=source.pos2.x-before.pos2.x,oy=source.pos2.y-before.pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp_world(before.pos2.x,source.pos2.x),presentation::lerp_world(before.pos2.y,source.pos2.y),presentation::lerp_world(before.pos2.z,source.pos2.z)};
     return draw;
 }
 bool Dialogue::start(AnmVm& vm,AnmLoaded* file,i32 script){
@@ -135,7 +135,7 @@ animate:
 }
 i32 Dialogue::draw(){
     if(state.message<0)return -1;
-    float timer=state.timer.value().to_float();if(presentation::active&&presentation_valid&&presentation_message==state.message)timer=presentation::lerp(presentation_timer,timer);
+    float timer=state.timer.value().to_float();if(presentation::active&&presentation_valid&&presentation_message==state.message)timer=presentation::lerp_world(presentation_timer,timer);
     const float height=timer<60?(number(timer)*number(48)/number(60)).to_float():48;
     AnmVm portraits[4];for(u32 i=0;i<4;++i)portraits[i]=presentation_vm(state.portraits[i],presentation_portraits[i]);
     for(i32 first:{0,2}){auto& a=portraits[first];auto& b=portraits[first+1];if(a.pos.z>=b.pos.z){renderer.draw_no_rotation(a);renderer.draw_no_rotation(b);}else{renderer.draw_no_rotation(b);renderer.draw_no_rotation(a);}}

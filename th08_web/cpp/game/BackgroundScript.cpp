@@ -1,6 +1,7 @@
 #include "BackgroundScript.hpp"
 #include "GraphicsMath.hpp"
 #include "GameMath.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {
 Vec3 subtract(const Vec3& a,const Vec3& b){return {Scalar::sub(a.x,b.x),Scalar::sub(a.y,b.y),Scalar::sub(a.z,b.z)};}
@@ -34,13 +35,13 @@ bool BackgroundScript::load(const u8* bytes,u32 size,AnmLoaded& background,AnmLo
     start(&text,s.tint_vm,33,false);s.tint_vm.SetInterrupt(2);s.youkai_tint=0;s.tint_time.set(0);return !invalid;
 }
 void BackgroundScript::release(bool keep_program){
-    quads.clear();state.quad_vms=nullptr;
+    quads.clear();state.quad_vms=nullptr;presentation_camera_valid=false;
     if(!keep_program){program.clear();state.stage_data=nullptr;state.objects=nullptr;state.instances=nullptr;state.instructions=nullptr;}
 }
 void BackgroundScript::reset_camera(){
     auto& s=state;s.time.set(0);s.instruction_index=0;s.position={};s.spell_state=0;s.fog_duration=0;
     s.fog={200,500,{i32(0xff000000)}};s.camera.position={0,0,1000};s.camera.target_offset={};s.camera.eye_offset={};s.camera.up={0,1,0};s.camera.field_of_view=.5235987901687622f;
-    s.camera_final=s.camera_initial=s.camera;s.camera_effect=0;
+    s.camera_final=s.camera_initial=s.camera;s.camera_effect=0;presentation_previous_camera=s.camera;presentation_camera_valid=false;
     for(u32 i=0;i<4;++i){s.camera_durations[i]=0;s.camera_timers[i].set(0);}s.pending_interrupt=0;
     s.distance_limit=context.stage==5?1822500.f:context.stage==6||context.stage==7?3240000.f:1322500.f;
 }
@@ -85,8 +86,16 @@ void BackgroundScript::finish_frame(){
         s.fog.near_plane=((number(s.fog_final.near_plane)-number(s.fog_initial.near_plane))*number(t)+number(s.fog_initial.near_plane)).to_float();s.fog.far_plane=((number(s.fog_final.far_plane)-number(s.fog_initial.far_plane))*number(t)+number(s.fog_initial.far_plane)).to_float();if(s.fog_time.current>=s.fog_duration)s.fog_duration=0;
     }
 }
+SceneCamera BackgroundScript::presentation_camera()const{
+    SceneCamera result=state.camera;if(!presentation::render_only||!presentation::active||!presentation_camera_valid)return result;
+    const auto close=[](const Vec3& a,const Vec3& b){const float dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;return dx*dx+dy*dy+dz*dz<262144.0f;};
+    if(!close(presentation_previous_camera.position,state.camera.position)||!close(presentation_previous_camera.target_offset,state.camera.target_offset)||!close(presentation_previous_camera.eye_offset,state.camera.eye_offset))return result;
+    const auto mix=[](const Vec3& a,const Vec3& b){return Vec3{presentation::lerp_world(a.x,b.x),presentation::lerp_world(a.y,b.y),presentation::lerp_world(a.z,b.z)};};
+    result.position=mix(presentation_previous_camera.position,state.camera.position);result.target_offset=mix(presentation_previous_camera.target_offset,state.camera.target_offset);result.eye_offset=mix(presentation_previous_camera.eye_offset,state.camera.eye_offset);result.up=mix(presentation_previous_camera.up,state.camera.up);result.field_of_view=presentation::lerp_world(presentation_previous_camera.field_of_view,state.camera.field_of_view);GraphicsMath::normalize(result.unused24,result.target_offset);return result;
+}
 JobResult BackgroundScript::update(){
     auto& s=state;if(!s.stage_data||context.paused)return JobResult::Continue;
+    presentation_previous_camera=s.camera;presentation_camera_valid=true;
     if(context.stage==7){
         if(!s.moon_effect){s.moon_effect=actions.moon();if(s.moon_effect)start(s.animation,*s.moon_effect,11,false);}
         else if(s.pending_interrupt==1)start(s.animation,*s.moon_effect,11,false);

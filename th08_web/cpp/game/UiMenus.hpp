@@ -1,6 +1,7 @@
 #pragma once
 #include "AsciiManager.hpp"
 #include "GameValues.hpp"
+#include <array>
 namespace th08 {
 struct MenuContext {
     u32 flags=0;
@@ -41,6 +42,11 @@ public:
     void draw_pause();
     void draw_retry();
 private:
+    struct PresentationVm {Vec3 pos{},pos2{};i16 script=-1;bool visible=false;};
+    std::array<PresentationVm,10> pause_previous{};
+    std::array<PresentationVm,6> retry_previous{};
+    PresentationVm pause_background{},retry_background{};
+    bool pause_presentation_valid=false,retry_presentation_valid=false;
     AsciiState& ascii;
     AnmExecutor& executor;
     AnmRenderer& renderer;
@@ -53,5 +59,7 @@ private:
     bool capture(AnmVm& vm);
     void viewport();
     void continue_game();
+    void snapshot_pause();void snapshot_retry();
+    void draw_presented(AnmVm& source,const PresentationVm& before,bool valid,bool force_no_z=false);
 };
 }

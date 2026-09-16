@@ -113,7 +113,7 @@ void AsciiManager::draw_strings(const AsciiContext& c){
     }
     if(gui)viewport(false);
     for(u32 i=0;i<4;++i){auto& source=s.boss_markers[i];if(source.pos.x<56||source.pos.x>392)continue;AnmVm marker_copy;if(presentation::render_only)marker_copy=source;auto& marker=presentation::render_only?marker_copy:source;
-        if(presentation::active&&presentation_boss_markers_valid){const auto& before=presentation_boss_markers[i];const float dx=source.pos.x-before.x;if(before.x>=56&&before.x<=392&&std::fabs(dx)<128)marker.pos.x=presentation::lerp(before.x,source.pos.x);}
+        if(presentation::active&&presentation_boss_markers_valid){const auto& before=presentation_boss_markers[i];const float dx=source.pos.x-before.x;if(before.x>=56&&before.x<=392&&std::fabs(dx)<128)marker.pos.x=presentation::lerp_world(before.x,source.pos.x);}
         const float distance=std::fabs((number(marker.pos.x)-number(32)-number(c.player.x)).to_float());direct_sprite(marker,157);
         bool normal=false;
         switch(s.boss_states[i]){

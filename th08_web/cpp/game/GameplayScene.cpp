@@ -12,7 +12,7 @@ GameplayScene::GameplayScene(GameplaySession& s,TextureStore& t,AnmLibrary& l,An
   presentation(globals,animations,p,*this),spells(globals,s.numbers,s.values,s.history,s.records,effect_system,background,animations,presentation,player_state.bomb,enemies),spell_drawing(globals,s.records,r),
   gui(hud,display,dialogue_context,gui_context,s.numbers,s.values,s.config,animations,ascii,r,*this),
   dialogue(hud,display,dialogue_context,s.numbers,s.values,animations,p,r,*this),
-  background_script(background,background_context,animations,*this),background_view(background,r,*this),spell_background(background,background_view,effect_system,animations),name_atlas(t,r),
+  background_script(background,background_context,animations,*this),background_view(background,background_script,r,*this),spell_background(background,background_view,effect_system,animations),name_atlas(t,r),
   native_scene{player.timing,animations,screen,background,spell_background,presentation,dialogue_context.hud_redraw,screen_counter,&gui},
   player_world{effect_system,items,enemies,bullets,spells,presentation,hud,display,gui,background_script,screen,ascii,ascii_context,globals},
   background_flow(background_script,background_view,*this),bullet_flow(projectile_pool,bullets,items,effect_pool,s.random,*this),

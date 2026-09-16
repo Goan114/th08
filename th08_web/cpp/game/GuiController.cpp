@@ -19,8 +19,8 @@ AnmVm GuiController::presentation_vm(const AnmVm& source)const{
     const auto* begin=reinterpret_cast<const u8*>(&display);const auto* end=begin+sizeof(display);const auto* at=reinterpret_cast<const u8*>(&source);
     if(at<begin||at+sizeof(AnmVm)>end)return draw;const size_t offset=size_t(at-begin);const auto* before=reinterpret_cast<const AnmVm*>(reinterpret_cast<const u8*>(presentation_state.display.get())+offset);
     if(before->scriptIndex!=source.scriptIndex||before->visible!=source.visible)return draw;
-    const float dx=source.pos.x-before->pos.x,dy=source.pos.y-before->pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp(before->pos.x,source.pos.x),presentation::lerp(before->pos.y,source.pos.y),presentation::lerp(before->pos.z,source.pos.z)};
-    const float ox=source.pos2.x-before->pos2.x,oy=source.pos2.y-before->pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp(before->pos2.x,source.pos2.x),presentation::lerp(before->pos2.y,source.pos2.y),presentation::lerp(before->pos2.z,source.pos2.z)};
+    const float dx=source.pos.x-before->pos.x,dy=source.pos.y-before->pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp_world(before->pos.x,source.pos.x),presentation::lerp_world(before->pos.y,source.pos.y),presentation::lerp_world(before->pos.z,source.pos.z)};
+    const float ox=source.pos2.x-before->pos2.x,oy=source.pos2.y-before->pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp_world(before->pos2.x,source.pos2.x),presentation::lerp_world(before->pos2.y,source.pos2.y),presentation::lerp_world(before->pos2.z,source.pos2.z)};
     return draw;
 }
 void GuiController::draw_presented_no_rotation(AnmVm& vm){if(presentation::render_only){auto draw=presentation_vm(vm);renderer.draw_no_rotation(draw);}else renderer.draw_no_rotation(vm);}
@@ -29,7 +29,7 @@ void GuiController::draw_presented_world(AnmVm& vm){if(presentation::render_only
 Vec3 GuiController::presentation_text_position(const GuiFormattedText& current,const GuiFormattedText& before)const{
     if(!presentation::active||!presentation_state.valid||current.display!=before.display||current.timer.current<before.timer.current)return current.position;
     const float dx=current.position.x-before.position.x,dy=current.position.y-before.position.y;if(dx*dx+dy*dy>=16384.0f)return current.position;
-    return {presentation::lerp(before.position.x,current.position.x),presentation::lerp(before.position.y,current.position.y),presentation::lerp(before.position.z,current.position.z)};
+    return {presentation::lerp_world(before.position.x,current.position.x),presentation::lerp_world(before.position.y,current.position.y),presentation::lerp_world(before.position.z,current.position.z)};
 }
 bool GuiController::start(AnmVm& vm,AnmLoaded* file,i32 script,bool reset_position){
     if(!file||script<0||u32(script)>=file->scriptCount)return false;

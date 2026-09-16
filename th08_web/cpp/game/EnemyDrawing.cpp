@@ -98,11 +98,11 @@ void EnemyDrawing::snapshot(EclVm* const* layers){
 Vec3 EnemyDrawing::position(EclVm& enemy){
     if(!presentation::active)return enemy.resolved_position;const auto found=previous.find(&enemy);if(found==previous.end())return enemy.resolved_position;
     const auto& before=found->second;const float dx=enemy.resolved_position.x-before.position.x,dy=enemy.resolved_position.y-before.position.y;if(enemy.lifetime.current<before.age||enemy.main_context.subroutine!=before.subroutine||dx*dx+dy*dy>=16384.0f)return enemy.resolved_position;
-    return {presentation::lerp(before.position.x,enemy.resolved_position.x),presentation::lerp(before.position.y,enemy.resolved_position.y),presentation::lerp(before.position.z,enemy.resolved_position.z)};
+    return {presentation::lerp_world(before.position.x,enemy.resolved_position.x),presentation::lerp_world(before.position.y,enemy.resolved_position.y),presentation::lerp_world(before.position.z,enemy.resolved_position.z)};
 }
 float EnemyDrawing::direction(EclVm& enemy){
     if(!presentation::active)return enemy.direction.z;const auto found=previous.find(&enemy);if(found==previous.end()||enemy.lifetime.current<found->second.age||enemy.main_context.subroutine!=found->second.subroutine)return enemy.direction.z;
-    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=enemy.direction.z-found->second.direction;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(found->second.direction+delta*presentation::alpha,0);
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=enemy.direction.z-found->second.direction;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(found->second.direction+delta*presentation::world_alpha,0);
 }
 bool draw_enemy_layers(EclVm* const* layers,i32 first,i32 last,const Vec2& offset,EnemyDrawActions& actions){
     if(first<0||last>4)return false;

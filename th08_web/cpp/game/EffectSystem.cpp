@@ -69,15 +69,15 @@ void EffectSystem::snapshot_presentation(){for(size_t i=0;i<presentation_previou
 Vec3 EffectSystem::presentation_position(EffectState& e)const{
     if(!presentation::active)return e.position;const size_t index=size_t(&e-state.objects);if(index>=presentation_previous.size())return e.position;const auto& before=presentation_previous[index];
     const float dx=e.position.x-before.position.x,dy=e.position.y-before.position.y;if(!before.active||before.kind!=e.kind||e.age.current<before.age||dx*dx+dy*dy>=16384.0f)return e.position;
-    return {presentation::lerp(before.position.x,e.position.x),presentation::lerp(before.position.y,e.position.y),presentation::lerp(before.position.z,e.position.z)};
+    return {presentation::lerp_world(before.position.x,e.position.x),presentation::lerp_world(before.position.y,e.position.y),presentation::lerp_world(before.position.z,e.position.z)};
 }
 void EffectSystem::presentation_geometry(const EffectState& source,EffectState& draw)const{
     const size_t index=size_t(&source-state.objects);if(index>=presentation_previous.size())return;const auto& before=presentation_previous[index];
     const float dx=source.position.x-before.position.x,dy=source.position.y-before.position.y;if(!before.active||before.kind!=source.kind||source.age.current<before.age||dx*dx+dy*dy>=16384.0f)return;
-    draw.center={presentation::lerp(before.center.x,source.center.x),presentation::lerp(before.center.y,source.center.y),presentation::lerp(before.center.z,source.center.z)};
-    draw.radius=presentation::lerp(before.radius,source.radius);draw.width=presentation::lerp(before.width,source.width);draw.height=presentation::lerp(before.height,source.height);
+    draw.center={presentation::lerp_world(before.center.x,source.center.x),presentation::lerp_world(before.center.y,source.center.y),presentation::lerp_world(before.center.z,source.center.z)};
+    draw.radius=presentation::lerp_world(before.radius,source.radius);draw.width=presentation::lerp_world(before.width,source.width);draw.height=presentation::lerp_world(before.height,source.height);
     constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;
-    auto angle=[&](float a,float b){float d=b-a;if(d>pi)d-=tau;else if(d<-pi)d+=tau;return add_angle(a+d*presentation::alpha,0);};
+    auto angle=[&](float a,float b){float d=b-a;if(d>pi)d-=tau;else if(d<-pi)d+=tau;return add_angle(a+d*presentation::world_alpha,0);};
     draw.angle=angle(before.angle,source.angle);draw.angle_y=angle(before.angle_y,source.angle_y);
 }
 JobResult EffectSystem::update(){

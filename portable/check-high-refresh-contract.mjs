@@ -17,7 +17,7 @@ assert.match(host,/elapsed\+=touhou::sdl::FrameCadence::interval;result=tick\(\)
 // Every real 60 Hz tick still executes TH08's authoritative draw once. High
 // refresh only hides that swap and follows it with a presentation-only draw.
 assert.match(host,/runtime->app\.draw\(1\.0f,false,false\)/);
-assert.match(host,/runtime->app\.draw\(alpha,interpolate,true\)/);
+assert.match(host,/runtime->app\.draw\(alpha,interpolate,true,!frozen\)/);
 assert.match(host,/presentation_primed/);
 assert.match(host,/const bool frozen=.*paused.*retrying.*pause_state.*show_retry/s);
 const frameTick=host.indexOf('result=tick();if(result||!runtime)break;');
@@ -45,5 +45,8 @@ for(const source of [rendererH,renderer]){
 }
 assert.match(presentation,/render_only/);
 assert.match(presentation,/previous\+\(current-previous\)\*alpha/);
+assert.match(presentation,/world_alpha/);
+assert.match(presentation,/lerp_world/);
+assert.match(app,/presentation::begin\(presentation_alpha,presentation_active,presentation_only,world_interpolate\)/);
 
 console.log('TH08 high-refresh contract PASS: fixed 60 Hz simulation + owner-side presentation-only interpolation');

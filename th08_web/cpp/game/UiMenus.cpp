@@ -1,6 +1,7 @@
 // Pause and retry state transitions from TH08 1.00d, checked against the
 // original functions and the MIT GensokyoClub/th08 reference.
 #include "UiMenus.hpp"
+#include "Presentation.hpp"
 namespace th08 {
 namespace {
 constexpr u16 escape=8,up=16,down=32,quit=512,restart=16384,select=4097;
@@ -19,8 +20,19 @@ bool UiMenus::capture(AnmVm& vm){
     if(!actions.capture(request))return false;vm.pos={32,16,0};return true;
 }
 void UiMenus::viewport(){auto v=renderer.viewport;v.x=u32(Scalar::truncate(context.arcade_origin.x));v.y=u32(Scalar::truncate(context.arcade_origin.y));v.width=u32(Scalar::truncate(context.arcade_size.x));v.height=u32(Scalar::truncate(context.arcade_size.y));renderer.set_viewport(v);}
+void UiMenus::snapshot_pause(){auto& s=ascii.pause;for(size_t i=0;i<pause_previous.size();++i)pause_previous[i]={s.sprites[i].pos,s.sprites[i].pos2,s.sprites[i].scriptIndex,s.sprites[i].visible};pause_background={s.background.pos,s.background.pos2,s.background.scriptIndex,s.background.visible};pause_presentation_valid=true;}
+void UiMenus::snapshot_retry(){auto& s=ascii.retry;for(size_t i=0;i<retry_previous.size();++i)retry_previous[i]={s.sprites[i].pos,s.sprites[i].pos2,s.sprites[i].scriptIndex,s.sprites[i].visible};retry_background={s.background.pos,s.background.pos2,s.background.scriptIndex,s.background.visible};retry_presentation_valid=true;}
+void UiMenus::draw_presented(AnmVm& source,const PresentationVm& before,bool valid,bool force_no_z){
+    if(!presentation::render_only&&!force_no_z){renderer.draw_no_rotation(source);return;}AnmVm draw=source;
+    if(presentation::active&&valid&&before.script==source.scriptIndex&&before.visible==source.visible){
+        const float dx=source.pos.x-before.pos.x,dy=source.pos.y-before.pos.y;if(dx*dx+dy*dy<16384.0f)draw.pos={presentation::lerp(before.pos.x,source.pos.x),presentation::lerp(before.pos.y,source.pos.y),presentation::lerp(before.pos.z,source.pos.z)};
+        const float ox=source.pos2.x-before.pos2.x,oy=source.pos2.y-before.pos2.y;if(ox*ox+oy*oy<16384.0f)draw.pos2={presentation::lerp(before.pos2.x,source.pos2.x),presentation::lerp(before.pos2.y,source.pos2.y),presentation::lerp(before.pos2.z,source.pos2.z)};
+    }
+    if(force_no_z)draw.zWriteDisabled=true;renderer.draw_no_rotation(draw);
+}
 i32 UiMenus::update_pause(){
     auto& s=ascii.pause;auto& c=context;auto* vm=s.sprites;
+    snapshot_pause();
     auto close=[&](u32 next){actions.sound(10);s.state=next;for(i32 i=0;i<10;++i)if(vm[i].visible)vm[i].pendingInterrupt=2;s.frames=0;};
     if(c.pressed(escape)&&s.state!=4){close(4);s.background.pendingInterrupt=1;}
     if(c.pressed(quit)&&s.state!=9)close(9);
@@ -81,6 +93,7 @@ void UiMenus::continue_game(){
 }
 i32 UiMenus::update_retry(){
     auto& s=ascii.retry;auto& c=context;auto* vm=s.sprites;
+    snapshot_retry();
     if(c.practice()&&!c.spell_practice()){c.show_retry=0;globals.display_score=globals.score;c.supervisor_state=6;return 1;}
     if(c.replay()){c.show_retry=0;c.supervisor_state=7;globals.display_score=globals.score;return 1;}
     switch(s.state){
@@ -126,12 +139,12 @@ i32 UiMenus::update_retry(){
 }
 void UiMenus::draw_pause(){
     auto& s=ascii.pause;if(!context.pause_state)return;viewport();
-    if(context.lockable_backbuffer&&s.state!=0){auto vm=s.background;vm.zWriteDisabled=true;renderer.draw_no_rotation(vm);}
-    for(auto& vm:s.sprites)if(vm.visible)renderer.draw_no_rotation(vm);
+    if(context.lockable_backbuffer&&s.state!=0)draw_presented(s.background,pause_background,pause_presentation_valid,true);
+    for(size_t i=0;i<10;++i)if(s.sprites[i].visible)draw_presented(s.sprites[i],pause_previous[i],pause_presentation_valid);
 }
 void UiMenus::draw_retry(){
     auto& s=ascii.retry;if(!context.show_retry)return;viewport();
-    if(context.lockable_backbuffer&&(s.state!=0||s.frames>2))renderer.draw_no_rotation(s.background);
-    const i32 count=!context.spell_practice()&&context.difficulty<4?4:3;for(i32 i=0;i<count;++i)if(s.sprites[i].visible)renderer.draw_no_rotation(s.sprites[i]);
+    if(context.lockable_backbuffer&&(s.state!=0||s.frames>2))draw_presented(s.background,retry_background,retry_presentation_valid);
+    const i32 count=!context.spell_practice()&&context.difficulty<4?4:3;for(i32 i=0;i<count;++i)if(s.sprites[i].visible)draw_presented(s.sprites[i],retry_previous[i],retry_presentation_valid);
 }
 }

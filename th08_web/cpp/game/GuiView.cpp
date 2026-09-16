@@ -40,7 +40,7 @@ void GuiController::draw_stage(){
         auto rect=[&](float left,float right,u32 color1,u32 color2){const u32 colors[]={color1,color1,color2,color2};renderer.draw_rectangle(left,19,right,23,colors,true);};
         float boss_life=gui.boss_life;u32 boss_opacity=gui.boss_opacity;
         if(presentation::active&&presentation_state.valid&&presentation_state.boss_present==gui.boss_present&&presentation_state.boss_life_state==display.boss_life_state){
-            boss_life=presentation::lerp(presentation_state.boss_life,gui.boss_life);boss_opacity=u32(std::clamp(presentation::lerp(float(presentation_state.boss_opacity),float(gui.boss_opacity)),0.0f,255.0f));
+            boss_life=presentation::lerp_world(presentation_state.boss_life,gui.boss_life);boss_opacity=u32(std::clamp(presentation::lerp_world(float(presentation_state.boss_opacity),float(gui.boss_opacity)),0.0f,255.0f));
         }
         const u32 alpha=boss_opacity<<24;rect(64,(number(boss_life)*number(320)+number(64)).to_float(),alpha|0xffffff,alpha|0x202060);
         for(i32 j=0;j<8;++j){if(!gui.segment_end[j]||gui.segment_start[j]>=boss_life)continue;const float end=boss_life<gui.segment_end[j]?boss_life:gui.segment_end[j];

@@ -3,9 +3,9 @@
 #include "Presentation.hpp"
 namespace th08 {
 namespace {
-Vec3 presentation_lerp(const Vec3& previous,const Vec3& current){return {presentation::lerp(previous.x,current.x),presentation::lerp(previous.y,current.y),presentation::lerp(previous.z,current.z)};}
+Vec3 presentation_lerp(const Vec3& previous,const Vec3& current){return {presentation::lerp_world(previous.x,current.x),presentation::lerp_world(previous.y,current.y),presentation::lerp_world(previous.z,current.z)};}
 float presentation_angle(float previous,float current){
-    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=current-previous;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(previous+delta*presentation::alpha,0);
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=current-previous;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(previous+delta*presentation::world_alpha,0);
 }
 bool close_enough(const Vec3& a,const Vec3& b){const float dx=a.x-b.x,dy=a.y-b.y;return dx*dx+dy*dy<16384.0f;}
 }
@@ -35,7 +35,7 @@ void BulletDrawing::laser(LaserState& l,const Vec2& origin){
         if((l.start_offset<16||l.speed==0)&&(!l.unknown599||l.state)){auto& cap=l.animation[1];cap.pos=current_position(l.start_offset,.05f);cap.color1=body.color1;cap.flag6=1;cap.color1.a=255;cap.scale.x=((number(l.width)/number(10))*((number(16)-number(l.start_offset))/number(16))).to_float();cap.scale.y=cap.scale.x;if(cap.scale.y<=0){cap.scale.x=Scalar::div(l.width,10);cap.scale.y=cap.scale.x;}current_offset(cap);}
     }
     Vec3 laser_position=l.position;float angle=l.angle,start_offset=l.start_offset,end_offset=l.end_offset;
-    if(presentation::active){const size_t index=size_t(&l-state.lasers);const auto& p=previous_lasers[index];if(p.active&&l.timer.current>=p.age&&close_enough(p.position,l.position)){laser_position=presentation_lerp(p.position,l.position);angle=presentation_angle(p.angle,l.angle);start_offset=presentation::lerp(p.start_offset,l.start_offset);end_offset=presentation::lerp(p.end_offset,l.end_offset);}}
+    if(presentation::active){const size_t index=size_t(&l-state.lasers);const auto& p=previous_lasers[index];if(p.active&&l.timer.current>=p.age&&close_enough(p.position,l.position)){laser_position=presentation_lerp(p.position,l.position);angle=presentation_angle(p.angle,l.angle);start_offset=presentation::lerp_world(p.start_offset,l.start_offset);end_offset=presentation::lerp_world(p.end_offset,l.end_offset);}}
     const float cosine_value=cosine(angle).to_float(),sine_value=sine(angle).to_float();
     const float midpoint=((number(end_offset)-number(start_offset))/number(2)+number(start_offset)).to_float();
     const auto position=[&](float distance,float depth){return Vec3{(number(cosine_value)*number(distance)+number(laser_position.x)).to_float(),(number(sine_value)*number(distance)+number(laser_position.y)).to_float(),depth};};

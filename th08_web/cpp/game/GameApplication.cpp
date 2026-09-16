@@ -123,11 +123,11 @@ bool GameApplication::update(){
     platform.begin_frame();const i32 value=chain.run();publish_scene();synchronize();
     if(value<=0){failed|=value<0;running=false;}failed|=invalid();return running&&!failed;
 }
-bool GameApplication::draw(float presentation_alpha,bool presentation_active,bool presentation_only){
+bool GameApplication::draw(float presentation_alpha,bool presentation_active,bool presentation_only,bool world_interpolate){
     if(!running||invalid())return false;if(title.modal())return true;
     const auto string_count=ascii.state.string_count;const u32 ascii_color=ascii.state.color;const float ascii_scale_x=ascii.state.scale_x,ascii_scale_y=ascii.state.scale_y;const i32 ascii_gui=ascii.state.gui,ascii_selected=ascii.state.selected,ascii_space=ascii.state.space_width;const Vec2 saved_shake=renderer.shake;
     if(presentation_only&&presentation_shake_valid)renderer.shake=presentation_shake;else if(!presentation_only){presentation_shake=renderer.shake;presentation_shake_valid=true;}
-    presentation::begin(presentation_alpha,presentation_active,presentation_only);
+    presentation::begin(presentation_alpha,presentation_active,presentation_only,world_interpolate);
     const i32 value=chain.run(true);renderer.flush();if(presentation_only){ascii.state.string_count=string_count;ascii.state.color=ascii_color;ascii.state.scale_x=ascii_scale_x;ascii.state.scale_y=ascii_scale_y;ascii.state.gui=ascii_gui;ascii.state.selected=ascii_selected;ascii.state.space_width=ascii_space;}
     if(!presentation_only&&value<=0){failed|=value<0;running=false;}
     if(!presentation_only){if(game_attached&&!(game.globals.game_flags&8))game.recording.input.timing_level=statistics.state.replay_fps;platform.process_sounds();}

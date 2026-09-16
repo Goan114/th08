@@ -3,7 +3,7 @@
 namespace th08 {
 namespace {
 Vec3 presentation_lerp(const Vec3& previous,const Vec3& current){
-    return {presentation::lerp(previous.x,current.x),presentation::lerp(previous.y,current.y),presentation::lerp(previous.z,current.z)};
+    return {presentation::lerp_world(previous.x,current.x),presentation::lerp_world(previous.y,current.y),presentation::lerp_world(previous.z,current.z)};
 }
 bool presentation_near(const Vec3& previous,const Vec3& current){const float dx=current.x-previous.x,dy=current.y-previous.y;return dx*dx+dy*dy<4096.0f;}
 }

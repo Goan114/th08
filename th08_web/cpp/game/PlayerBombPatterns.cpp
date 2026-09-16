@@ -9,11 +9,11 @@ void PlayerBombPatterns::snapshot_presentation(){for(u32 i=0;i<128;++i){const au
 Vec3 PlayerBombPatterns::presentation_position(u32 index)const{
     if(index>=128||!presentation::active)return index<128?objects.objects[index].position:Vec3{};const auto& o=objects.objects[index];const auto& p=presentation_previous[index];
     const float dx=o.position.x-p.position.x,dy=o.position.y-p.position.y;if(p.state!=o.state||p.script!=o.animation[0].scriptIndex||o.timer.current<p.age||dx*dx+dy*dy>=16384.0f)return o.position;
-    return {presentation::lerp(p.position.x,o.position.x),presentation::lerp(p.position.y,o.position.y),presentation::lerp(p.position.z,o.position.z)};
+    return {presentation::lerp_world(p.position.x,o.position.x),presentation::lerp_world(p.position.y,o.position.y),presentation::lerp_world(p.position.z,o.position.z)};
 }
 float PlayerBombPatterns::presentation_angle(u32 index)const{
     if(index>=128||!presentation::active)return index<128?objects.objects[index].angle:0;const auto& o=objects.objects[index];const auto& p=presentation_previous[index];if(p.state!=o.state||p.script!=o.animation[0].scriptIndex||o.timer.current<p.age)return o.angle;
-    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=o.angle-p.angle;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(p.angle+delta*presentation::alpha,0);
+    constexpr float pi=3.1415927410125732f,tau=6.2831854820251465f;float delta=o.angle-p.angle;if(delta>pi)delta-=tau;else if(delta<-pi)delta+=tau;return add_angle(p.angle+delta*presentation::world_alpha,0);
 }
 void PlayerBombPatterns::begin(PlayerBombKind kind,i32 sprite,i32 duration,i32 invincibility,i32 variant){begin_player_bomb(objects,bomb,life,movement.position,sprite,player_bomb_name(kind),duration,invincibility,variant,actions);}
 void PlayerBombPatterns::step(AnmVm* vm,u32 count){for(u32 i=0;i<count;++i)if(vm[i].scriptIndex>=0)actions.step_animation(vm[i]);}

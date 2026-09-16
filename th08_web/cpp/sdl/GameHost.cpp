@@ -69,7 +69,7 @@ EM_BOOL frame(double now,void* epoch){if(!running||uintptr_t(epoch)!=loop_epoch)
     }
     if(!result&&runtime&&high){
         const bool frozen=runtime->app.in_game()&&(runtime->app.game.paused||runtime->app.game.retrying||runtime->app.game.menus.context.pause_state||runtime->app.game.menus.context.show_retry);
-        const float alpha=interpolate&&!frozen?float(cadence.interpolation_alpha()):1.0f;presented=runtime->app.draw(alpha,interpolate,true);
+        const float alpha=interpolate?float(cadence.interpolation_alpha()):1.0f;presented=runtime->app.draw(alpha,interpolate,true,!frozen);
     }
     if(presented&&runtime)runtime->app.statistics.presentation_frame();
     sdl_audio_pump();th08_frame_finished(result,emscripten_get_now()-frame_begin);return running?EM_TRUE:EM_FALSE;

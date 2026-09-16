@@ -58,7 +58,7 @@ JobResult ScreenEffects::draw(ScreenEffectState& s){
     case ScreenEffectType::MenuFullFade:full=true;break;
     default:break;
     }
-    i32 draw_alpha=s.alpha;if(presentation::active){const auto found=presentation_previous.find(&s);if(found!=presentation_previous.end()){const auto& before=found->second;if(before.type==s.type&&before.phase==s.phase&&before.a==s.a&&s.timer.current>=before.timer)draw_alpha=i32(std::clamp(presentation::lerp(float(before.alpha),float(s.alpha)),0.0f,255.0f));}}
+    i32 draw_alpha=s.alpha;if(presentation::active){const auto found=presentation_previous.find(&s);if(found!=presentation_previous.end()){const auto& before=found->second;if(before.type==s.type&&before.phase==s.phase&&before.a==s.a&&s.timer.current>=before.timer)draw_alpha=i32(std::clamp(presentation::lerp_world(float(before.alpha),float(s.alpha)),0.0f,255.0f));}}
     const u32 color=(u32(draw_alpha)<<24)|(s.type==ScreenEffectType::Flash?u32(s.b)&0xffffff:u32(s.a));
     const u32 colors[4]{color,color,color,color};renderer.draw_rectangle(full?0:32,full?0:16,full?640:416,full?480:464,colors);return JobResult::Continue;
 }

@@ -1,11 +1,12 @@
 #include "BackgroundView.hpp"
+#include "BackgroundScript.hpp"
 #include "Presentation.hpp"
 #include <algorithm>
 namespace th08 {
 JobResult BackgroundView::high(){
     auto& s=state;auto& r=renderer;
     if(!th08::presentation::render_only){presentation={s.spell_flag,s.tint_color,s.use_tint,s.effect_visible,true};objects.snapshot();}
-    else if(presentation.valid){restore={s.spell_flag,s.tint_color,s.use_tint,s.effect_visible,s.effect_flags,{},true};for(u32 i=0;i<32;++i)restore.effect_positions[i]=s.effect_positions[i];s.spell_flag=presentation.spell_flag;s.tint_color=presentation.tint_color;s.use_tint=presentation.use_tint;s.effect_visible=presentation.effect_visible;}
+    else if(presentation.valid){restore={s.spell_flag,s.tint_color,s.use_tint,s.effect_visible,s.effect_flags,{},true};for(u32 i=0;i<32;++i)restore.effect_positions[i]=s.effect_positions[i];s.spell_flag=presentation.spell_flag;s.tint_color=presentation.tint_color;s.use_tint=presentation.use_tint;s.effect_visible=presentation.effect_visible;saved_camera=s.camera;s.camera=script.presentation_camera();camera_override=true;}
     s.effect_flags=0;for(u32 i=0;i<16;++i)s.effect_positions[i]={};
     auto viewport=r.viewport;viewport.x=32;viewport.y=16;viewport.width=384;viewport.height=448;r.viewport=viewport;r.begin_background();
     if(!r.fog_disabled)r.set_fog(false);r.flush();
@@ -30,7 +31,7 @@ JobResult BackgroundView::low(){
     if(s.spell_state>0){for(i32 i=0;i<s.spell_vm_count&&i<32;++i)layer(s.spell_vms[i]);if(s.callback)s.callback(s,r,callback_context);}
     r.screen_camera();r.set_viewport(r.viewport);r.set_fog_range(1000,2000);
     if(!s.use_tint){r.mix_enabled=false;r.mix_color=0x80808080;}s.use_tint=0;s.effect_visible=0;
-    if(restore.active){s.spell_flag=restore.spell_flag;s.tint_color=restore.tint_color;s.use_tint=restore.use_tint;s.effect_visible=restore.effect_visible;s.effect_flags=restore.effect_flags;for(u32 i=0;i<32;++i)s.effect_positions[i]=restore.effect_positions[i];restore.active=false;}
+    if(restore.active){s.spell_flag=restore.spell_flag;s.tint_color=restore.tint_color;s.use_tint=restore.use_tint;s.effect_visible=restore.effect_visible;s.effect_flags=restore.effect_flags;for(u32 i=0;i<32;++i)s.effect_positions[i]=restore.effect_positions[i];restore.active=false;}if(camera_override){s.camera=saved_camera;camera_override=false;}
     return JobResult::Continue;
 }
 }

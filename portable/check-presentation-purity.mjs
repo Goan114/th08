@@ -35,6 +35,17 @@ assert.match(items,/if\(presentation::render_only\)\{copy=source;vm=&copy;\}/);
 const background=read('th08_web/cpp/game/BackgroundObjects.cpp');
 assert.match(background,/if\(!presentation::render_only\)object\.flags\|=2/);
 assert.match(background,/presentation::render_only.*presentation_vms/s);
+const backgroundView=read('th08_web/cpp/game/BackgroundView.cpp');
+const backgroundScript=read('th08_web/cpp/game/BackgroundScript.cpp');
+assert.match(backgroundView,/saved_camera=s\.camera;s\.camera=script\.presentation_camera\(\);camera_override=true/);
+assert.match(backgroundView,/if\(camera_override\)\{s\.camera=saved_camera;camera_override=false;\}/);
+assert.match(backgroundScript,/presentation_previous_camera=s\.camera;presentation_camera_valid=true/);
+
+const menus=read('th08_web/cpp/game/UiMenus.cpp');
+assert.match(menus,/snapshot_pause\(\)/);
+assert.match(menus,/snapshot_retry\(\)/);
+assert.match(menus,/presentation::render_only/);
+assert.match(menus,/presentation::lerp\(before\.pos\.x,source\.pos\.x\)/);
 
 const enemy=read('th08_web/cpp/game/EnemySystem.cpp');
 assert.match(enemy,/if\(!presentation::render_only\)failed\|=!ok/);
