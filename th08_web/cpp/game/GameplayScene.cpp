@@ -1,16 +1,17 @@
 #include "GameplayScene.hpp"
 #include "PracticeRuntime.hpp"
+#include "PracticeSections.hpp"
 namespace th08 {
 GameplayScene::GameplayScene(GameplaySession& s,TextureStore& t,AnmLibrary& l,AnmRenderer& r,GameplayPlatform& p,Chain* shared_chain,AsciiManager* shared_ascii)
  :session(s),textures(t),library(l),renderer(r),platform(p),chain(shared_chain?*shared_chain:owned_chain),animations(s.random),owned_ascii(animations,r,p),ascii(shared_ascii?*shared_ascii:owned_ascii),
-  player_services(player_state,shots,s.numbers,s.values,s.gauge,s.rank,l,animations,r,p),
+  player_services(player_state,shots,s.numbers,s.values,s.gauge,s.rank,s.practice,l,animations,r,p),
   player(player_state,shots,s.numbers,s.gauge,s.thresholds,s.rank,s.random,player_services.services()),
   screen(chain,r,s.random),effect_system(effect_pool,environment,animations,r,s.random,screen,player_state.shots.regions,s.values,player_state.context.replay_flags),
   items(player,s.numbers,s.values,s.gauge,s.rank,s.history,s.random,l,animations,r,player_services),
   executor(s.random,player.timing,globals),
   enemies(program,executor,player.timing,s.random,s.numbers,s.values,s.rank,s.gauge,player,effect_system,items,projectile_pool,ascii,ascii_context,r,*this),
   bullets(projectile_pool,globals,s.random,player,items,effect_system,r,*this),
-  presentation(globals,animations,p,*this),spells(globals,s.numbers,s.values,s.history,s.records,effect_system,background,animations,presentation,player_state.bomb,enemies),spell_drawing(globals,s.records,r),
+  presentation(globals,animations,p,*this),spells(globals,s.numbers,s.values,s.history,s.records,effect_system,background,animations,presentation,player_state.bomb,s.practice,enemies),spell_drawing(globals,s.records,r),
   gui(hud,display,dialogue_context,gui_context,s.numbers,s.values,s.config,animations,ascii,r,*this),
   dialogue(hud,display,dialogue_context,s.numbers,s.values,animations,p,r,*this),
   background_script(background,background_context,animations,*this),background_view(background,background_script,r,*this),spell_background(background,background_view,effect_system,animations),name_atlas(t,r),
@@ -25,8 +26,36 @@ GameplayScene::~GameplayScene(){unload();}
 bool GameplayScene::ControlActions::replay_stage(i32 stage){return scene.replay_stage_mask&(1u<<stage);}
 void GameplayScene::ControlActions::update_enemy_name(){auto& g=scene.globals;scene.copy_enemy_name(EnemyNameAtlas::select(g.stage,bool(g.game_flags&0x4000),g.current_spell));}
 void GameplayScene::ControlActions::release_loading_surface(){scene.platform.release_loading_surface();}
-void GameplayScene::ControlActions::play_music(i32 slot,i32 song){scene.platform.play_music(slot,song);}
-void GameplayScene::ControlActions::pause_audio(){scene.platform.menu_music(MenuMusic::Pause,0);}
+void GameplayScene::ControlActions::play_music(i32 slot,i32 song){if(!scene.practice_bgm_filter(0,song))scene.platform.play_music(slot,song);}
+void GameplayScene::ControlActions::pause_audio(){if(!scene.practice_bgm_filter(2,0))scene.platform.menu_music(MenuMusic::Pause,0);}
+bool GameplayScene::practice_bgm_filter(i32 command,i32 song){
+    // Port of upstream ElBgmTest (thprac_games.h): while the everlasting-BGM
+    // hotkey holds, duplicate starts, stops and pauses are swallowed so the
+    // locked song keeps playing. The lock re-arms on the next play command.
+    auto& p=session.practice;
+    bool el=p.everlasting_bgm&&p.active&&!p.replay;
+    if(p.run.section==TH08_ST6A_LS||(p.run.section>=TH08_ST6B_LS1&&p.run.section<=TH08_ST6B_LS5))el=false;
+    const bool is_practice=(globals.game_flags&1)!=0;
+    switch(command){
+    case 0:
+        if(p.el_bgm_lock==-1)p.el_bgm_lock=song;
+        if(p.el_bgm_lock!=song){p.el_bgm_lock=-1;p.el_bgm_block=false;}
+        else if(!p.el_bgm_block&&el){p.el_bgm_block=true;return false;}
+        if(p.el_bgm_lock>=0&&p.el_bgm_lock!=song){p.el_bgm_lock=-1;p.el_bgm_block=false;}
+        break;
+    case 1:
+        if(p.el_bgm_lock>=0){p.el_bgm_lock=-1;if(!is_practice||!el)p.el_bgm_block=false;}
+        break;
+    case 2:
+        if(p.el_bgm_lock>=0)p.el_bgm_block=el;
+        break;
+    case 3:
+        if(p.el_bgm_lock>=0&&!p.el_bgm_block&&el){p.el_bgm_block=true;return false;}
+        break;
+    default:break;
+    }
+    return p.el_bgm_block;
+}
 void GameplayScene::ControlActions::sound(i32 index){scene.sound(index);}
 void GameplayScene::ControlActions::update_game_time(){scene.update_game_time();}
 void GameplayScene::ControlActions::capture_arcade(){scene.capture_arcade();}
@@ -179,9 +208,10 @@ void GameplayScene::unload(bool keep,bool release_all){
     if(release_all){release(5);shots[0]=ShotResource{};shots[1]=ShotResource{};}
 }
 bool GameplayScene::prepare_frame(u16 buttons,float rate,bool force_unit){
-    update_practice(*this,session);
     if(!ready())return false;player.timing={rate,force_unit};player_state.input.buttons=buttons;player_state.bomb_input.previous_buttons=previous_input;dialogue_context.previous_input=previous_input;dialogue_context.input=buttons;menus.context.keys=buttons;menus.context.previous_keys=previous_input;previous_input=buttons;
     if(recording_game){recording.input.physical=buttons;publish_input(recording.input);}else if(playing_replay)publish_input(playback.input);
+    // Practice cheats run after input publication so F6 can press the bomb key.
+    update_practice(*this,session);
     synchronize();return !invalid();
 }
 bool GameplayScene::update(u16 buttons,float rate,bool force_unit){if(!prepare_frame(buttons,rate,force_unit))return false;failed|=chain.run()<0;return !invalid();}

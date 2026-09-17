@@ -19,7 +19,15 @@ struct PracticeState {
     PracticeConfig configured,run;
     // Cheats are deliberately unavailable during replay and disable saving a
     // recording once used: a changing trainer state isn't a deterministic run.
-    u32 cheats=0;bool assisted=false,familiar_pending=false;
+    u32 cheats=0;bool assisted=false,familiar_pending=false,everlasting_bgm=false;
+    // Everlasting-BGM filter state, mirroring ElBgmTest's statics upstream.
+    i32 el_bgm_lock=-1;bool el_bgm_block=false;
+    // Advanced Options owns these independently of the in-game F1-F7 flags,
+    // exactly like THAdvOptWnd's persistent context in upstream thprac.
+    bool all_clear_bonus=false,doswnc=false;
+    // TH08's Tab tracker keeps this per-run counter separately from the
+    // aggregate captured-spell value stored by the original game.
+    u32 tracker_last_spell_captures=0,tracker_dissolve_count=0;
 };
 std::vector<u8> practice_trailer(const PracticeConfig&);
 // Strips only our final trailer; callers can subsequently read THMOTION.

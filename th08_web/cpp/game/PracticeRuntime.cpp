@@ -81,8 +81,7 @@ bool apply_practice(GameplayScene& g,GameplaySession& s){
     n.graze=n.graze_stage=p.graze;n.points=p.point?p.point:p.point_total;n.points_stage=p.point?p.point:p.point_stage;s.history.points=n.points;
     n.point_extends=0;do{point_item_extend_threshold(n,g.globals.difficulty);if(n.points<n.next_point_extend)break;++n.point_extends;}while(n.point_extends<32);
     n.time_orbs=n.total_time_orbs=s.history.time_orbs=p.time;n.point_value=p.value/10*10;n.clock_time=i8(p.night);
-    s.rank.value=p.rankLock?p.rank:std::min(p.rank,(g.globals.difficulty==2||g.globals.difficulty==3)?12:16);
-    if(p.rankLock)s.rank.minimum=s.rank.maximum=p.rank;
+    if(p.rank){s.rank.value=p.rankLock?p.rank:std::min(p.rank,(g.globals.difficulty==2||g.globals.difficulty==3)?12:16);if(p.rankLock)s.rank.minimum=s.rank.maximum=p.rank;}
     if(!PracticePatcher(g,s).apply())return false;
     state.familiar_pending=p.familiar!=0;g.enemies.population.practice_familiar=state.familiar_pending?p.familiar:0;
     const bool boss=p.section>=10000?((p.stage==3||p.stage==4)&&p.section%100>4):(p.section&&!p.dlg&&practice_sections[p.section].bgm);
@@ -96,11 +95,13 @@ bool apply_practice(GameplayScene& g,GameplaySession& s){
 }
 void update_practice(GameplayScene& g,GameplaySession& s){
     auto& p=s.practice;if(!p.enabled||p.replay||!p.cheats)return;
-    p.assisted=true;auto& n=s.numbers;
-    if(p.cheats&1){if(g.globals.player_state==0||g.globals.player_state==3){g.globals.player_state=3;g.globals.player_state_timer.set(60);}}
-    if(p.cheats&2)n.lives=8;if(p.cheats&4)n.bombs=8;if(p.cheats&8)n.power=128;
-    if(p.cheats&16)n.clock_time=i8(p.active?p.run.night:0);
-    if(p.cheats&32)g.player_state.life.auto_bomb=1;
-    s.values.refresh_integrity();
+    p.assisted=true;
+    // F5 time lock (upstream patches 0x416CBE and 0x42DDB5): keep every boss
+    // phase timeout one frame ahead of its clock so the remaining time never
+    // decreases. Night/clock counters are not part of this cheat.
+    if(p.cheats&16)for(auto* boss:g.globals.boss_slots)if(boss&&boss->timeout>0)boss->timeout=wrapping_add(boss->timeout,1);
+    // F6 auto bomb (upstream 0x44CC18/0x44CC21 write the bomb key into the
+    // input bitmap on hit): press bomb while the deathbomb window is open.
+    if(p.cheats&32){auto& life=g.player_state.life;if(life.state==2&&life.predead_count>0&&s.numbers.bombs>=1)g.player_state.input.buttons|=2;}
 }
 }

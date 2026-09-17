@@ -63,7 +63,7 @@ async function command(message){
  case 'resources':await installResources(message.resources);return {};
  case 'keyboard':if(!practice?.key(String(message.code),!!message.down))cstring(String(message.code),p=>core.sdl_key(p,!!message.down));return {};
  case 'thprac-mouse':practice?.mouse(message);return {};
- case 'keyboard-clear':core.sdl_keys_clear();return {};
+ case 'keyboard-clear':practice?.clear();core.sdl_keys_clear();return {};
  case 'touch-cancel':cancelTouches();return {};
  case 'direct-touch':directTouch(core,canvas,message,{width:innerWidth,height:innerHeight});return {};
  case 'touch-controls':touchControls(core,options,message);return {};
@@ -81,17 +81,20 @@ window.addEventListener('message',event=>{const m=event.data;if(event.source!==p
  queue=queue.then(async()=>{await initialized;try{const result=await command(m);if(typeof m.request==='string')parent.postMessage({protocol,game,request:m.request,ok:true,...result},location.origin);}catch(e){if(typeof m.request==='string')parent.postMessage({protocol,game,request:m.request,ok:false,error:String(e),errno:e.errno},location.origin);else error(e);}}).catch(error);
 });
 document.addEventListener('visibilitychange',()=>{if(!core||!launched)return;core.sdl_keys_clear();cancelTouches();core.sdl_loop_pause(document.hidden?1:0);if(document.hidden)queue=queue.then(save).catch(error);});
-window.addEventListener('blur',()=>{if(core){core.sdl_keys_clear();cancelTouches();}});
+window.addEventListener('blur',()=>{if(core){practice?.clear();core.sdl_keys_clear();cancelTouches();}});
 window.addEventListener('pagehide',()=>{cancelTouches();if(core&&launched){core.sdl_loop_pause(1);void save().catch(console.error);}});
 canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();core?.sdl_loop_pause(1);error('图形环境已失效，请退出后重新开始。');});
 for(const name of ['pointerdown','keydown'])window.addEventListener(name,()=>Module?.SDL3?.audioContext?.resume().catch(()=>{}),{capture:true});
+for(const name of ['keydown','keyup'])window.addEventListener(name,event=>{
+ if(options.thpracEnabled&&practice?.key(event.code,name==='keydown'))event.preventDefault();
+},{capture:true});
 const initialized=(async()=>{
  let audioContext;try{audioContext=parent.__touhouAudioContext||parent.__th10AudioContext;}catch{}
  Module=await createModule({canvas,noInitialRun:true,...(audioContext?{SDL3:{audioContext}}:{}),print:console.log,printErr:console.error,
   instantiateWasm(imports,ready){return WebAssembly.instantiateStreaming(fetch('./th08-sdl.wasm'),imports).then(({instance,module})=>{core=instance.exports;ready(instance,module);return core;});}
  });
  window.Module=Module;window.FS=Module.FS;observeMusicWrites(Module,core,game);Module.FS.mkdirTree('/savesth08');Module.FS.mount(Module.IDBFS,{},'/savesth08');await sync(true);
- practice=createPractice({core,getApp:()=>app,canvas,clearKeys:()=>core.sdl_keys_clear(),setMusic:value=>core.sdl_music_enabled(value)});
+ practice=createPractice({core,getApp:()=>app,canvas,clearKeys:()=>core.sdl_keys_clear(),setMusic:value=>core.sdl_music_enabled(value),setPaused:value=>core.sdl_loop_pause(value||document.hidden?1:0)});
  Module.FS.mkdirTree('/savesth08/replay');await migrateSaves();await mountData();cstring('#screen',core.sdl_canvas);
  Module.runtimePrepare=()=>!document.hidden;
  Module.runtimeFinish=(result,duration)=>{

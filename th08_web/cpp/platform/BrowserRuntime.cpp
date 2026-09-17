@@ -1,4 +1,8 @@
 #include "BrowserRuntime.hpp"
+#ifdef TH_NATIVE_PLATFORM
+#include "../sdl/ThpracUi.hpp"
+#include "Renderer.hpp"
+#endif
 #include "PlatformDevices.hpp"
 #include "GameAudioManager.hpp"
 #include "../game/Presentation.hpp"
@@ -94,6 +98,9 @@ const BrowserTexture* BrowserRuntime::texture(u32 h){const auto* r=app.textures.
 void BrowserRuntime::begin_frame(){}
 bool BrowserRuntime::present(){
     flush();
+#ifdef TH_NATIVE_PLATFORM
+    if(auto* renderer=touhou::sdl::current())ThpracUi::render(*this,*renderer);
+#endif
     if(presentation::render_only)return graphics_device().present(back)&&!capture_failed;
     captured=false;const bool presented=graphics_device().present(back);finish_capture();return presented&&!capture_failed;
 }
