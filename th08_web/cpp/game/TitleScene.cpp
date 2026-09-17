@@ -24,7 +24,7 @@ bool TitleScene::attach(Chain& owner){
             if(practice.accepted){practice.accepted=false;practice.menu=false;s.context.currentStage=practice.run.stage;
                 if(practice.run.stage==8)s.context.difficulty=4;s.context.flags.isPracticeMode=true;s.context.flags.isReplay=false;s.context.flags.isSpellPractice=false;
                 s.context.supervisor_state=2;s.platform.stop_audio();return JobResult::Remove;}
-            practice.menu=true;return JobResult::Continue;
+            practice.menu=true;s.menus.state.practiceState=0;return JobResult::Continue;
         }
         practice.menu=false;const auto result=s.menus.update();return s.invalid()?JobResult::Error:result;});calculation.argument=this;calculation.deleted=[](void* p){static_cast<TitleScene*>(p)->release();return 0;};
     drawing.set_callback([](void* p){auto& s=*static_cast<TitleScene*>(p);if(!s.information.active)s.view.draw();return s.invalid()?JobResult::Error:JobResult::Continue;});drawing.argument=this;

@@ -23,7 +23,9 @@ bool GuiFlow::setup(){
     if(!context.keep_resources){g.stage_text=resources.load(13,stage_text[spell&&context.spell_number>=205?8:s.stage]);if(!g.stage_text)return false;}
     if(context.initial)for(i32 i=0;i<16;++i)if(!c.start(d.front[i],g.front,i))return false;
     g.frame=0;g.boss_present=false;d.boss_life_state=0;g.boss_life_max=g.boss_life=0;
-    if(!spell){for(i32 i=0;i<4;++i){if(!c.start(d.stage_text[i],g.stage_text,i,true))return false;d.stage_text[i].baseSpriteIndex=d.stage_text[i].activeSpriteIndex;}}
+    // Upstream th08_disable_title (0x439568): section warps skip the opening
+    // stage title sequence; the tied clock intro never executes either.
+    if(!spell&&!context.section_warp){for(i32 i=0;i<4;++i){if(!c.start(d.stage_text[i],g.stage_text,i,true))return false;d.stage_text[i].baseSpriteIndex=d.stage_text[i].activeSpriteIndex;}}
     else{const auto& music=spell_music(context.spell_number);if(!context.keep_resources||music.pause_in_practice){if(!c.start(d.stage_text[0],g.stage_text,3,true))return false;d.stage_text[0].baseSpriteIndex=d.stage_text[0].activeSpriteIndex;if(g.stage_text->SetSprite(&d.stage_text[0],music.name_sprite+3))return false;}}
     d.dialogue.message=-1;d.clear_frames=0;d.bonus.display=d.popup.display=d.spell_bonus.display=0;g.flags.lives=g.flags.bombs=g.flags.graze=g.flags.points=g.flags.power=g.flags.time=2;
     if(!c.start(d.stage_rank,s.ascii,3))return false;c.scene.hud_redraw=16;d.clear_clock_display=0;return true;

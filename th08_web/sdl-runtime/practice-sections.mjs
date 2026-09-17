@@ -44,14 +44,14 @@ export const sections=[
     "bgm": 0,
     "names": [
       [
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2"
+        "",
+        "",
+        ""
       ],
       [
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2"
+        "",
+        "",
+        ""
       ],
       [
         "萤符「地上的流星」",
@@ -219,9 +219,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST1_LS",
-        "TH08_ST1_LS",
-        "TH08_ST1_LS"
+        "",
+        "",
+        ""
       ],
       [
         "隐虫「永夜蛰居」",
@@ -499,9 +499,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST2_LS",
-        "TH08_ST2_LS",
-        "TH08_ST2_LS"
+        "",
+        "",
+        ""
       ],
       [
         "夜雀「午夜中的合唱指挥」",
@@ -639,9 +639,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST3_BOSS2",
-        "TH08_ST3_BOSS2",
-        "TH08_ST3_BOSS2"
+        "",
+        "",
+        ""
       ],
       [
         "始符「短命的137」",
@@ -814,9 +814,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST3_LS",
-        "TH08_ST3_LS",
-        "TH08_ST3_LS"
+        "",
+        "",
+        ""
       ],
       [
         "未来「高天原」",
@@ -1164,9 +1164,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST4A_LS",
-        "TH08_ST4A_LS",
-        "TH08_ST4A_LS"
+        "",
+        "",
+        ""
       ],
       [
         "神灵「梦想封印　瞬」",
@@ -1514,9 +1514,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST4B_LS",
-        "TH08_ST4B_LS",
-        "TH08_ST4B_LS"
+        "",
+        "",
+        ""
       ],
       [
         "魔炮「究极火花」",
@@ -1864,9 +1864,9 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST5_LS",
-        "TH08_ST5_LS",
-        "TH08_ST5_LS"
+        "",
+        "",
+        ""
       ],
       [
         "月眼「月兔远隔催眠术(Tele-Mesmerism)」",
@@ -2879,24 +2879,24 @@ export const sections=[
     "bgm": 0,
     "names": [
       [
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1"
+        "旧史「旧秘境史 -古代史-」",
+        "Past \"Old History of an Untrodden Land -Old History-\"",
+        "旧史「旧秘境史　-オールドヒストリー-」"
       ],
       [
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1"
+        "旧史「旧秘境史 -古代史-」",
+        "Past \"Old History of an Untrodden Land -Old History-\"",
+        "旧史「旧秘境史　-オールドヒストリー-」"
       ],
       [
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1"
+        "旧史「旧秘境史 -古代史-」",
+        "Past \"Old History of an Untrodden Land -Old History-\"",
+        "旧史「旧秘境史　-オールドヒストリー-」"
       ],
       [
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1",
-        "TH08_ST7_MID1"
+        "旧史「旧秘境史 -古代史-」",
+        "Past \"Old History of an Untrodden Land -Old History-\"",
+        "旧史「旧秘境史　-オールドヒストリー-」"
       ],
       [
         "旧史「旧秘境史 -古代史-」",
@@ -2914,24 +2914,24 @@ export const sections=[
     "bgm": 0,
     "names": [
       [
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2"
+        "转世「一条归桥」",
+        "Reincarnation \"Ichijou Returning Bridge\"",
+        "転世「一条戻り橋」"
       ],
       [
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2"
+        "转世「一条归桥」",
+        "Reincarnation \"Ichijou Returning Bridge\"",
+        "転世「一条戻り橋」"
       ],
       [
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2"
+        "转世「一条归桥」",
+        "Reincarnation \"Ichijou Returning Bridge\"",
+        "転世「一条戻り橋」"
       ],
       [
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2",
-        "TH08_ST7_MID2"
+        "转世「一条归桥」",
+        "Reincarnation \"Ichijou Returning Bridge\"",
+        "転世「一条戻り橋」"
       ],
       [
         "转世「一条归桥」",
@@ -2949,24 +2949,24 @@ export const sections=[
     "bgm": 0,
     "names": [
       [
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3"
+        "新史「新幻想史 -现代史-」",
+        "Future \"New History of Fantasy -Next History-\"",
+        "新史「新幻想史　-ネクストヒストリー-」"
       ],
       [
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3"
+        "新史「新幻想史 -现代史-」",
+        "Future \"New History of Fantasy -Next History-\"",
+        "新史「新幻想史　-ネクストヒストリー-」"
       ],
       [
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3"
+        "新史「新幻想史 -现代史-」",
+        "Future \"New History of Fantasy -Next History-\"",
+        "新史「新幻想史　-ネクストヒストリー-」"
       ],
       [
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3",
-        "TH08_ST7_MID3"
+        "新史「新幻想史 -现代史-」",
+        "Future \"New History of Fantasy -Next History-\"",
+        "新史「新幻想史　-ネクストヒストリー-」"
       ],
       [
         "新史「新幻想史 -现代史-」",
@@ -2984,24 +2984,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1"
+        "关底一非",
+        "Boss Nonspell 1",
+        "ボス 通常1"
       ],
       [
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1"
+        "关底一非",
+        "Boss Nonspell 1",
+        "ボス 通常1"
       ],
       [
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1"
+        "关底一非",
+        "Boss Nonspell 1",
+        "ボス 通常1"
       ],
       [
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1",
-        "TH08_ST7_END_NS1"
+        "关底一非",
+        "Boss Nonspell 1",
+        "ボス 通常1"
       ],
       [
         "关底一非",
@@ -3019,24 +3019,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1"
+        "时效「月岩笠的诅咒」",
+        "Limiting Edict \"Curse of Tsuki-no-Iwakasa\"",
+        "時効「月のいはかさの呪い」"
       ],
       [
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1"
+        "时效「月岩笠的诅咒」",
+        "Limiting Edict \"Curse of Tsuki-no-Iwakasa\"",
+        "時効「月のいはかさの呪い」"
       ],
       [
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1"
+        "时效「月岩笠的诅咒」",
+        "Limiting Edict \"Curse of Tsuki-no-Iwakasa\"",
+        "時効「月のいはかさの呪い」"
       ],
       [
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1",
-        "TH08_ST7_END_S1"
+        "时效「月岩笠的诅咒」",
+        "Limiting Edict \"Curse of Tsuki-no-Iwakasa\"",
+        "時効「月のいはかさの呪い」"
       ],
       [
         "时效「月岩笠的诅咒」",
@@ -3054,24 +3054,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2"
+        "关底二非",
+        "Boss Nonspell 2",
+        "ボス 通常2"
       ],
       [
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2"
+        "关底二非",
+        "Boss Nonspell 2",
+        "ボス 通常2"
       ],
       [
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2"
+        "关底二非",
+        "Boss Nonspell 2",
+        "ボス 通常2"
       ],
       [
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2",
-        "TH08_ST7_END_NS2"
+        "关底二非",
+        "Boss Nonspell 2",
+        "ボス 通常2"
       ],
       [
         "关底二非",
@@ -3089,24 +3089,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2"
+        "不死「火鸟　-凤翼天翔-」",
+        "Undying \"Fire Bird -Flying Phoenix-\"",
+        "不死「火の鳥　-鳳翼天翔-」"
       ],
       [
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2"
+        "不死「火鸟　-凤翼天翔-」",
+        "Undying \"Fire Bird -Flying Phoenix-\"",
+        "不死「火の鳥　-鳳翼天翔-」"
       ],
       [
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2"
+        "不死「火鸟　-凤翼天翔-」",
+        "Undying \"Fire Bird -Flying Phoenix-\"",
+        "不死「火の鳥　-鳳翼天翔-」"
       ],
       [
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2",
-        "TH08_ST7_END_S2"
+        "不死「火鸟　-凤翼天翔-」",
+        "Undying \"Fire Bird -Flying Phoenix-\"",
+        "不死「火の鳥　-鳳翼天翔-」"
       ],
       [
         "不死「火鸟　-凤翼天翔-」",
@@ -3124,24 +3124,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3"
+        "关底三非",
+        "Boss Nonspell 3",
+        "ボス 通常3"
       ],
       [
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3"
+        "关底三非",
+        "Boss Nonspell 3",
+        "ボス 通常3"
       ],
       [
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3"
+        "关底三非",
+        "Boss Nonspell 3",
+        "ボス 通常3"
       ],
       [
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3",
-        "TH08_ST7_END_NS3"
+        "关底三非",
+        "Boss Nonspell 3",
+        "ボス 通常3"
       ],
       [
         "关底三非",
@@ -3159,24 +3159,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3"
+        "藤原「灭罪寺院伤」",
+        "Fujiwara \"Wounds of Metsuzai Temple\"",
+        "藤原「滅罪寺院傷」"
       ],
       [
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3"
+        "藤原「灭罪寺院伤」",
+        "Fujiwara \"Wounds of Metsuzai Temple\"",
+        "藤原「滅罪寺院傷」"
       ],
       [
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3"
+        "藤原「灭罪寺院伤」",
+        "Fujiwara \"Wounds of Metsuzai Temple\"",
+        "藤原「滅罪寺院傷」"
       ],
       [
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3",
-        "TH08_ST7_END_S3"
+        "藤原「灭罪寺院伤」",
+        "Fujiwara \"Wounds of Metsuzai Temple\"",
+        "藤原「滅罪寺院傷」"
       ],
       [
         "藤原「灭罪寺院伤」",
@@ -3194,24 +3194,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4"
+        "关底四非",
+        "Boss Nonspell 4",
+        "ボス 通常4"
       ],
       [
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4"
+        "关底四非",
+        "Boss Nonspell 4",
+        "ボス 通常4"
       ],
       [
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4"
+        "关底四非",
+        "Boss Nonspell 4",
+        "ボス 通常4"
       ],
       [
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4",
-        "TH08_ST7_END_NS4"
+        "关底四非",
+        "Boss Nonspell 4",
+        "ボス 通常4"
       ],
       [
         "关底四非",
@@ -3229,24 +3229,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4"
+        "不死「徐福时空」",
+        "Undying \"Xu Fu's Dimension\"",
+        "不死「徐福時空」"
       ],
       [
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4"
+        "不死「徐福时空」",
+        "Undying \"Xu Fu's Dimension\"",
+        "不死「徐福時空」"
       ],
       [
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4"
+        "不死「徐福时空」",
+        "Undying \"Xu Fu's Dimension\"",
+        "不死「徐福時空」"
       ],
       [
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4",
-        "TH08_ST7_END_S4"
+        "不死「徐福时空」",
+        "Undying \"Xu Fu's Dimension\"",
+        "不死「徐福時空」"
       ],
       [
         "不死「徐福时空」",
@@ -3264,24 +3264,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5"
+        "关底五非",
+        "Boss Nonspell 5",
+        "ボス 通常5"
       ],
       [
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5"
+        "关底五非",
+        "Boss Nonspell 5",
+        "ボス 通常5"
       ],
       [
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5"
+        "关底五非",
+        "Boss Nonspell 5",
+        "ボス 通常5"
       ],
       [
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5",
-        "TH08_ST7_END_NS5"
+        "关底五非",
+        "Boss Nonspell 5",
+        "ボス 通常5"
       ],
       [
         "关底五非",
@@ -3299,24 +3299,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5"
+        "灭罪「正直者之死」",
+        "Forgiveness \"Honest Man's Death\"",
+        "滅罪「正直者の死」"
       ],
       [
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5"
+        "灭罪「正直者之死」",
+        "Forgiveness \"Honest Man's Death\"",
+        "滅罪「正直者の死」"
       ],
       [
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5"
+        "灭罪「正直者之死」",
+        "Forgiveness \"Honest Man's Death\"",
+        "滅罪「正直者の死」"
       ],
       [
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5",
-        "TH08_ST7_END_S5"
+        "灭罪「正直者之死」",
+        "Forgiveness \"Honest Man's Death\"",
+        "滅罪「正直者の死」"
       ],
       [
         "灭罪「正直者之死」",
@@ -3334,24 +3334,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6"
+        "关底六非",
+        "Boss Nonspell 6",
+        "ボス 通常6"
       ],
       [
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6"
+        "关底六非",
+        "Boss Nonspell 6",
+        "ボス 通常6"
       ],
       [
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6"
+        "关底六非",
+        "Boss Nonspell 6",
+        "ボス 通常6"
       ],
       [
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6",
-        "TH08_ST7_END_NS6"
+        "关底六非",
+        "Boss Nonspell 6",
+        "ボス 通常6"
       ],
       [
         "关底六非",
@@ -3369,24 +3369,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6"
+        "虚人「无」",
+        "Hollow Giant \"Woo\"",
+        "虚人「ウー」"
       ],
       [
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6"
+        "虚人「无」",
+        "Hollow Giant \"Woo\"",
+        "虚人「ウー」"
       ],
       [
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6"
+        "虚人「无」",
+        "Hollow Giant \"Woo\"",
+        "虚人「ウー」"
       ],
       [
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6",
-        "TH08_ST7_END_S6"
+        "虚人「无」",
+        "Hollow Giant \"Woo\"",
+        "虚人「ウー」"
       ],
       [
         "虚人「无」",
@@ -3404,24 +3404,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7"
+        "关底七非",
+        "Boss Nonspell 7",
+        "ボス 通常7"
       ],
       [
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7"
+        "关底七非",
+        "Boss Nonspell 7",
+        "ボス 通常7"
       ],
       [
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7"
+        "关底七非",
+        "Boss Nonspell 7",
+        "ボス 通常7"
       ],
       [
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7",
-        "TH08_ST7_END_NS7"
+        "关底七非",
+        "Boss Nonspell 7",
+        "ボス 通常7"
       ],
       [
         "关底七非",
@@ -3439,24 +3439,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7"
+        "不灭「不死鸟之尾」",
+        "Inextinguishable \"Phoenix's Tail\"",
+        "不滅「フェニックスの尾」"
       ],
       [
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7"
+        "不灭「不死鸟之尾」",
+        "Inextinguishable \"Phoenix's Tail\"",
+        "不滅「フェニックスの尾」"
       ],
       [
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7"
+        "不灭「不死鸟之尾」",
+        "Inextinguishable \"Phoenix's Tail\"",
+        "不滅「フェニックスの尾」"
       ],
       [
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7",
-        "TH08_ST7_END_S7"
+        "不灭「不死鸟之尾」",
+        "Inextinguishable \"Phoenix's Tail\"",
+        "不滅「フェニックスの尾」"
       ],
       [
         "不灭「不死鸟之尾」",
@@ -3474,24 +3474,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8"
+        "关底八非",
+        "Boss Nonspell 8",
+        "ボス 通常8"
       ],
       [
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8"
+        "关底八非",
+        "Boss Nonspell 8",
+        "ボス 通常8"
       ],
       [
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8"
+        "关底八非",
+        "Boss Nonspell 8",
+        "ボス 通常8"
       ],
       [
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8",
-        "TH08_ST7_END_NS8"
+        "关底八非",
+        "Boss Nonspell 8",
+        "ボス 通常8"
       ],
       [
         "关底八非",
@@ -3509,24 +3509,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8"
+        "蓬莱「凯风快晴　-Fujiyama Volcano-」",
+        "Hourai \"South Wind, Clear Sky -Fujiyama Volcano-\"",
+        "蓬莱「凱風快晴　-フジヤマヴォルケイノ-」"
       ],
       [
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8"
+        "蓬莱「凯风快晴　-Fujiyama Volcano-」",
+        "Hourai \"South Wind, Clear Sky -Fujiyama Volcano-\"",
+        "蓬莱「凱風快晴　-フジヤマヴォルケイノ-」"
       ],
       [
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8"
+        "蓬莱「凯风快晴　-Fujiyama Volcano-」",
+        "Hourai \"South Wind, Clear Sky -Fujiyama Volcano-\"",
+        "蓬莱「凱風快晴　-フジヤマヴォルケイノ-」"
       ],
       [
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8",
-        "TH08_ST7_END_S8"
+        "蓬莱「凯风快晴　-Fujiyama Volcano-」",
+        "Hourai \"South Wind, Clear Sky -Fujiyama Volcano-\"",
+        "蓬莱「凱風快晴　-フジヤマヴォルケイノ-」"
       ],
       [
         "蓬莱「凯风快晴　-Fujiyama Volcano-」",
@@ -3544,24 +3544,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9"
+        "「不死鸟附体」",
+        "\"Possessed by Phoenix\"",
+        "「パゼストバイフェニックス」"
       ],
       [
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9"
+        "「不死鸟附体」",
+        "\"Possessed by Phoenix\"",
+        "「パゼストバイフェニックス」"
       ],
       [
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9"
+        "「不死鸟附体」",
+        "\"Possessed by Phoenix\"",
+        "「パゼストバイフェニックス」"
       ],
       [
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9",
-        "TH08_ST7_END_S9"
+        "「不死鸟附体」",
+        "\"Possessed by Phoenix\"",
+        "「パゼストバイフェニックス」"
       ],
       [
         "「不死鸟附体」",
@@ -3579,24 +3579,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10"
+        "「蓬莱人形」",
+        "\"Hourai Doll\"",
+        "「蓬莱人形」"
       ],
       [
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10"
+        "「蓬莱人形」",
+        "\"Hourai Doll\"",
+        "「蓬莱人形」"
       ],
       [
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10"
+        "「蓬莱人形」",
+        "\"Hourai Doll\"",
+        "「蓬莱人形」"
       ],
       [
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10",
-        "TH08_ST7_END_S10"
+        "「蓬莱人形」",
+        "\"Hourai Doll\"",
+        "「蓬莱人形」"
       ],
       [
         "「蓬莱人形」",
@@ -3614,24 +3614,24 @@ export const sections=[
     "bgm": 1,
     "names": [
       [
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS"
+        "「不朽的弹幕」",
+        "\"Imperishable Shooting\"",
+        "「インペリシャブルシューティング」"
       ],
       [
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS"
+        "「不朽的弹幕」",
+        "\"Imperishable Shooting\"",
+        "「インペリシャブルシューティング」"
       ],
       [
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS"
+        "「不朽的弹幕」",
+        "\"Imperishable Shooting\"",
+        "「インペリシャブルシューティング」"
       ],
       [
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS",
-        "TH08_ST7_END_LS"
+        "「不朽的弹幕」",
+        "\"Imperishable Shooting\"",
+        "「インペリシャブルシューティング」"
       ],
       [
         "「不朽的弹幕」",

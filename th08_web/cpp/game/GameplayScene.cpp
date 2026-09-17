@@ -174,14 +174,15 @@ bool GameplayScene::load(const GameplayLoad& wanted,bool initialize_values){
     if(initialize_values&&!startup.before_player(wanted.initial))return false;
     presentation.context.text=dialogue_context.text;spell_drawing.digits=dialogue_context.ascii;
     std::memcpy(dialogue_context.clears,session.clears,sizeof(session.clears));
-    if(!player_services.prepare()||!player.initialize({u8(wanted.character),wanted.initial,bool(wanted.flags&0x4000),0,{384,448}})){unload();return false;}player_services.finish();
+    const bool section_warp=session.practice.active&&session.practice.run.section!=0;
+    if(!player_services.prepare()||!player.initialize({u8(wanted.character),wanted.initial,bool(wanted.flags&0x4000),u8(section_warp),{384,448}})){unload();return false;}player_services.finish();
     if(initialize_values){
         startup.after_player(player.profile(false).initial_bombs);
         if(playing_replay){if(!playback.begin(wanted.stage,session,globals,player_state.context.miss_control)){unload();return false;}playback.input.current=playback.input.previous=0;replay_stage_mask=playback.stage_mask();if(wanted.initial&&playback.metadata().header.unknown6)sample_replay_frame();}
         startup.after_replay();std::memcpy(dialogue_context.clears,session.clears,sizeof(session.clears));
     }
     background_context={wanted.stage,false,bool(wanted.flags&0x4000),false};background_flow.context={wanted.keep_resources,dialogue_context.text};
-    bullet_flow.context={wanted.initial,wanted.release_resources};enemy_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources};effect_flow.context={wanted.stage,wanted.spell,bool(wanted.flags&0x4000),wanted.keep_resources};gui_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources,0,wanted.spell};spell_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources};
+    bullet_flow.context={wanted.initial,wanted.release_resources};enemy_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources};effect_flow.context={wanted.stage,wanted.spell,bool(wanted.flags&0x4000),wanted.keep_resources};gui_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources,u8(section_warp),wanted.spell};spell_flow.context={wanted.initial,wanted.keep_resources,wanted.release_resources};
     dialogue_context.flags=globals.game_flags;dialogue_context.stage=wanted.stage;dialogue_context.character=wanted.character;gui_context.difficulty=wanted.difficulty;items.difficulty=wanted.difficulty;
     if(!background_flow.attach(chain,wanted.stage)||!bullet_flow.attach(chain)||!enemy_flow.attach(chain)||!effect_flow.attach(chain)||!gui_flow.attach(chain)||!spell_flow.attach(chain)){unload();return false;}
     // These three counters belong to GameManager across stages. EnemyManager

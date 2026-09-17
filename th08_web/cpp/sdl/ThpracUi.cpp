@@ -13,7 +13,7 @@
 
 namespace th08::ThpracUi {
 namespace {
-bool initialized=false,frame_open=false,menu_open=false,tracker_open=false,advanced_open=false,practice_was_open=false;
+bool initialized=false,frame_open=false,menu_open=false,tracker_open=false,advanced_open=false,practice_was_open=false,practice_keys_armed=false;
 bool key_down[256]{},key_pressed[256]{};float mouse_x=-FLT_MAX,mouse_y=-FLT_MAX;bool mouse_down=false;
 int locale=0,practice_section_index=0;
 
@@ -51,7 +51,7 @@ void select_current_section(PracticeConfig& p){
 void draw_practice(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;auto& p=state.configured;
  if(!practice_was_open){
-  practice_was_open=true;practice_section_index=0;select_current_section(p);
+  practice_was_open=true;practice_keys_armed=false;practice_section_index=0;select_current_section(p);
   // THGuiPrac::State(1): when the gauge type changes, reset the gauge to the
   // shottype's initial value.
   const int shot=runtime.app.title.context.character;
@@ -83,13 +83,19 @@ void draw_practice(BrowserRuntime& runtime){
    const i64 score_min=0,score_max=9999999990ll;ImGui::DragScalar(tr("分数","Score","スコア"),ImGuiDataType_S64,&p.score,20.f,&score_min,&score_max,"%lld");p.score=p.score/10*10;
    ImGui::DragInt(tr("擦弹","Graze","グレイズ"),&p.graze,2,0,0x7fffffff);ImGui::DragInt(tr("总计蓝点","Point (Total)","得点(合計)"),&p.point_total,2,0,9999);ImGui::DragInt(tr("本关蓝点","Point (Stage)","得点(ステージ)"),&p.point_stage,2,0,9999);ImGui::DragInt(tr("刻符","Time Orbs","刻符"),&p.time,2,0,0x7fffffff);ImGui::DragInt(tr("夜点","Point Value","夜点"),&p.value,20,0,9999999);p.value=p.value/10*10;
    char night[16];if(p.night<2)std::snprintf(night,sizeof(night),"11:%s",p.night%2?"30":"00");else std::snprintf(night,sizeof(night),"%02d:%s",(p.night-2)/2,p.night%2?"30":"00");ImGui::SliderInt(tr("夜晚","Night","時刻"),&p.night,0,11,night);
-   if(p.warp==2||p.warp==3)ImGui::SliderInt(tr("累计使魔","Familiars","累計使い魔"),&p.familiar,0,2000);const int rankMax=p.rankLock?99:(runtime.app.title.context.difficulty>1?12:16);p.rank=std::clamp(p.rank,8,rankMax);ImGui::SliderInt("Rank",&p.rank,8,rankMax);ImGui::Checkbox(tr("锁Rank","Rank Lock","ランク固定"),reinterpret_cast<bool*>(&p.rankLock));
+   // Upstream CheckIfBoss(): any midboss/boss section (warp 2-5) shows familiars.
+   if(p.warp>=2&&p.warp<=5)ImGui::SliderInt(tr("累计使魔","Familiars","累計使い魔"),&p.familiar,0,2000);const int rankMax=p.rankLock?99:(runtime.app.title.context.difficulty>1?12:16);p.rank=std::clamp(p.rank,8,rankMax);ImGui::SliderInt("Rank",&p.rank,8,rankMax);ImGui::Checkbox(tr("锁Rank","Rank Lock","ランク固定"),reinterpret_cast<bool*>(&p.rankLock));
   }
-  ImGui::PopItemWidth();ImGui::SetWindowFocus();
+  ImGui::PopItemWidth();if(!ImGui::IsPopupOpen(nullptr,ImGuiPopupFlags_AnyPopupId|ImGuiPopupFlags_AnyPopupLevel))ImGui::SetWindowFocus();
  }
  ImGui::End();ImGui::PopStyleVar(2);
- if(pressed(VK_Z)||pressed(VK_RETURN)){select_current_section(p);state.run=p;state.run.warp=0;state.accepted=true;}
- if(pressed(VK_X)||pressed(VK_ESCAPE)){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
+ // The menu can open on the same tick that confirmed character select (the
+ // title chain re-executes the callback via EXECUTE_AGAIN), so the opening
+ // Z press is still a fresh edge: ignore confirm/cancel until every such
+ // key has been released once, matching upstream waiting for real input.
+ if(!practice_keys_armed){if(!(key_down[VK_Z]||key_down[VK_RETURN]||key_down[VK_X]||key_down[VK_ESCAPE]))practice_keys_armed=true;}
+ if(practice_keys_armed&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p);state.run=p;state.run.warp=0;state.accepted=true;}
+ if(practice_keys_armed&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
 }
 void draw_overlay(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;if(!state.enabled)return;
