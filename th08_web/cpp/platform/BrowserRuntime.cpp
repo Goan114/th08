@@ -37,6 +37,11 @@ bool BrowserRuntime::write(const char* p,const u8* b,u32 size){
     if(name.find("replay/")==0&&name.size()>4&&name.substr(name.size()-4)==".rpy"&&motion.used()&&!motion.playing){
         const auto tail=motion.trailer(8);if(tail.empty())return false;extended.assign(b,b+size);extended.insert(extended.end(),tail.begin(),tail.end());b=extended.data();size=extended.size();
     }
+    if(name.find("replay/")==0&&name.size()>4&&name.substr(name.size()-4)==".rpy"&&app.session.practice.active&&!app.session.practice.replay){
+        if(app.session.practice.assisted)return false;
+        const auto tail=practice_trailer(app.session.practice.run);if(tail.empty())return false;
+        if(extended.empty())extended.assign(b,b+size);extended.insert(extended.end(),tail.begin(),tail.end());b=extended.data();size=extended.size();
+    }
     if(!put(p,b,size))return false;return file_device().save(p,b,size);
 }
 bool BrowserRuntime::player_motion(const PlayerMovementState& state,float speed,const FrameTiming& timing,float& x,float& y){

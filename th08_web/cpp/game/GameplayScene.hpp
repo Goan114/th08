@@ -113,6 +113,7 @@ public:
     bool load(const GameplayLoad&,bool initialize_values=false);void unload(bool keep_resources=false,bool release_resources=true);
     bool start(const GameplayLoad& wanted){return load(wanted,true);}
     bool load_replay(const u8* data,u32 size){if(loaded)return false;return playback.load(data,size)&&platform.load_motion(data,size);}
+    void play_practice_music(i32 slot,i32 song){platform.play_music(slot,song);}
     bool update(u16 buttons,float rate=1,bool force_unit=false);bool draw();
     // Application-owned chains run the same jobs alongside the supervisor,
     // loading display and FPS counter, preserving their original priorities.

@@ -1,4 +1,5 @@
 #include "GameplayScene.hpp"
+#include "PracticeRuntime.hpp"
 namespace th08 {
 GameplayScene::GameplayScene(GameplaySession& s,TextureStore& t,AnmLibrary& l,AnmRenderer& r,GameplayPlatform& p,Chain* shared_chain,AsciiManager* shared_ascii)
  :session(s),textures(t),library(l),renderer(r),platform(p),chain(shared_chain?*shared_chain:owned_chain),animations(s.random),owned_ascii(animations,r,p),ascii(shared_ascii?*shared_ascii:owned_ascii),
@@ -30,7 +31,15 @@ void GameplayScene::ControlActions::sound(i32 index){scene.sound(index);}
 void GameplayScene::ControlActions::update_game_time(){scene.update_game_time();}
 void GameplayScene::ControlActions::capture_arcade(){scene.capture_arcade();}
 void GameplayScene::ControlActions::demo_fade(){scene.screen.create(ScreenEffectType::ArcadeFadeOut,120,0,0,0,21);scene.fade_music(3);}
-AnmLoaded* GameplayScene::load(i32 slot,const char* path){const auto bytes=platform.read(path);auto* result=library.load(slot,bytes.data(),bytes.size());if(result&&u32(slot)<32)owned_resources|=1u<<slot;return result;}
+AnmLoaded* GameplayScene::load(i32 slot,const char* path){auto bytes=platform.read(path);
+    // THStage4ANM: patch our private copy before ANM decoding, preserving the
+    // pristine resource/preload cache for subsequent ordinary runs.
+    const auto& practice=session.practice;
+    if(slot==4&&practice.active&&practice.run.mode==1&&practice.run.section&&(globals.stage==3||globals.stage==4)){
+        const std::pair<u32,i32> patches[]{{0x8029c,0},{0x802b0,0},{0x802bc,4000},{0x802f8,0},{0x8030c,0},{0x802fc,1}};
+        for(const auto& patch:patches){if(patch.first+4>bytes.size())return nullptr;std::memcpy(bytes.data()+patch.first,&patch.second,4);}
+    }
+    auto* result=library.load(slot,bytes.data(),bytes.size());if(result&&u32(slot)<32)owned_resources|=1u<<slot;return result;}
 AnmLoaded* GameplayScene::get(i32 slot){return library.get(slot);}
 void GameplayScene::release(i32 slot){renderer.flush();library.release(slot);if(u32(slot)<32)owned_resources&=~(1u<<slot);}
 AnmVm* GameplayScene::moon(){return effect_system.fixed(64,{},12,0xffffffff);}
@@ -156,6 +165,7 @@ bool GameplayScene::load(const GameplayLoad& wanted,bool initialize_values){
     menus.context.shot_bombs=number(player.profile(false).initial_bombs).truncate_int();
     if(!initialize_values){control.state.stage_mask=u16(1u<<wanted.stage);control.state.start_music=wanted.keep_resources&&(wanted.flags&0x4000)&&!spell_music(wanted.spell).pause_in_practice?2:1;}
     globals.frame_count_value=&enemies.state.frames;session.stall_frames=enemies.state.frames;
+    if(initialize_values&&!apply_practice(*this,session)){unload();return false;}
     bind_jobs();loaded=true;synchronize();return ready();
 }
 void GameplayScene::unload(bool keep,bool release_all){
@@ -169,6 +179,7 @@ void GameplayScene::unload(bool keep,bool release_all){
     if(release_all){release(5);shots[0]=ShotResource{};shots[1]=ShotResource{};}
 }
 bool GameplayScene::prepare_frame(u16 buttons,float rate,bool force_unit){
+    update_practice(*this,session);
     if(!ready())return false;player.timing={rate,force_unit};player_state.input.buttons=buttons;player_state.bomb_input.previous_buttons=previous_input;dialogue_context.previous_input=previous_input;dialogue_context.input=buttons;menus.context.keys=buttons;menus.context.previous_keys=previous_input;previous_input=buttons;
     if(recording_game){recording.input.physical=buttons;publish_input(recording.input);}else if(playing_replay)publish_input(playback.input);
     synchronize();return !invalid();

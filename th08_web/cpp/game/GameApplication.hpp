@@ -178,7 +178,7 @@ public:
     bool initialize(u32 performance_frequency=0);
     bool update();bool draw(float presentation_alpha=1.0f,bool presentation_active=false,bool presentation_only=false,bool world_interpolate=true);
     void shutdown();bool save_score();
-    bool finalize_replay(i32 slot,const char* name){if(!game.recording.ready()||(game.globals.game_flags&8)||slot<1||slot>15||!name)return false;last_game=result_context();save_replay(slot,name);return !invalid();}
+    bool finalize_replay(i32 slot,const char* name){if(session.practice.assisted||!game.recording.ready()||(game.globals.game_flags&8)||slot<1||slot>15||!name)return false;last_game=result_context();save_replay(slot,name);return !invalid();}
     bool active()const{return running;}
     bool invalid()const{return failed||animations.invalid||title.invalid()||results.invalid()||(game_attached&&game.invalid());}
     bool in_game()const{return game_attached;}

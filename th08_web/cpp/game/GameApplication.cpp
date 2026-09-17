@@ -45,6 +45,7 @@ void GameApplication::finish_effect(){if(transition_effect){transition_effect->p
 void GameApplication::show_loading(const Vec3& p,bool capture){failed|=!loading.show(p,capture);}
 void GameApplication::fade_loading(){loading.fade();finish_effect();}
 bool GameApplication::enter_title(bool replay_finished){
+    session.practice.menu=session.practice.accepted=false;
     music.detach();results.detach();title.detach();
     title.context.supervisor_state=1;title.context.supervisor_previous=supervisor.state.previous;
     if(replay_finished)title.context.flags.isReplay=true;
@@ -58,7 +59,13 @@ bool GameApplication::enter_game(){
     if(from_title){const auto& c=title.context;g.stage=c.currentStage;g.difficulty=c.difficulty;g.shot=c.character;g.current_spell=c.currentSpellCardNumber;g.game_flags=flag_bits(c.flags);supervisor.state.stage=g.stage;supervisor.state.difficulty=g.difficulty;supervisor.state.practice=g.game_flags&1;}
     else if(target==Scene::Restart)g.stage=supervisor.state.stage;
     const auto request=GameplayLoad{i32(g.stage),i32(g.difficulty),g.shot,g.current_spell,g.game_flags,initial,supervisor.state.keep_resources,initial,i32(target)};
-    if((g.game_flags&8)&&from_title){const auto bytes=platform.read(title.context.replayFilename);if(!game.load_replay(bytes.data(),bytes.size())){platform.replay_error();return false;}}
+    if(from_title){
+        auto& p=session.practice;p.cheats=0;p.assisted=false;p.replay=bool(g.game_flags&8);p.active=false;
+        if(p.replay){const auto bytes=platform.read(title.context.replayFilename);u32 size=bytes.size();bool found=false;PracticeConfig config;
+            if(!read_practice_trailer(bytes.data(),size,config,found)||(found&&(!p.enabled||config.stage!=i32(g.stage)))||!game.load_replay(bytes.data(),bytes.size())){platform.replay_error();return false;}
+            p.active=found&&config.mode==1;if(found)p.run=config;
+        }else p.active=p.enabled&&(g.game_flags&1)&&!(g.game_flags&0x4002)&&p.run.mode==1;
+    }
     title.detach();show_loading(from_title?Vec3{500,440,0}:Vec3{280,430,0},true);if(from_title)start_effect();
     GameplayLoad prepared=request;if((prepared.flags&0x60)>=0x40)prepared.flags=(prepared.flags&~0x60u)|0x20;
     if(!game.load(prepared,true))return false;game_attached=true;game.menus.context.supervisor_state=2;game.control.state.load_state=1;game.control.state.replay_mode=title.context.replayMode;game.control.state.demo_index=title.context.currentDemoReplay;
@@ -137,6 +144,7 @@ bool GameApplication::save_score(){auto context=game_attached?result_context():l
 // ResultScreen indexes rows 0..14; replay filenames and the public save API use 1..15.
 std::vector<u8> GameApplication::ResultIo::read_replay(i32 slot){const auto path=replay_path(slot+1);return a.platform.read(path.c_str());}
 void GameApplication::save_replay(i32 slot,const char* name){
+    if(session.practice.assisted)return;
     if(slot<1||slot>15||!name||!game.recording.ready())return;ReplayExportContext context;std::memcpy(context.player_name,name,std::min<std::size_t>(8,std::strlen(name)));platform.calendar(context.date,context.timestamp);
     context.rendered_frames=last_game.rendered_frames;context.total_frames=last_game.total_frames;context.human_frames=last_game.human_frames;context.active_frames=last_game.active_frames;
     const auto bytes=export_replay(game.recording,session,game.globals,context);const auto path=replay_path(slot);failed|=bytes.empty()||!platform.write(path.c_str(),bytes.data(),bytes.size());
