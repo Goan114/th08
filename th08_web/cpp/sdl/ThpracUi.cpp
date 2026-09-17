@@ -13,11 +13,11 @@
 
 namespace th08::ThpracUi {
 namespace {
-bool initialized=false,frame_open=false,menu_open=false,tracker_open=false,advanced_open=false,practice_was_open=false,practice_keys_armed=false;
+bool initialized=false,frame_open=false,menu_open=false,tracker_open=false,advanced_open=false,practice_was_open=false,practice_keys_armed=false,text_editing=false;
 bool key_down[256]{},key_pressed[256]{};float mouse_x=-FLT_MAX,mouse_y=-FLT_MAX;bool mouse_down=false;
 int locale=0,practice_section_index=0;
 
-enum Vk {VK_BACK=8,VK_TAB=9,VK_RETURN=13,VK_ESCAPE=27,VK_LEFT=37,VK_UP=38,VK_RIGHT=39,VK_DOWN=40,VK_1=49,VK_2=50,VK_3=51,VK_X=88,VK_Z=90,VK_F1=112,VK_F7=118,VK_F12=123};
+enum Vk {VK_BACK=8,VK_TAB=9,VK_RETURN=13,VK_SHIFT=16,VK_CONTROL=17,VK_MENU=18,VK_ESCAPE=27,VK_SPACE=32,VK_PRIOR=33,VK_NEXT=34,VK_END=35,VK_HOME=36,VK_LEFT=37,VK_UP=38,VK_RIGHT=39,VK_DOWN=40,VK_INSERT=45,VK_DELETE=46,VK_1=49,VK_2=50,VK_3=51,VK_X=88,VK_Z=90,VK_F1=112,VK_F7=118,VK_F12=123};
 const char* tr(const char* zh,const char* en,const char* ja){return locale==0?zh:locale==2?ja:en;}
 bool pressed(int vk){return vk>=0&&vk<256&&key_pressed[vk];}
 u32 bridge_keys(){return u32(EM_ASM_INT({return (Module.eaglerControls?.thpracKeyboardBits||0)|0;}));}
@@ -94,8 +94,12 @@ void draw_practice(BrowserRuntime& runtime){
  // Z press is still a fresh edge: ignore confirm/cancel until every such
  // key has been released once, matching upstream waiting for real input.
  if(!practice_keys_armed){if(!(key_down[VK_Z]||key_down[VK_RETURN]||key_down[VK_X]||key_down[VK_ESCAPE]))practice_keys_armed=true;}
- if(practice_keys_armed&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p);state.run=p;state.run.warp=0;state.accepted=true;}
- if(practice_keys_armed&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
+ // While an imgui item is active (text edit or drag), Enter/Escape/Z belong
+ // to the widget, not the menu; use last frame's state so the confirming
+ // keystroke itself is also swallowed.
+ const bool widget_busy=text_editing;text_editing=ImGui::IsAnyItemActive();
+ if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p);state.run=p;state.run.warp=0;state.accepted=true;}
+ if(practice_keys_armed&&!widget_busy&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
 }
 void draw_overlay(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;if(!state.enabled)return;
@@ -117,14 +121,20 @@ void draw_overlay(BrowserRuntime& runtime){
 }
 
 bool initialize(){
- if(initialized)return true;IMGUI_CHECKVERSION();ImGui::CreateContext();auto& io=ImGui::GetIO();io.ConfigFlags|=ImGuiConfigFlags_NavEnableGamepad;io.BackendFlags|=ImGuiBackendFlags_HasGamepad;io.DisplaySize={640,480};io.DisplayFramebufferScale={1,1};io.IniFilename=nullptr;ImGui::StyleColorsDark();locale=EM_ASM_INT({const v=String(Module.eaglerOptions?.thpracLocale||'');return v.startsWith('ja')?2:v.startsWith('en')?1:0;});ImFontConfig config{};config.FontNo=0;config.RasterizerMultiply=1.25f;config.OversampleH=5;config.OversampleV=5;const ImWchar* range=locale==0?io.Fonts->GetGlyphRangesChineseFull():locale==2?io.Fonts->GetGlyphRangesJapanese():io.Fonts->GetGlyphRangesDefault();io.FontDefault=io.Fonts->AddFontFromFileTTF("/fonts/msgothic.ttc",16,&config,range);if(!io.FontDefault||!ImGuiFreeType::BuildFontAtlas(io.Fonts,0)){ImGui::DestroyContext();return false;}initialized=true;return true;
+ if(initialized)return true;IMGUI_CHECKVERSION();ImGui::CreateContext();auto& io=ImGui::GetIO();io.ConfigFlags|=ImGuiConfigFlags_NavEnableGamepad;io.BackendFlags|=ImGuiBackendFlags_HasGamepad;io.DisplaySize={640,480};io.DisplayFramebufferScale={1,1};io.IniFilename=nullptr;
+ io.KeyMap[ImGuiKey_Tab]=VK_TAB;io.KeyMap[ImGuiKey_LeftArrow]=VK_LEFT;io.KeyMap[ImGuiKey_RightArrow]=VK_RIGHT;io.KeyMap[ImGuiKey_UpArrow]=VK_UP;io.KeyMap[ImGuiKey_DownArrow]=VK_DOWN;io.KeyMap[ImGuiKey_PageUp]=VK_PRIOR;io.KeyMap[ImGuiKey_PageDown]=VK_NEXT;io.KeyMap[ImGuiKey_Home]=VK_HOME;io.KeyMap[ImGuiKey_End]=VK_END;io.KeyMap[ImGuiKey_Insert]=VK_INSERT;io.KeyMap[ImGuiKey_Delete]=VK_DELETE;io.KeyMap[ImGuiKey_Backspace]=VK_BACK;io.KeyMap[ImGuiKey_Space]=VK_SPACE;io.KeyMap[ImGuiKey_Enter]=VK_RETURN;io.KeyMap[ImGuiKey_Escape]=VK_ESCAPE;io.KeyMap[ImGuiKey_KeyPadEnter]=VK_RETURN;io.KeyMap[ImGuiKey_A]='A';io.KeyMap[ImGuiKey_C]='C';io.KeyMap[ImGuiKey_V]='V';io.KeyMap[ImGuiKey_X]='X';io.KeyMap[ImGuiKey_Y]='Y';io.KeyMap[ImGuiKey_Z]='Z';
+ ImGui::StyleColorsDark();locale=EM_ASM_INT({const v=String(Module.eaglerOptions?.thpracLocale||'');return v.startsWith('ja')?2:v.startsWith('en')?1:0;});ImFontConfig config{};config.FontNo=0;config.RasterizerMultiply=1.25f;config.OversampleH=5;config.OversampleV=5;const ImWchar* range=locale==0?io.Fonts->GetGlyphRangesChineseFull():locale==2?io.Fonts->GetGlyphRangesJapanese():io.Fonts->GetGlyphRangesDefault();io.FontDefault=io.Fonts->AddFontFromFileTTF("/fonts/msgothic.ttc",16,&config,range);if(!io.FontDefault||!ImGuiFreeType::BuildFontAtlas(io.Fonts,0)){ImGui::DestroyContext();return false;}initialized=true;return true;
 }
 void shutdown(){if(!initialized)return;if(frame_open){ImGui::EndFrame();frame_open=false;}publish_menu(false);ImGui::DestroyContext();initialized=false;}
 void process_event(const SDL_Event& event){if(!initialized)return;if(event.type==SDL_EVENT_MOUSE_MOTION){mouse_x=event.motion.x;mouse_y=event.motion.y;}else if(event.type==SDL_EVENT_MOUSE_BUTTON_DOWN||event.type==SDL_EVENT_MOUSE_BUTTON_UP){mouse_x=event.button.x;mouse_y=event.button.y;if(event.button.button==SDL_BUTTON_LEFT)mouse_down=event.type==SDL_EVENT_MOUSE_BUTTON_DOWN;}else if(event.type==SDL_EVENT_MOUSE_WHEEL){ImGui::GetIO().MouseWheel+=event.wheel.y;ImGui::GetIO().MouseWheelH+=event.wheel.x;}}
 void mouse(int type,float x,float y){mouse_x=x;mouse_y=y;if(type==1)mouse_down=true;else if(type==2)mouse_down=false;}
-void update_input(BrowserRuntime& runtime){if(!initialized)return;auto* keys=runtime.keyboard_state();const u32 bits=bridge_keys();for(int i=0;i<256;i++){const bool down=keys[i]!=0||bridge_key_down(i,bits);key_pressed[i]=down&&!key_down[i];key_down[i]=down;}auto& state=runtime.app.session.practice;if(!state.enabled){menu_open=tracker_open=advanced_open=false;publish_menu(false);return;}if(pressed(VK_BACK)&&!ImGui::IsAnyItemActive())menu_open=!menu_open;if(pressed(VK_TAB)&&runtime.app.in_game())tracker_open=!tracker_open;if(pressed(VK_F12))advanced_open=!advanced_open;if(menu_open&&runtime.app.in_game()&&!state.replay){for(int i=0;i<6;i++)if(pressed(VK_F1+i))toggle_cheat(runtime,i);if(pressed(VK_F7))state.everlasting_bgm=!state.everlasting_bgm;}if(pressed(VK_ESCAPE)&&advanced_open)advanced_open=false;publish_menu(menu_open);}
+void update_input(BrowserRuntime& runtime){if(!initialized)return;auto* keys=runtime.keyboard_state();const u32 bits=bridge_keys();for(int i=0;i<256;i++){const bool down=keys[i]!=0||bridge_key_down(i,bits);key_pressed[i]=down&&!key_down[i];key_down[i]=down;}auto& state=runtime.app.session.practice;if(!state.enabled){menu_open=tracker_open=advanced_open=false;publish_menu(false);return;}if(pressed(VK_BACK)&&!ImGui::IsAnyItemActive())menu_open=!menu_open;if(pressed(VK_TAB)&&!ImGui::IsAnyItemActive()&&runtime.app.in_game())tracker_open=!tracker_open;if(pressed(VK_F12))advanced_open=!advanced_open;if(menu_open&&runtime.app.in_game()&&!state.replay){for(int i=0;i<6;i++)if(pressed(VK_F1+i))toggle_cheat(runtime,i);if(pressed(VK_F7))state.everlasting_bgm=!state.everlasting_bgm;}if(pressed(VK_ESCAPE)&&advanced_open)advanced_open=false;publish_menu(menu_open);}
 bool captures_game_input(){return advanced_open||practice_was_open;}
-void render(BrowserRuntime& runtime,touhou::sdl::Renderer& renderer){if(!initialized)return;auto& io=ImGui::GetIO();io.DeltaTime=1.f/60.f;io.DisplaySize={640,480};io.MousePos={mouse_x,mouse_y};io.MouseDown[0]=mouse_down;io.NavInputs[ImGuiNavInput_DpadUp]=key_down[VK_UP];io.NavInputs[ImGuiNavInput_DpadDown]=key_down[VK_DOWN];io.NavInputs[ImGuiNavInput_DpadLeft]=key_down[VK_LEFT];io.NavInputs[ImGuiNavInput_DpadRight]=key_down[VK_RIGHT];io.NavInputs[ImGuiNavInput_Activate]=key_down[VK_Z]||key_down[VK_RETURN];io.NavInputs[ImGuiNavInput_Cancel]=key_down[VK_X]||key_down[VK_ESCAPE];ImGui::NewFrame();frame_open=true;
+void render(BrowserRuntime& runtime,touhou::sdl::Renderer& renderer){if(!initialized)return;auto& io=ImGui::GetIO();io.DeltaTime=1.f/60.f;io.DisplaySize={640,480};io.MousePos={mouse_x,mouse_y};io.MouseDown[0]=mouse_down;io.KeyCtrl=key_down[VK_CONTROL];io.KeyShift=key_down[VK_SHIFT];io.KeyAlt=key_down[VK_MENU];for(int i=0;i<256;i++)io.KeysDown[i]=key_down[i];
+ // Text entry for drags/sliders (CTRL+click or double-click to edit): queue
+ // digits and signs only while a widget owns input.
+ if(ImGui::IsAnyItemActive()){for(int vk=48;vk<=57;vk++)if(pressed(vk))io.AddInputCharacter(ImWchar('0'+vk-48));for(int vk=96;vk<=105;vk++)if(pressed(vk))io.AddInputCharacter(ImWchar('0'+vk-96));if(pressed(189)||pressed(109))io.AddInputCharacter('-');if(pressed(190)||pressed(110))io.AddInputCharacter('.');}
+ io.NavInputs[ImGuiNavInput_DpadUp]=key_down[VK_UP];io.NavInputs[ImGuiNavInput_DpadDown]=key_down[VK_DOWN];io.NavInputs[ImGuiNavInput_DpadLeft]=key_down[VK_LEFT];io.NavInputs[ImGuiNavInput_DpadRight]=key_down[VK_RIGHT];io.NavInputs[ImGuiNavInput_Activate]=key_down[VK_Z]||key_down[VK_RETURN];io.NavInputs[ImGuiNavInput_Cancel]=key_down[VK_X]||key_down[VK_ESCAPE];ImGui::NewFrame();frame_open=true;
  if(runtime.app.session.practice.menu)draw_practice(runtime);else if(!(key_down[VK_X]||key_down[VK_Z]||key_down[VK_ESCAPE]||key_down[VK_RETURN]))practice_was_open=false;draw_overlay(runtime);ImGui::Render();frame_open=false;renderer.render_imgui(ImGui::GetDrawData(),runtime.backbuffer());
 }
 }
