@@ -16,6 +16,11 @@ namespace {
 bool initialized=false,frame_open=false,menu_open=false,tracker_open=false,advanced_open=false,practice_was_open=false,practice_keys_armed=false,text_editing=false,desktop_pointer=false;
 bool key_down[256]{},key_pressed[256]{};float mouse_x=-FLT_MAX,mouse_y=-FLT_MAX;bool mouse_down=false;
 int locale=0,practice_section_index=0;
+// ImGui runs one frame per fixed 60 Hz tick (update_input). High-refresh
+// presentation passes must re-render the cached draw data only: starting a
+// new ImGui frame per present consumed edge-triggered input (typed digits)
+// several times per press and ran ImGui's clock several times fast.
+unsigned input_generation=0,rendered_generation=~0u;bool frame_drawn=false;
 
 enum Vk {VK_BACK=8,VK_TAB=9,VK_RETURN=13,VK_SHIFT=16,VK_CONTROL=17,VK_MENU=18,VK_ESCAPE=27,VK_SPACE=32,VK_PRIOR=33,VK_NEXT=34,VK_END=35,VK_HOME=36,VK_LEFT=37,VK_UP=38,VK_RIGHT=39,VK_DOWN=40,VK_INSERT=45,VK_DELETE=46,VK_1=49,VK_2=50,VK_3=51,VK_X=88,VK_Z=90,VK_F1=112,VK_F7=118,VK_F12=123};
 const char* tr(const char* zh,const char* en,const char* ja){return locale==0?zh:locale==2?ja:en;}
@@ -41,17 +46,20 @@ void hotkey_line(const char* key,const char* label,bool& value){
 bool section_has_dialogue(int section){
  switch(section){case 3:case 10:case 18:case 25:case 35:case 47:case 55:case 57:case 66:case 67:case 69:case 83:case 86:return true;default:return false;}
 }
-std::vector<const PracticeSectionLabel*> matching_sections(const PracticeConfig& p){
- std::vector<const PracticeSectionLabel*> out;for(const auto& s:practice_section_labels){if(s.stage!=p.stage)continue;if(p.warp==2&&s.group!=1)continue;if(p.warp==3&&s.group!=2)continue;if(p.warp==4&&s.spell)continue;if(p.warp==5&&!s.spell)continue;out.push_back(&s);}return out;
+// Upstream GuiCombo hides entries whose name is empty for the current
+// difficulty (ComboSections skips them, CheckComboItemNew cannot land on
+// them); e.g. stage 1's midboss spell exists only on Hard/Lunatic.
+std::vector<const PracticeSectionLabel*> matching_sections(const PracticeConfig& p, int difficulty){
+ std::vector<const PracticeSectionLabel*> out;for(const auto& s:practice_section_labels){if(s.stage!=p.stage)continue;if(p.warp==2&&s.group!=1)continue;if(p.warp==3&&s.group!=2)continue;if(p.warp==4&&s.spell)continue;if(p.warp==5&&!s.spell)continue;const char* name=s.names[std::clamp(difficulty,0,4)][locale];if(!name||!*name)continue;out.push_back(&s);}return out;
 }
-void select_current_section(PracticeConfig& p){
+void select_current_section(PracticeConfig& p, int difficulty){
  if(p.warp==0||p.warp==6){p.section=0;return;}if(p.warp==1){static constexpr int counts[]{2,4,3,6,6,5,2,2,7};int chapter=p.section>=10000?p.section%100:1;chapter=std::clamp(chapter,1,counts[p.stage]);p.section=10000+(p.stage+1)*100+chapter;return;}
- auto matches=matching_sections(p);if(matches.empty()){p.section=0;practice_section_index=0;return;}auto found=std::find_if(matches.begin(),matches.end(),[&](auto* s){return s->id==p.section;});if(found!=matches.end())practice_section_index=int(found-matches.begin());practice_section_index=std::clamp(practice_section_index,0,int(matches.size())-1);p.section=matches[practice_section_index]->id;
+ auto matches=matching_sections(p,difficulty);if(matches.empty()){p.section=0;practice_section_index=0;return;}auto found=std::find_if(matches.begin(),matches.end(),[&](auto* s){return s->id==p.section;});if(found!=matches.end())practice_section_index=int(found-matches.begin());practice_section_index=std::clamp(practice_section_index,0,int(matches.size())-1);p.section=matches[practice_section_index]->id;
 }
 void draw_practice(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;auto& p=state.configured;
  if(!practice_was_open){
-  practice_was_open=true;practice_keys_armed=false;practice_section_index=0;select_current_section(p);
+  practice_was_open=true;practice_keys_armed=false;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);
   // THGuiPrac::State(1): when the gauge type changes, reset the gauge to the
   // shottype's initial value.
   const int shot=runtime.app.title.context.character;
@@ -68,12 +76,12 @@ void draw_practice(BrowserRuntime& runtime){
   if(p.mode==1){
    const char* warps[]={tr("无","None","なし"),tr("道中","Stage Portion","道中"),tr("道中Boss","Mid Boss","道中ボス"),tr("关底Boss","End Boss","ボス"),tr("非符","Non Spell","通常"),tr("符卡","Spell Card","スペカ"),tr("帧","Frame","フレーム")};
    // Stages 4A/4B have no midboss: warp 2 is unavailable, like upstream.
-   if(p.stage==3||p.stage==4){if(p.warp==2)p.warp=0;const char* no_mid[]{warps[0],warps[1],warps[3],warps[4],warps[5],warps[6]};int wi=p.warp<2?p.warp:p.warp-1;if(ImGui::Combo(tr("传送","Warp","ワープ"),&wi,no_mid,6)){p.warp=wi<2?wi:wi+1;p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p);}}
-   else if(ImGui::Combo(tr("传送","Warp","ワープ"),&p.warp,warps,7)){p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p);}
+   if(p.stage==3||p.stage==4){if(p.warp==2)p.warp=0;const char* no_mid[]{warps[0],warps[1],warps[3],warps[4],warps[5],warps[6]};int wi=p.warp<2?p.warp:p.warp-1;if(ImGui::Combo(tr("传送","Warp","ワープ"),&wi,no_mid,6)){p.warp=wi<2?wi:wi+1;p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);}}
+   else if(ImGui::Combo(tr("传送","Warp","ワープ"),&p.warp,warps,7)){p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);}
    if(p.warp==1){static constexpr int setup[9][2]{{1,1},{4,0},{2,1},{4,2},{4,2},{3,2},{2,0},{2,0},{3,4}};const auto& counts=setup[p.stage];int chapter=p.section>=10000?p.section%100:1;
     char portion[64];if(!counts[1])std::snprintf(portion,sizeof(portion),"#%d",chapter);else if(chapter<=counts[0])std::snprintf(portion,sizeof(portion),tr("前半 #%d","First Half #%d","前半 #%d"),chapter);else std::snprintf(portion,sizeof(portion),tr("后半 #%d","Second Half #%d","後半 #%d"),chapter-counts[0]);
     if(ImGui::SliderInt(tr("章节","Chapter","チャプター"),&chapter,1,counts[0]+counts[1],portion))p.section=10000+(p.stage+1)*100+chapter;}
-   else if(p.warp>=2&&p.warp<=5){auto matches=matching_sections(p);if(!matches.empty()){select_current_section(p);std::vector<const char*> names;for(auto* s:matches)names.push_back(s->names[std::clamp(runtime.app.title.context.difficulty,0,4)][locale]);if(ImGui::Combo(warps[p.warp],&practice_section_index,names.data(),int(names.size()))){p.section=matches[practice_section_index]->id;p.phase=0;}if(section_has_dialogue(p.section))ImGui::Checkbox(tr("对话","Dialog","会話"),reinterpret_cast<bool*>(&p.dlg));}}
+   else if(p.warp>=2&&p.warp<=5){auto matches=matching_sections(p,runtime.app.title.context.difficulty);if(!matches.empty()){select_current_section(p,runtime.app.title.context.difficulty);std::vector<const char*> names;for(auto* s:matches)names.push_back(s->names[std::clamp(runtime.app.title.context.difficulty,0,4)][locale]);if(ImGui::Combo(warps[p.warp],&practice_section_index,names.data(),int(names.size()))){p.section=matches[practice_section_index]->id;p.phase=0;}if(section_has_dialogue(p.section))ImGui::Checkbox(tr("对话","Dialog","会話"),reinterpret_cast<bool*>(&p.dlg));}}
    else if(p.warp==6)ImGui::DragInt(tr("帧","Frame","フレーム"),&p.frame,2,0,0x7fffffff);
    if(p.section==66)ImGui::SliderInt(tr("阶段","Phase","段階"),&p.phase,0,2);else if(p.section==104)ImGui::SliderInt(tr("阶段","Phase","段階"),&p.phase,0,6);else p.phase=0;
    ImGui::SliderInt(tr("残机","Life","残機"),&p.life,0,8);ImGui::SliderInt("Bomb",&p.bomb,0,8);ImGui::SliderInt(tr("火力","Power","霊力"),&p.power,0,128);
@@ -98,7 +106,7 @@ void draw_practice(BrowserRuntime& runtime){
  // to the widget, not the menu; use last frame's state so the confirming
  // keystroke itself is also swallowed.
  const bool widget_busy=text_editing;text_editing=ImGui::IsAnyItemActive();
- if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p);state.run=p;state.run.warp=0;state.accepted=true;}
+ if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p,runtime.app.title.context.difficulty);state.run=p;state.run.warp=0;state.accepted=true;}
  if(practice_keys_armed&&!widget_busy&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
 }
 void draw_overlay(BrowserRuntime& runtime){
@@ -134,15 +142,17 @@ bool initialize(){
 void shutdown(){if(!initialized)return;if(frame_open){ImGui::EndFrame();frame_open=false;}publish_menu(false);ImGui::DestroyContext();initialized=false;}
 void process_event(const SDL_Event& event){if(!initialized)return;if(event.type==SDL_EVENT_MOUSE_MOTION){if(event.motion.which!=SDL_TOUCH_MOUSEID&&event.motion.which!=SDL_PEN_MOUSEID)desktop_pointer=true;mouse_x=event.motion.x;mouse_y=event.motion.y;}else if(event.type==SDL_EVENT_MOUSE_BUTTON_DOWN||event.type==SDL_EVENT_MOUSE_BUTTON_UP){if(event.button.which!=SDL_TOUCH_MOUSEID&&event.button.which!=SDL_PEN_MOUSEID)desktop_pointer=true;mouse_x=event.button.x;mouse_y=event.button.y;if(event.button.button==SDL_BUTTON_LEFT)mouse_down=event.type==SDL_EVENT_MOUSE_BUTTON_DOWN;}else if(event.type==SDL_EVENT_MOUSE_WHEEL){ImGui::GetIO().MouseWheel+=event.wheel.y;ImGui::GetIO().MouseWheelH+=event.wheel.x;}}
 void mouse(int type,float x,float y){mouse_x=x;mouse_y=y;if(type==1)mouse_down=true;else if(type==2)mouse_down=false;}
-void update_input(BrowserRuntime& runtime){if(!initialized)return;auto* keys=runtime.keyboard_state();const u32 bits=bridge_keys();for(int i=0;i<256;i++){const bool down=keys[i]!=0||bridge_key_down(i,bits);key_pressed[i]=down&&!key_down[i];key_down[i]=down;}auto& state=runtime.app.session.practice;if(!state.enabled){menu_open=tracker_open=advanced_open=false;publish_menu(false);return;}if(pressed(VK_BACK)&&!ImGui::IsAnyItemActive())menu_open=!menu_open;if(pressed(VK_TAB)&&!ImGui::IsAnyItemActive()&&runtime.app.in_game())tracker_open=!tracker_open;if(pressed(VK_F12))advanced_open=!advanced_open;if(menu_open&&runtime.app.in_game()&&!state.replay){for(int i=0;i<6;i++)if(pressed(VK_F1+i))toggle_cheat(runtime,i);if(pressed(VK_F7))state.everlasting_bgm=!state.everlasting_bgm;}if(pressed(VK_ESCAPE)&&advanced_open)advanced_open=false;publish_menu(menu_open);}
+void update_input(BrowserRuntime& runtime){if(!initialized)return;++input_generation;auto* keys=runtime.keyboard_state();const u32 bits=bridge_keys();for(int i=0;i<256;i++){const bool down=keys[i]!=0||bridge_key_down(i,bits);key_pressed[i]=down&&!key_down[i];key_down[i]=down;}auto& state=runtime.app.session.practice;if(!state.enabled){menu_open=tracker_open=advanced_open=false;publish_menu(false);return;}if(pressed(VK_BACK)&&!ImGui::IsAnyItemActive())menu_open=!menu_open;if(pressed(VK_TAB)&&!ImGui::IsAnyItemActive()&&runtime.app.in_game())tracker_open=!tracker_open;if(pressed(VK_F12))advanced_open=!advanced_open;if(menu_open&&runtime.app.in_game()&&!state.replay){for(int i=0;i<6;i++)if(pressed(VK_F1+i))toggle_cheat(runtime,i);if(pressed(VK_F7))state.everlasting_bgm=!state.everlasting_bgm;}if(pressed(VK_ESCAPE)&&advanced_open)advanced_open=false;publish_menu(menu_open);}
 bool captures_game_input(){return advanced_open||practice_was_open;}
-void render(BrowserRuntime& runtime,touhou::sdl::Renderer& renderer){if(!initialized)return;auto& io=ImGui::GetIO();io.DeltaTime=1.f/60.f;io.DisplaySize={640,480};io.MousePos={mouse_x,mouse_y};io.MouseDown[0]=mouse_down;io.KeyCtrl=key_down[VK_CONTROL];io.KeyShift=key_down[VK_SHIFT];io.KeyAlt=key_down[VK_MENU];io.ConfigDragClickToInputText=desktop_pointer;for(int i=0;i<256;i++)io.KeysDown[i]=key_down[i];
+void render(BrowserRuntime& runtime,touhou::sdl::Renderer& renderer){if(!initialized)return;
+ if(rendered_generation==input_generation){if(frame_drawn)renderer.render_imgui(ImGui::GetDrawData(),runtime.backbuffer());return;}
+ rendered_generation=input_generation;auto& io=ImGui::GetIO();io.DeltaTime=1.f/60.f;io.DisplaySize={640,480};io.MousePos={mouse_x,mouse_y};io.MouseDown[0]=mouse_down;io.KeyCtrl=key_down[VK_CONTROL];io.KeyShift=key_down[VK_SHIFT];io.KeyAlt=key_down[VK_MENU];io.ConfigDragClickToInputText=desktop_pointer;for(int i=0;i<256;i++)io.KeysDown[i]=key_down[i];
  // Desktop thprac numeric fields should be directly editable: ImGui's drag
  // widgets can now switch to TempInputText on a click-release without a drag.
  // Queue numeric characters for the whole practice-menu frame; ImGui clears
  // unused characters at EndFrame, while an active TempInputText consumes them.
  if(runtime.app.session.practice.menu){for(int vk=48;vk<=57;vk++)if(pressed(vk))io.AddInputCharacter(ImWchar('0'+vk-48));for(int vk=96;vk<=105;vk++)if(pressed(vk))io.AddInputCharacter(ImWchar('0'+vk-96));if(pressed(189)||pressed(109))io.AddInputCharacter('-');if(pressed(190)||pressed(110))io.AddInputCharacter('.');}
  io.NavInputs[ImGuiNavInput_DpadUp]=key_down[VK_UP];io.NavInputs[ImGuiNavInput_DpadDown]=key_down[VK_DOWN];io.NavInputs[ImGuiNavInput_DpadLeft]=key_down[VK_LEFT];io.NavInputs[ImGuiNavInput_DpadRight]=key_down[VK_RIGHT];io.NavInputs[ImGuiNavInput_Activate]=key_down[VK_Z]||key_down[VK_RETURN];io.NavInputs[ImGuiNavInput_Cancel]=key_down[VK_X]||key_down[VK_ESCAPE];ImGui::NewFrame();frame_open=true;
- if(runtime.app.session.practice.menu)draw_practice(runtime);else if(!(key_down[VK_X]||key_down[VK_Z]||key_down[VK_ESCAPE]||key_down[VK_RETURN]))practice_was_open=false;draw_overlay(runtime);ImGui::Render();frame_open=false;renderer.render_imgui(ImGui::GetDrawData(),runtime.backbuffer());
+ if(runtime.app.session.practice.menu)draw_practice(runtime);else if(!(key_down[VK_X]||key_down[VK_Z]||key_down[VK_ESCAPE]||key_down[VK_RETURN]))practice_was_open=false;draw_overlay(runtime);ImGui::Render();frame_open=false;renderer.render_imgui(ImGui::GetDrawData(),runtime.backbuffer());frame_drawn=true;
 }
 }

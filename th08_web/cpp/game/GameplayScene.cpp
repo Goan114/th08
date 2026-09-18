@@ -24,7 +24,14 @@ GameplayScene::GameplayScene(GameplaySession& s,TextureStore& t,AnmLibrary& l,An
 }
 GameplayScene::~GameplayScene(){unload();}
 bool GameplayScene::ControlActions::replay_stage(i32 stage){return scene.replay_stage_mask&(1u<<stage);}
-void GameplayScene::ControlActions::update_enemy_name(){auto& g=scene.globals;scene.copy_enemy_name(EnemyNameAtlas::select(g.stage,bool(g.game_flags&0x4000),g.current_spell));}
+void GameplayScene::ControlActions::update_enemy_name(){auto& g=scene.globals;
+    // A thprac boss warp already pinned the boss name (MSGNameFix, mirroring
+    // upstream th08_name_fix); the stage-progress heuristic would revert it to
+    // the midboss name (e.g. Extra boss Mokou showing as Keine).
+    const auto& practice=scene.session.practice;
+    if(practice.active&&practice.run.mode==1&&practice.run.section)
+        if(const i32 pinned=practice_boss_name_override(u32(g.stage),practice.run.section)){scene.copy_enemy_name(pinned);return;}
+    scene.copy_enemy_name(EnemyNameAtlas::select(g.stage,bool(g.game_flags&0x4000),g.current_spell));}
 void GameplayScene::ControlActions::release_loading_surface(){scene.platform.release_loading_surface();}
 void GameplayScene::ControlActions::play_music(i32 slot,i32 song){if(!scene.practice_bgm_filter(0,song))scene.platform.play_music(slot,song);}
 void GameplayScene::ControlActions::pause_audio(){if(!scene.practice_bgm_filter(2,0))scene.platform.menu_music(MenuMusic::Pause,0);}

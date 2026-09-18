@@ -19,6 +19,10 @@ bool GuiFlow::setup(){
         for(i32 i=0;i<14;++i)for(i32 j=0;j<12;++j){auto& vm=d.transition[i*12+j];if(!c.start(vm,s.capture,((i+j)&1)+3))return false;vm.counterVar0=i+j*2;vm.pos={float(j*32)+15.5f,float(i*32)+15.5f,0};vm.uvScrollPos={float(j)/16,float(i)/16};}d.transition_count=168;
     }
     c.clock(3);if(!c.start(d.clock_intro,g.times,0,true)||g.times->SetSprite(&d.clock_intro,c.globals.clock_time))return false;
+    // The clock intro only plays with the opening stage title. Spell practice
+    // and section warps skip that sequence, so the clock must never execute
+    // (it starts at alpha 0 and would otherwise freeze mid-script on screen).
+    c.clock_intro_enabled=!spell&&!context.section_warp;
     if(!spell){const i32 team=s.character<4?s.character:(s.character-4)/2;const auto bytes=resources.message(messages[s.stage][team]);if(!dialogue.load(bytes.data(),bytes.size()))return false;}
     if(!context.keep_resources){g.stage_text=resources.load(13,stage_text[spell&&context.spell_number>=205?8:s.stage]);if(!g.stage_text)return false;}
     if(context.initial)for(i32 i=0;i<16;++i)if(!c.start(d.front[i],g.front,i))return false;
