@@ -104,7 +104,8 @@ export function observeMusicWrites(Module,core,game) {
 }
 export async function mountManagedData(Module,{game,parentWindow,query,fetcher=globalThis.fetch,base=globalThis.location?.href,emit}){
  if(query.get('managedData')!=='1'||typeof parentWindow?.__eaglerPrepareManagedRuntimeDataV1!=='function')throw Error('请从 eagler-touhou 启动此运行时');
- const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,generation:query.get('gameGeneration')});
+ const epoch=Number(query.get('runtimeEpoch'));if(!Number.isSafeInteger(epoch)||epoch<=0)throw Error('Runtime navigation epoch unavailable');
+ const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,generation:query.get('gameGeneration'),epoch});
  // Cross-frame ArrayBuffers need not pass this realm's instanceof check.
  const bytes=new Uint8Array(result.buffer);
  if(bytes.byteLength<16||bytes.byteLength>128*1024*1024)throw Error('Invalid game DATA size');
