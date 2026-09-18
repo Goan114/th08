@@ -49,10 +49,13 @@ test('OGG resources install into live FS and notify native retry',async()=>{
 });
 test('managed DATA stays separate from immutable font resources',async()=>{
  const module=filesystem(),buffer=new Uint8Array(32).buffer;let request;
- await mountManagedData(module,{game,base,query:new URLSearchParams('managedData=1&gameGeneration=g1'),
+ await mountManagedData(module,{game,base,query:new URLSearchParams('managedData=1&gameGeneration=g1&runtimeEpoch=23'),
  parentWindow:{__eaglerPrepareManagedRuntimeDataV1:async value=>{request=value;return {buffer};}},
  fetcher:async()=>Response.json({schema:'eagler-sdl-resources/1',game,resources:[]})});
- assert.deepEqual(request,{game,generation:'g1'});assert.equal(module.files.get('/game/'+game+'.dat').byteLength,32);
+ assert.deepEqual(request,{game,generation:'g1',epoch:23});assert.equal(module.files.get('/game/'+game+'.dat').byteLength,32);
+ await assert.rejects(mountManagedData(module,{game,base,query:new URLSearchParams('managedData=1&gameGeneration=g1'),
+  parentWindow:{__eaglerPrepareManagedRuntimeDataV1:async()=>({buffer})},
+  fetcher:async()=>Response.json({schema:'eagler-sdl-resources/1',game,resources:[]})}),/epoch unavailable/);
  await assert.rejects(mountManagedData(module,{game,query:new URLSearchParams(),parentWindow:{}}),/eagler-touhou/);
 });
 test('options normalize invalid sensitivity and movement mode',()=>{
