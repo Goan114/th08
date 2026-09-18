@@ -47,6 +47,7 @@ class PlayerScene:public PlayerSetupActions,public PlayerLifeActions,public Play
         void panned_sound(i32 id,float x)override{s.sound(id,x);}
         void screen(ScreenEffectType type,i32 duration,i32 a,i32 b,i32 c,i32 priority)override{s.world->screen.create(type,duration,a,b,c,priority);}
         void background_color(u32 color)override{s.reset_screen_color();s.world->background.tint(color);s.world->background.state.use_tint=1;}
+        void reset_screen_color()override{s.reset_screen_color();}
         void draw(AnmVm& vm,bool rotated)override{if(rotated)s.renderer.draw_2d(vm);else s.renderer.draw_no_rotation(vm);}
         void rectangle(float a,float b,float c,float d,u32 color)override{const u32 colors[]{color,color,color,color};s.renderer.draw_rectangle(a,b,c,d,colors);}
     } patterns{*this};

@@ -48,19 +48,19 @@ class PracticePatcher {
     void STDJump(int offset,i32 ordinal,i32 time,i32 instruction_time=0){stdfile.SetPos(offset);stdfile<<instruction_time<<0x000c0004<<ordinal<<time<<0;}
     void STDStage4Fix(bool last=false){stdfile<<pair{0xed8,1}<<pair{0xf14,1};if(last){stdfile.SetPos(0x1394);stdfile<<6926<<0x000c001f<<2<<0<<0<<6926<<0x000c0004<<1<<0<<0;STDJump(0xf48,70,6926);}}
     void MSGNameFix(){
-        const auto stage=scene.globals.stage;int name=0;
-        if(stage==5&&thPracParam.section>=TH08_ST5_BOSS1)name=22;
+        const auto stage=scene.globals.stage;
         if(stage==6)scene.background.dialogue_state=2;
         if(stage==7||(stage==8&&thPracParam.section>=TH08_ST7_END_NS1)){
-            // Upstream swaps two raw executable globals here. In this source
-            // port those addresses are not equivalent to ECL animation slots:
-            // EnemyFlow already owns slot 0=enemy.anm and slot 1=stage ANM.
-            // Swapping them makes direct Final/Extra boss warps resolve boss
-            // animation opcodes against the wrong resource (Extra can enter
-            // Keine's/midboss resource path and fail when the spell starts).
-            scene.background.dialogue_state=2;name=stage==7?24:25;
+            // Upstream swaps the two enemy-face globals (0x4ecc9c/0x4ecca0) so
+            // a direct boss warp resolves the boss's face instead of the
+            // midboss's. The vanilla boss dialogue performs the same swap on
+            // faces[2]/faces[3] (Dialogue.cpp); in this port the shared store
+            // is globals.spell_enemy_face/spell_enemy_face2.
+            std::swap(scene.globals.spell_enemy_face,scene.globals.spell_enemy_face2);
+            scene.background.dialogue_state=2;
         }
-        if(name)valid&=scene.hud.front&&scene.name_atlas.copy(*scene.hud.front,name);
+        if(const int name=practice_boss_name_override(u32(stage),thPracParam.section))
+            valid&=scene.hud.front&&scene.name_atlas.copy(*scene.hud.front,name);
     }
 #include "PracticePatches.inc"
 public:
@@ -75,6 +75,12 @@ public:
         return valid&&ecl.valid&&stdfile.valid;
     }
 };
+}
+i32 practice_boss_name_override(u32 stage, i32 section){
+    if(stage==5&&section>=TH08_ST5_BOSS1)return 22;
+    if(stage==7&&section)return 24;
+    if(stage==8&&section>=TH08_ST7_END_NS1)return 25;
+    return 0;
 }
 bool apply_practice(GameplayScene& g,GameplaySession& s){
     auto& state=s.practice;if(!state.active||state.run.mode!=1)return true;
