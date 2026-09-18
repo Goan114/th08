@@ -2,6 +2,7 @@
 #include "EclNative.hpp"
 #include "AsciiManager.hpp"
 #include "GuiState.hpp"
+#include "Localization.hpp"
 namespace th08 {
 namespace {
 void interpolate(AnmVm& vm,u32 kind,i32 duration,u8 mode){vm.interpCurrentTimers[kind].set(0);vm.interpEndTimers[kind].set(duration);vm.interpModes[kind]=mode;}
@@ -25,7 +26,8 @@ bool SpellSystem::begin(EclVm& enemy,u32 number,i32 portrait,u32 bonus,const u8*
     s.spell_bonus_decay=(bonus-bonus/7)/u32(enemy.timeout/60);s.spell_remaining.set(enemy.timeout);s.spell_initial.set(enemy.timeout);decode(s.spell_name,name,48,0xaa);
     if(!std::memchr(s.spell_name,0,48))return false;
     presentation.context.game_flags=s.game_flags;presentation.context.current_spell=s.current_spell;
-    if(!presentation.enemy(portrait,s.spell_name,0)||!actions.clear_projectiles(1))return false;
+    // Storage keeps the decoded Japanese name (CATK records, replays); only the announcement display point looks up spells.etl.
+    if(!presentation.enemy(portrait,Localization::SpellName(u32(number),s.spell_name),0)||!actions.clear_projectiles(1))return false;
     background.spell_state=1;background.spell_frames=0;
     if(background.spell_vm_count<0||background.spell_vm_count>32)return false;
     for(i32 i=0;i<background.spell_vm_count;i++){

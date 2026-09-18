@@ -69,7 +69,8 @@ export function directTouch(core,canvas,message,viewport) {
  core.sdl_touch(type,id,(x*viewport.width-rect.left)/rect.width,(y*viewport.height-rect.top)/rect.height);
 }
 export function resourcePath(path,game) {
- return typeof path==='string'&&(new RegExp('^/bgm-ogg/'+game+'_(?:[0-9]{2}|13b)\\.ogg$').test(path)||/^\/fonts\/[a-z0-9_.-]+$/.test(path)||path==='/msgothic.ttc');
+ return typeof path==='string'&&(new RegExp('^/bgm-ogg/'+game+'_(?:[0-9]{2}|13b)\\.ogg$').test(path)||/^\/fonts\/[a-z0-9_.-]+$/.test(path)||path==='/msgothic.ttc'||path==='/unifont.otf'||
+  (new RegExp('^/thcrap/'+game+'/[a-z0-9_/.-]+$').test(path)&&!path.includes('..')&&!path.includes('//')));
 }
 export function ensureSharedFontAlias(Module){
  const source='/msgothic.ttc',target='/fonts/msgothic.ttc';
@@ -104,7 +105,9 @@ export function observeMusicWrites(Module,core,game) {
 }
 export async function mountManagedData(Module,{game,parentWindow,query,fetcher=globalThis.fetch,base=globalThis.location?.href,emit}){
  if(query.get('managedData')!=='1'||typeof parentWindow?.__eaglerPrepareManagedRuntimeDataV1!=='function')throw Error('请从 eagler-touhou 启动此运行时');
- const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,generation:query.get('gameGeneration')});
+ const epoch=Number(query.get('runtimeEpoch'));
+ if(!Number.isSafeInteger(epoch)||epoch<=0)throw Error('Invalid runtimeEpoch navigation binding');
+ const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,epoch,generation:query.get('gameGeneration')});
  // Cross-frame ArrayBuffers need not pass this realm's instanceof check.
  const bytes=new Uint8Array(result.buffer);
  if(bytes.byteLength<16||bytes.byteLength>128*1024*1024)throw Error('Invalid game DATA size');

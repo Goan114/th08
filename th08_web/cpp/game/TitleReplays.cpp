@@ -1,6 +1,7 @@
 // TH08 replay menu. Platform file enumeration is explicit; decoded metadata
 // and stage offsets are ordinary C++ data and never executable addresses.
 #include "TitleMenus.hpp"
+#include "Localization.hpp"
 #include <cstdio>
 namespace th08 {
 void TitleMenus::scan_replays(){
@@ -61,7 +62,11 @@ i32 TitleMenus::OnUpdateReplayMenu(){
             state.cursor=0;while(!stage_present(state.cursor)){++state.cursor;if(state.cursor>8)return corrupt_replay();}
             InitializeAndSetSprite(state.resultTextAnm,state.spellCardNameVms,11);
             auto& name=state.spellCardNameVms[0];name.pos={};name.anchor=3;name.fontWidth=name.fontHeight=15;
-            char text[49]{};std::memcpy(text,state.replays[state.selectedReplay].spell_name,48);DrawTextLeft(&name,0xffffff,0,text);name.color1.d3dColor=COLOR_WHITE;break;
+            char text[49]{};std::memcpy(text,state.replays[state.selectedReplay].spell_name,48);
+            // spell_name in the replay file stays the recorded Japanese; the
+            // display point looks up spells.etl (upstream spell_name#replay).
+            const i32 spellNumber=state.replays[state.selectedReplay].spell_number;
+            DrawTextLeft(&name,0xffffff,0,spellNumber>=0?Localization::SpellName(u32(spellNumber),text):text);name.color1.d3dColor=COLOR_WHITE;break;
         }
         if(pressed(10)){actions.sound(11,0);state.currentScreenState=4;state.stateTimer=0;SetInterruptArray(state.vms,state.vmCount,16);}break;
     case 2:{

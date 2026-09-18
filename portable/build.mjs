@@ -11,7 +11,11 @@ const python=process.env.TH_PYTHON??'python';
 const run=(args)=>new Promise((done,reject)=>{const p=spawn(python,[emcc,...args],{cwd:root,env,windowsHide:true,stdio:['ignore','pipe','pipe']});let log='';p.stdout.on('data',x=>{log+=x;process.stdout.write(x);});p.stderr.on('data',x=>{log+=x;process.stderr.write(x);});p.on('error',reject);p.on('exit',code=>code?reject(Error('emcc failed '+code+'\n'+log)):done());});
 const imgui=resolve(root,'cpp/third_party/imgui');
 const common=['-O2','-g0','-fno-strict-aliasing','-ffp-contract=off','-DTH_SDL3=1','-DTH_NATIVE_PLATFORM=1','-DIMGUI_DISABLE_WIN32_FUNCTIONS','--use-port=sdl3','--use-port=sdl3_ttf','-I'+resolve(workspace,'portable/sdl'),'-I'+imgui];
-const excluded=new Set(game==='th10'?['LegacyBridge.cpp','LegacyCallbacks.cpp','Exports.cpp','Freestanding.cpp']:['RuntimeExports.cpp']);
+// thcrap-style offline language pack for th08. ON by default, matching the
+// always-on thprac convention; TH_ENABLE_THCRAP=0 builds the strict Japanese
+// regression baseline (LocalizationStub, no /thcrap/th08/ override reads).
+const thcrap=game==='th08'&&(process.env.TH_ENABLE_THCRAP??'1')!=='0';
+const excluded=new Set(game==='th10'?['LegacyBridge.cpp','LegacyCallbacks.cpp','Exports.cpp','Freestanding.cpp']:['RuntimeExports.cpp',thcrap?'LocalizationStub.cpp':'Localization.cpp']);
 const sources=readdirSync(resolve(root,'cpp/game')).filter(n=>n.endsWith('.cpp')&&!excluded.has(n)).map(n=>'cpp/game/'+n);
 sources.push(...readdirSync(resolve(root,'cpp/platform')).filter(n=>n.endsWith('.cpp')).map(n=>'cpp/platform/'+n));
 sources.push(...readdirSync(resolve(root,'cpp/sdl')).filter(n=>n.endsWith('.cpp')).map(n=>'cpp/sdl/'+n));
@@ -19,12 +23,12 @@ if(game==='th08')sources.push(...['imgui.cpp','imgui_draw.cpp','imgui_freetype.c
 const shared=resolve(workspace,'portable/sdl'),numeric=resolve(workspace,'portable/numeric'),input=resolve(workspace,'portable/input'),renderer=resolve(shared,'Renderer.cpp');
 function headers(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?headers(resolve(dir,e.name)):/\.(h|hpp|inc)$/.test(e.name)?[resolve(dir,e.name)]:[]);}
 const hash=createHash('sha256');for(const path of [...headers(resolve(root,'cpp')),...headers(shared),...headers(numeric),...headers(input)].sort())hash.update(path).update(readFileSync(path));
-const flags=[...common,'-std=c++17','-fno-exceptions','-fno-rtti'],prefix=JSON.stringify([flags,hash.digest('hex')]);
+const flags=[...common,...(thcrap?['-DTH_ENABLE_THCRAP=1']:[]),'-std=c++17','-fno-exceptions','-fno-rtti'],prefix=JSON.stringify([flags,hash.digest('hex')]);
 const objects=resolve(out,'objects');mkdirSync(objects,{recursive:true});
 async function compile(source,name,c=false){const object=resolve(objects,name+'.o'),key=createHash('sha256').update(prefix).update(readFileSync(source)).digest('hex');if(existsSync(object)&&existsSync(object+'.key')&&readFileSync(object+'.key','utf8')===key)return object;
  await run([...(c?[...common,'-std=c11','-DSOFTFLOAT_FAST_INT64','-DINLINE_LEVEL=5']:flags),'-c',source,'-o',object]);writeFileSync(object+'.key',key);return object;
 }
-console.log('Build '+game+' C++ / SDL3 / Emscripten');
+console.log('Build '+game+' C++ / SDL3 / Emscripten'+(game==='th08'?' / TH_ENABLE_THCRAP='+(thcrap?'ON':'OFF'):''));
 // Populate SDL's port cache once before parallel translation units use it.
 const rendererObject=await compile(renderer,'shared_renderer');
 const soft=resolve(root,game==='th10'?'cpp/rebuild/third_party/softfloat.c':'cpp/third_party/softfloat.c'),softObject=await compile(soft,'softfloat',true);
