@@ -52,7 +52,13 @@ class PracticePatcher {
         if(stage==5&&thPracParam.section>=TH08_ST5_BOSS1)name=22;
         if(stage==6)scene.background.dialogue_state=2;
         if(stage==7||(stage==8&&thPracParam.section>=TH08_ST7_END_NS1)){
-            std::swap(scene.globals.enemy_animation_files[0],scene.globals.enemy_animation_files[1]);scene.background.dialogue_state=2;name=stage==7?24:25;
+            // Upstream swaps two raw executable globals here. In this source
+            // port those addresses are not equivalent to ECL animation slots:
+            // EnemyFlow already owns slot 0=enemy.anm and slot 1=stage ANM.
+            // Swapping them makes direct Final/Extra boss warps resolve boss
+            // animation opcodes against the wrong resource (Extra can enter
+            // Keine's/midboss resource path and fail when the spell starts).
+            scene.background.dialogue_state=2;name=stage==7?24:25;
         }
         if(name)valid&=scene.hud.front&&scene.name_atlas.copy(*scene.hud.front,name);
     }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {defaults,fields,normalizePractice} from '../th08_web/sdl-runtime/practice.mjs';
+import {defaults,fields,normalizePractice} from '../th08_web/sdl-runtime/practice-config.mjs';
 import {sections} from '../th08_web/sdl-runtime/practice-sections.mjs';
 assert.equal(fields.length+1,23);
 assert.equal(sections.length,104);
@@ -20,4 +20,14 @@ const shell=readFileSync(resolve(import.meta.dirname,'../th08_web/sdl-runtime/sh
 for(const anchor of ["case 'thprac-mouse'","practice=createPractice",'practice.tick()','practice?.configure(options)'])assert(shell.includes(anchor),anchor);
 const practice=readFileSync(resolve(import.meta.dirname,'../th08_web/sdl-runtime/practice.mjs'),'utf8');
 assert(!practice.includes("emit('thprac-session'"),'TH08 must keep live practice state Runtime-owned');
+const ui=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/sdl/ThpracUi.cpp'),'utf8');
+assert(ui.includes('AddFontFromFileTTF("/unifont.otf",16,&config,range)'),'thprac UI must always use the Unicode font');
+assert(!ui.includes('AddFontFromFileTTF("/fonts/msgothic.ttc",16,&config,range)'),'thprac UI must not fall back to MS Gothic');
+assert(ui.includes('io.ConfigDragClickToInputText=desktop_pointer'),'desktop numeric controls must open text input on click-release');
+assert(ui.includes('event.motion.which!=SDL_TOUCH_MOUSEID')&&ui.includes('event.button.which!=SDL_TOUCH_MOUSEID'),'touch-generated mouse input must not enable desktop click-to-input behavior');
+assert(ui.includes('!ImGui::IsAnyItemActive()&&!ImGui::IsPopupOpen'),'practice window focus must not interrupt active numeric input');
+const runtime=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/PracticeRuntime.cpp'),'utf8');
+assert(!runtime.includes('std::swap(scene.globals.enemy_animation_files[0],scene.globals.enemy_animation_files[1])'),'source-level thprac must not swap ECL animation slots');
+const gameplay=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/GameplayScene.cpp'),'utf8');
+assert(gameplay.includes('SetSprite(&display.clock_intro,session.numbers.clock_time)'),'practice night must refresh the stage-entry clock');
 console.log(JSON.stringify({passed:true,sections:sections.length,fields:fields.length}));

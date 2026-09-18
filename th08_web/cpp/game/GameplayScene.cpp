@@ -195,7 +195,13 @@ bool GameplayScene::load(const GameplayLoad& wanted,bool initialize_values){
     menus.context.shot_bombs=number(player.profile(false).initial_bombs).truncate_int();
     if(!initialize_values){control.state.stage_mask=u16(1u<<wanted.stage);control.state.start_music=wanted.keep_resources&&(wanted.flags&0x4000)&&!spell_music(wanted.spell).pause_in_practice?2:1;}
     globals.frame_count_value=&enemies.state.frames;session.stall_frames=enemies.state.frames;
-    if(initialize_values&&!apply_practice(*this,session)){unload();return false;}
+    if(initialize_values){
+        if(!apply_practice(*this,session)){unload();return false;}
+        // GuiFlow creates the stage-entry clock before thprac restores the
+        // configured night value. Refresh that already-created VM so the
+        // entrance graphic and the later result screen use the same clock.
+        if(hud.times&&hud.times->SetSprite(&display.clock_intro,session.numbers.clock_time)){unload();return false;}
+    }
     bind_jobs();loaded=true;synchronize();return ready();
 }
 void GameplayScene::unload(bool keep,bool release_all){
