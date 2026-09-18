@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 const game=existsSync(new URL('../th08_web/cpp/game/AnmRenderer.cpp',import.meta.url))?'th08':'th10';
-const {normalizeOptions,applyTouchOptions,touchControls,directTouch,resourcePath,ensureSharedFontAlias,installResources,observeMusicWrites,mountManagedData}=await import('../'+game+'_web/sdl-runtime/eagler-host.mjs');
+const {normalizeOptions,applyTouchOptions,touchControls,directTouch,resourcePath,ensureSharedFontAlias,installResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError}=await import('../'+game+'_web/sdl-runtime/eagler-host.mjs');
 const base='http://localhost/runtime/'+game+'/entry.html';
 function filesystem(){
  const files=new Map();return {files,FS:{mkdirTree(){},writeFile(path,bytes){files.set(path,bytes);}}};
@@ -56,6 +56,12 @@ test('managed DATA stays separate from immutable font resources',async()=>{
  await assert.rejects(mountManagedData(module,{game,base,query:new URLSearchParams('managedData=1&gameGeneration=g1'),
   parentWindow:{__eaglerPrepareManagedRuntimeDataV1:async()=>({buffer})},
   fetcher:async()=>Response.json({schema:'eagler-sdl-resources/1',game,resources:[]})}),/epoch unavailable/);
+ const superseded=new DOMException('EAGLER_RUNTIME_SESSION_SUPERSEDED','AbortError');
+ assert.equal(isSupersededRuntimeError(superseded),true);
+ assert.equal(isSupersededRuntimeError(new DOMException('network aborted','AbortError')),false);
+ await assert.rejects(mountManagedData(module,{game,base,query:new URLSearchParams('managedData=1&gameGeneration=g1&runtimeEpoch=23'),
+  parentWindow:{__eaglerPrepareManagedRuntimeDataV1:async()=>{throw superseded;}},
+  fetcher:async()=>Response.json({schema:'eagler-sdl-resources/1',game,resources:[]})}),error=>isSupersededRuntimeError(error));
  await assert.rejects(mountManagedData(module,{game,query:new URLSearchParams(),parentWindow:{}}),/eagler-touhou/);
 });
 test('options normalize invalid sensitivity and movement mode',()=>{

@@ -3,7 +3,7 @@
 import createModule from './th08-sdl.mjs';
 import {bindOutsideTouches} from './eagler-host.mjs';
 import {exportReplayName,importReplayName} from './motion-replay.mjs';
-import {normalizeOptions,applyTouchOptions,touchControls,directTouch,ensureSharedFontAlias,installResources as installHostResources,observeMusicWrites,mountManagedData} from './eagler-host.mjs';
+import {normalizeOptions,applyTouchOptions,touchControls,directTouch,ensureSharedFontAlias,installResources as installHostResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError} from './eagler-host.mjs';
 const protocol='eagler-touhou/1',game='th08',query=new URLSearchParams(location.search),canvas=document.querySelector('canvas');
 const epoch=Number(query.get('runtimeEpoch'));
 const validEpoch=Number.isSafeInteger(epoch)&&epoch>0;
@@ -77,7 +77,7 @@ async function command(message){
 }
 let queue=Promise.resolve();
 window.addEventListener('message',event=>{const m=event.data;if(!validEpoch||event.source!==parent||event.origin!==location.origin||m?.protocol!==protocol||m.game!==game||m.epoch!==epoch||typeof m.command!=='string')return;
- queue=queue.then(async()=>{await initialized;try{const result=await command(m);if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:true,...result},location.origin);}catch(e){if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:false,error:String(e),errno:e.errno},location.origin);else error(e);}}).catch(error);
+ queue=queue.then(async()=>{if(await initialized===false)return;try{const result=await command(m);if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:true,...result},location.origin);}catch(e){if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:false,error:String(e),errno:e.errno},location.origin);else error(e);}}).catch(error);
 });
 document.addEventListener('visibilitychange',()=>{if(!core||!launched)return;core.sdl_keys_clear();cancelTouches();core.sdl_loop_pause(document.hidden?1:0);if(document.hidden)queue=queue.then(save).catch(error);});
 window.addEventListener('blur',()=>{if(core){core.sdl_keys_clear();cancelTouches();}});
@@ -101,4 +101,4 @@ const initialized=(async()=>{
  Module.runtimeStopped=()=>{};Module.runtimeNotice=message=>emit('notice',{message});Module.runtimeMidi=(op,data)=>{if(op===62&&music&&Module.touhouMusicMode==='midi')window.dispatchEvent(new CustomEvent('touhou-midi',{detail:{bytes:Array.from(data||[])}}));if(op===61)window.dispatchEvent(new CustomEvent('touhou-midi-close'));};Module.callMain=launch;
  window.__th08Runtime={core,Module,get app(){return app;},status,launch,stop,command};
  emit('ready');
-})().catch(e=>{error(e);throw e;});
+})().catch(e=>{if(isSupersededRuntimeError(e)){console.debug('Runtime navigation superseded');return false;}error(e);throw e;});

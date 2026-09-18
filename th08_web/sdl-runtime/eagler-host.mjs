@@ -102,6 +102,9 @@ export function observeMusicWrites(Module,core,game) {
   return result;
  };
 }
+export function isSupersededRuntimeError(error){
+ return error?.name==='AbortError'&&error?.message==='EAGLER_RUNTIME_SESSION_SUPERSEDED';
+}
 export async function mountManagedData(Module,{game,parentWindow,query,fetcher=globalThis.fetch,base=globalThis.location?.href,emit}){
  if(query.get('managedData')!=='1'||typeof parentWindow?.__eaglerPrepareManagedRuntimeDataV1!=='function')throw Error('请从 eagler-touhou 启动此运行时');
  const epoch=Number(query.get('runtimeEpoch'));if(!Number.isSafeInteger(epoch)||epoch<=0)throw Error('Runtime navigation epoch unavailable');
