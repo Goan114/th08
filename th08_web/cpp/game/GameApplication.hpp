@@ -16,6 +16,7 @@ namespace th08 {
 struct ApplicationPlatform:PlayerScenePlatform,TextWriter,AsciiOverlay,FrameClock {
     virtual void begin_motion(i32,bool,bool,bool){}
     virtual bool load_motion(const u8*,u32){return true;}
+    virtual i32 replay_touch_points(ReplayTouchPoint*,i32){return 0;}
     virtual std::vector<u8> read_prefix(const char*,u32 size)=0;
     virtual bool write(const char*,const u8*,u32)=0;
     virtual std::vector<std::string> user_replays()=0;
@@ -53,6 +54,7 @@ class GameApplication {
         bool player_motion(const PlayerMovementState& s,float speed,const FrameTiming& timing,float& x,float& y)override{return a.platform.player_motion(s,speed,timing,x,y);}
         void begin_motion(i32 stage,bool initial,bool replay,bool record)override{a.platform.begin_motion(stage,initial,replay,record);}
         bool load_motion(const u8* data,u32 size)override{return a.platform.load_motion(data,size);}
+        i32 replay_touch_points(ReplayTouchPoint* points,i32 capacity)override{return a.platform.replay_touch_points(points,capacity);}
         std::vector<u8> read(const char* p)override{return a.platform.read(p);}
         void sound(i32 i,i32 m,float p,bool pan)override{a.platform.sound(i,m,p,pan);}
         bool draw(AnmVm& v,TextAlignment t,u32 c,u32 o,const char* s)override{return a.platform.draw(v,t,c,o,s);}

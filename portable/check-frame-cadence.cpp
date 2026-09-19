@@ -5,7 +5,7 @@ int main(){
  for(unsigned hz:{15u,20u,30u,60u,90u,120u,144u,165u}){
   touhou::sdl::FrameCadence clock;unsigned ticks=0;
   for(unsigned i=0;i<hz*60;++i)ticks+=clock.advance(1./hz);
-  assert(ticks==3600);
+  assert(ticks==(hz<60?hz:60)*60);
  }
  touhou::sdl::FrameCadence clock;
  assert(clock.interpolation_alpha()==0);
@@ -13,9 +13,11 @@ int main(){
  assert(clock.interpolation_alpha()>.49&&clock.interpolation_alpha()<.51);
  assert(clock.advance(touhou::sdl::FrameCadence::interval*.5)==1);
  assert(clock.interpolation_alpha()<1.e-6);
- assert(clock.advance(.1)==4);assert(clock.advance(0)==2);
+ assert(clock.advance(.1)==1);assert(clock.advance(0)==0);
  assert(clock.interpolation_alpha()<=1);
- assert(clock.advance(30)==4);assert(clock.advance(0)==2);
+ assert(clock.advance(30)==1);assert(clock.advance(0)==0);
+ assert(clock.advance(touhou::sdl::FrameCadence::interval*3.5)==1);
+ assert(clock.interpolation_alpha()>.49&&clock.interpolation_alpha()<.51);
  clock.advance(.01);clock.reset();assert(clock.advance(0)==0);
  assert(clock.interpolation_alpha()==0);
  assert(clock.advance(-1)==0);

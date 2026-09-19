@@ -93,7 +93,16 @@ void GameplayScene::publish_input(const ReplayInputState& input){player_state.in
 JobResult GameplayScene::update_recording(){recording.input.flags=globals.game_flags;recording.input.slow_mode=session.config.slow_mode;recording.update();publish_input(recording.input);return JobResult::Continue;}
 JobResult GameplayScene::sample_replay_frame(){auto& state=recording_game?recording.frame_state:debug_frame;state.sample(session.random,control.state.restore_viewport);return JobResult::Continue;}
 JobResult GameplayScene::finish_replay_frame(){bool boss_present=false;for(auto* boss:globals.boss_slots)boss_present|=boss!=nullptr;return playback.after_update(globals.game_flags,control.state.replay_mode,dialogue.present(),display.dialogue.skippable,boss_present);}
-JobResult GameplayScene::draw_ascii(){ascii.draw_strings(ascii_context);ascii.state.string_count=0;menus.draw_pause();menus.draw_retry();if(ascii.state.demo.scriptIndex)renderer.draw_no_rotation(ascii.state.demo);return animations.invalid?JobResult::Error:JobResult::Continue;}
+JobResult GameplayScene::draw_ascii(){
+    if(playing_replay){
+        ReplayTouchPoint points[10];const i32 count=platform.replay_touch_points(points,10);
+        const u32 color=ascii.state.color;const float scale_x=ascii.state.scale_x,scale_y=ascii.state.scale_y;const i32 gui=ascii.state.gui,selected=ascii.state.selected;
+        ascii.state.color=0xffffffff;ascii.state.scale_x=ascii.state.scale_y=.7f;ascii.state.gui=0;ascii.state.selected=0;
+        for(i32 i=0;i<count;++i)ascii.add_string({points[i].x*640.f-5.f,points[i].y*480.f-7.f,0},"+",ascii_context.software_texturing);
+        ascii.state.color=color;ascii.state.scale_x=scale_x;ascii.state.scale_y=scale_y;ascii.state.gui=gui;ascii.state.selected=selected;
+    }
+    ascii.draw_strings(ascii_context);ascii.state.string_count=0;menus.draw_pause();menus.draw_retry();if(ascii.state.demo.scriptIndex)renderer.draw_no_rotation(ascii.state.demo);return animations.invalid?JobResult::Error:JobResult::Continue;
+}
 void GameplayScene::bind_jobs(){
     auto bind=[&](ChainElement& job,i32 priority,bool draw,JobCallback callback){job.set_callback(callback);job.argument=this;chain.add(&job,priority,draw);};
     bind(player_calc,9,false,[](void* p){return static_cast<GameplayScene*>(p)->update_player();});

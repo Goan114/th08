@@ -12,6 +12,7 @@
 #include "ReplayPlayback.hpp"
 #include "ReplayRecording.hpp"
 namespace th08 {
+struct ReplayTouchPoint {float x=0,y=0;};
 struct GameplayPlatform:PlayerScenePlatform,TextWriter,AsciiOverlay {
     virtual bool play_music(i32 index,i32 song)=0;
     virtual void play_audio(const char* path,i32 song)=0;
@@ -27,6 +28,7 @@ struct GameplayPlatform:PlayerScenePlatform,TextWriter,AsciiOverlay {
     virtual void preload_music(i32 slot,const char* path)=0;
     virtual void begin_motion(i32,bool,bool,bool){}
     virtual bool load_motion(const u8*,u32){return true;}
+    virtual i32 replay_touch_points(ReplayTouchPoint*,i32){return 0;}
 };
 // Actual gameplay owners, independent of the executable and the early
 // GameRuntime prototype. The supplied platform implements resource/device I/O.

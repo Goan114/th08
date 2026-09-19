@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {existsSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 const game=existsSync(new URL('../th08_web/cpp/game/AnmRenderer.cpp',import.meta.url))?'th08':'th10';
-const {normalizeOptions,applyTouchOptions,touchControls,directTouch,resourcePath,ensureSharedFontAlias,installResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError}=await import('../'+game+'_web/sdl-runtime/eagler-host.mjs');
+const {normalizeOptions,applyTouchOptions,touchControls,resumeRuntimeAudio,directTouch,resourcePath,ensureSharedFontAlias,installResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError}=await import('../'+game+'_web/sdl-runtime/eagler-host.mjs');
 const base='http://localhost/runtime/'+game+'/entry.html';
 function filesystem(){
  const files=new Map();return {files,FS:{mkdirTree(){},writeFile(path,bytes){files.set(path,bytes);}}};
@@ -18,6 +18,26 @@ test('touch snapshots do not reset gesture mode',()=>{
  touchControls(core,options,{joystickX:16384,joystickY:NaN});
  assert.deepEqual(calls.at(-1).slice(-2),[16384,0]);
  assert(!calls.some(c=>c[0]==='sdl_touch_mode'));
+});
+test('foreground audio resumes browser context before Runtime loop',async()=>{
+ const calls=[],core={sdl_loop_pause:value=>calls.push(value)};
+ const context={state:'suspended',async resume(){this.state='running';}};
+ assert.equal(await resumeRuntimeAudio({SDL3:{audioContext:context}},core,()=>true),true);
+ assert.deepEqual(calls,[0]);
+ calls.length=0;context.state='running';
+ assert.equal(await resumeRuntimeAudio({SDL3:{audioContext:context}},core,()=>true),true);
+ assert.deepEqual(calls,[0]);
+ calls.length=0;context.state='suspended';context.resume=async()=>{throw Error('gesture required');};
+ assert.equal(await resumeRuntimeAudio({SDL3:{audioContext:context}},core,()=>true),false);
+ assert.deepEqual(calls,[]);
+ calls.length=0;let foreground=true;context.state='suspended';context.resume=async()=>{context.state='running';foreground=false;};
+ assert.equal(await resumeRuntimeAudio({SDL3:{audioContext:context}},core,()=>foreground),false);
+ assert.deepEqual(calls,[]);
+});
+test('shell startup cannot leave Runtime paused when AudioContext is already running',()=>{
+ const shell=readFileSync(new URL('../'+game+'_web/sdl-runtime/shell.mjs',import.meta.url),'utf8').replaceAll('\r','');
+ assert.match(shell,/if\(forcePause\)core\.sdl_loop_pause\(1\);\s*return resumeRuntimeAudio/);
+ assert.doesNotMatch(shell,/if\(!forcePause&&\(!context\|\|context\.state==='running'\)\)return true/);
 });
 test('direct touch honors letterbox and viewport updates',()=>{
  const calls=[],core={sdl_touch:(...args)=>calls.push(args)};

@@ -60,6 +60,16 @@ export function touchControls(core,options,message) {
  const axis=v=>Number.isFinite(Number(v))?Math.max(-32767,Math.min(32767,Number(v))):0;
  core.sdl_touch_controls(!!c.fireEnabled,!!c.focusEnabled,c.bombSerial>>>0,c.escapeSerial>>>0,axis(c.joystickX),axis(c.joystickY));
 }
+export async function resumeRuntimeAudio(Module,core,isForeground=()=>true) {
+ if(!core||!isForeground())return false;
+ const context=Module?.SDL3?.audioContext;
+ if(context&&context.state!=='running'){
+  try{await context.resume();}catch{}
+ }
+ if(!isForeground()||(context&&context.state!=='running'))return false;
+ core.sdl_loop_pause?.(0);
+ return true;
+}
 export function directTouch(core,canvas,message,viewport) {
  const type={down:0,move:1,up:2,cancel:2}[message.type??message.action];
  const x=Number(message.x),y=Number(message.y),id=Number(message.id);

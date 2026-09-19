@@ -50,6 +50,10 @@ bool BrowserRuntime::player_motion(const PlayerMovementState& state,float speed,
     }
     motion.record(g.globals.stage,enabled,x,y);return enabled;
 }
+i32 BrowserRuntime::replay_touch_points(ReplayTouchPoint* points,i32 capacity){
+    if(!points||capacity<=0)return 0;touhou::input::MotionTrack::TouchPoint source[10];const i32 limit=std::min<i32>(capacity,10),count=motion.replay_points(source,limit);
+    for(i32 i=0;i<count;++i)points[i]={source[i].x,source[i].y};return count;
+}
 std::vector<std::string> BrowserRuntime::user_replays(){return resources_.user_replays();}
 void BrowserRuntime::calendar(char date[6],char stamp[20]){file_device().calendar(date,stamp);}
 u32 BrowserRuntime::milliseconds(){return file_device().milliseconds();}

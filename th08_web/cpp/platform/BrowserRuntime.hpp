@@ -41,6 +41,7 @@ public:
     bool player_motion(const PlayerMovementState&,float,const FrameTiming&,float&,float&)override;
     void begin_motion(i32 stage,bool initial,bool replay,bool record)override{motion.begin(stage,initial,replay,record);}
     bool load_motion(const u8* data,u32 size)override{return motion.load(data,size,8);}
+    i32 replay_touch_points(ReplayTouchPoint*,i32)override;
     BrowserRuntime();~BrowserRuntime();
     static std::string path(const char*);
     bool put(const char*,const u8*,u32);bool put_archive(const u8*,u32);bool put_font(i32,const u8*,u32);

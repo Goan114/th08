@@ -23,7 +23,7 @@ try{
   const seconds=(after.time-before.time)/1000,logicHz=(after.logic-before.logic)/seconds,audioRate=(after.mixed-before.mixed)/seconds;
   rows.push({displayHz:hz,logicHz,audioRate,before,after,outputBefore,outputAfter});console.log(JSON.stringify(rows.at(-1)));writeFileSync(`${game}_web/artifacts/architecture-candidate/validation/low-cadence-progress.json`,JSON.stringify(rows,null,2));
   assert(outputAfter.blocks>outputBefore.blocks,'Actual browser audio callbacks must run');assert.equal(outputAfter.zeroBlocks-outputBefore.zeroBlocks,0,'No empty browser output blocks during title music');
-  assert(logicHz>57&&logicHz<63,'Logic retains 60Hz through slow display callbacks');assert(audioRate>41000&&audioRate<47500,'PCM refill keeps pace with 44100 Hz playback');assert.equal(after.error,0);assert(after.rms>0);
+  const expectedLogic=Math.min(60,hz);assert(logicHz>expectedLogic-3&&logicHz<expectedLogic+3,'Logic follows original single-tick scheduler without catch-up');assert(audioRate>41000&&audioRate<47500,'PCM refill keeps pace with 44100 Hz playback');assert.equal(after.error,0);assert(after.rms>0);
  }
  assert.deepEqual(errors,[]);writeFileSync(`${game}_web/artifacts/architecture-candidate/validation/low-cadence.json`,JSON.stringify({passed:true,rows,errors},null,2));console.log(JSON.stringify({game,rows}));
 }finally{await browser.close();}

@@ -3,7 +3,7 @@
 import createModule from './th08-sdl.mjs';
 import {bindOutsideTouches} from './eagler-host.mjs';
 import {exportReplayName,importReplayName} from './motion-replay.mjs';
-import {normalizeOptions,applyTouchOptions,touchControls,directTouch,ensureSharedFontAlias,installResources as installHostResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError} from './eagler-host.mjs';
+import {normalizeOptions,applyTouchOptions,touchControls,resumeRuntimeAudio,directTouch,ensureSharedFontAlias,installResources as installHostResources,observeMusicWrites,mountManagedData,isSupersededRuntimeError} from './eagler-host.mjs';
 const protocol='eagler-touhou/1',game='th08',query=new URLSearchParams(location.search),canvas=document.querySelector('canvas');
 const epoch=Number(query.get('runtimeEpoch'));
 const validEpoch=Number.isSafeInteger(epoch)&&epoch>0;
@@ -44,6 +44,11 @@ async function installResources(resources=[]){return installHostResources(Module
 function applyOptions(){applyTouchOptions(core,options);core.sdl_touch_display?.(options.alwaysHitbox?1:0);}
 function status(){return Array.from(new Int32Array(core.memory.buffer,core.sdl_game_status(),10));}
 function save(){if(app)core.save(app);return sync(false);}
+async function resumeForegroundAudio(forcePause=false){
+ if(!core||!launched||document.hidden)return false;
+ if(forcePause)core.sdl_loop_pause(1);
+ return resumeRuntimeAudio(Module,core,()=>!!core&&launched&&!document.hidden);
+}
 async function stop(){if(closing)return;closing=true;try{core.sdl_loop_stop();await save();core.sdl_game_close();window.dispatchEvent(new CustomEvent('touhou-midi-close'));await sync(false);app=0;launched=false;emit('exit',{code:0,status:'success'});}finally{closing=false;}}
 async function launch(){
  if(launched)return;
@@ -53,8 +58,7 @@ async function launch(){
  const total=core.sdl_prepare_total();for(let i=0;i<total;i++){if(core.sdl_prepare_next()<0)throw Error('资源预载失败 '+i);if(i%12===11){document.querySelector('#loading').textContent='正在准备游戏资源 '+(i+1)+' / '+total;await new Promise(resolve=>setTimeout(resolve,0));}}
  if(!core.sdl_game_initialize())throw Error('永夜抄初始化失败');document.querySelector('#loading').textContent='';
  applyOptions();launched=true;first=false;lastPresented=0;lastHealth=performance.now();lastFrame=0;frames=0;maxGap=0;
- const audio=Module.SDL3?.audioContext;audio?.resume().catch(()=>{});
- canvas.focus({preventScroll:true});core.sdl_loop_pause(document.hidden?1:0);if(query.get('manual')!=='1')core.sdl_loop_start();
+ canvas.focus({preventScroll:true});core.sdl_loop_pause(1);if(!document.hidden)await resumeForegroundAudio();if(query.get('manual')!=='1')core.sdl_loop_start();
  emit('runtime-info',{renderer:'SDL3 / WebGL2 / C++',architecture:'eagler-touhou/1',version:'3.4.1-sdl3'});
 }
 async function command(message){
@@ -79,11 +83,12 @@ let queue=Promise.resolve();
 window.addEventListener('message',event=>{const m=event.data;if(!validEpoch||event.source!==parent||event.origin!==location.origin||m?.protocol!==protocol||m.game!==game||m.epoch!==epoch||typeof m.command!=='string')return;
  queue=queue.then(async()=>{if(await initialized===false)return;try{const result=await command(m);if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:true,...result},location.origin);}catch(e){if(typeof m.request==='string')parent.postMessage({protocol,game,epoch,request:m.request,ok:false,error:String(e),errno:e.errno},location.origin);else error(e);}}).catch(error);
 });
-document.addEventListener('visibilitychange',()=>{if(!core||!launched)return;core.sdl_keys_clear();cancelTouches();core.sdl_loop_pause(document.hidden?1:0);if(document.hidden)queue=queue.then(save).catch(error);});
+document.addEventListener('visibilitychange',()=>{if(!core||!launched)return;core.sdl_keys_clear();cancelTouches();if(document.hidden){core.sdl_loop_pause(1);queue=queue.then(save).catch(error);}else void resumeForegroundAudio(true);});
 window.addEventListener('blur',()=>{if(core){core.sdl_keys_clear();cancelTouches();}});
 window.addEventListener('pagehide',()=>{cancelTouches();if(core&&launched){core.sdl_loop_pause(1);void save().catch(console.error);}});
+window.addEventListener('pageshow',()=>{if(core&&launched&&!document.hidden)void resumeForegroundAudio(true);});
 canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();core?.sdl_loop_pause(1);error('图形环境已失效，请退出后重新开始。');});
-for(const name of ['pointerdown','keydown'])window.addEventListener(name,()=>Module?.SDL3?.audioContext?.resume().catch(()=>{}),{capture:true});
+for(const name of ['pointerdown','keydown'])window.addEventListener(name,()=>{if(Module?.SDL3?.audioContext?.state!=='running')void resumeForegroundAudio(true);},{capture:true});
 const initialized=(async()=>{
  let audioContext;try{audioContext=parent.__touhouAudioContext||parent.__th10AudioContext;}catch{}
  Module=await createModule({canvas,noInitialRun:true,...(audioContext?{SDL3:{audioContext}}:{}),print:console.log,printErr:console.error,
