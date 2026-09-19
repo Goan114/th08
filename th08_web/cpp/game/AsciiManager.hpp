@@ -70,6 +70,7 @@ public:
         :executor(executor),renderer(renderer),overlay(overlay){}
     void reset();
     void initialize_vms(const AsciiContext& context);
+    void snapshot_presentation(const AsciiContext& context);
     void set_gauge_interrupt(i32 interrupt);
     void tick_popups(const AsciiContext& context,const FrameTiming& timing);
     void tick_vms(bool demo);
@@ -82,11 +83,14 @@ public:
     void draw_percentage(const Vec3& position,i32 percentage,u32 color);
 private:
     struct PopupPresentation {Vec3 position{};i32 timer=-2;u8 in_use=0,characters=0;};
+    struct PresentationState {
+        Vec3 boss_markers[4]{},player{};
+        i32 gauge=0;float blindness_radius=0;u32 blindness_color=0;bool valid=false;
+    } presentation_state;
     PopupPresentation score_popup_previous[723]{};
     AnmExecutor& executor;
     AnmRenderer& renderer;
     AsciiOverlay& overlay;
-    Vec3 presentation_boss_markers[4]{};bool presentation_boss_markers_valid=false;
     void start(AnmVm& vm,AnmLoaded& file,i32 script);
     void set_sprite(AnmVm& vm,i32 sprite,bool initialize=false);
     void direct_sprite(AnmVm& vm,i32 sprite);

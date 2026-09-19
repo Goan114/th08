@@ -1,10 +1,13 @@
 // Emit an apply_patch document. No generated output is written implicitly.
-import {readFileSync,writeFileSync} from 'node:fs';
+import {existsSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
-const root=resolve(import.meta.dirname,'../..');
+const repository=resolve(import.meta.dirname,'..');
 const sourceArgument=process.argv.slice(2).find(value=>!value.startsWith('--'));
-const upstream=resolve(sourceArgument||resolve(root,'thprac'));
+if(!sourceArgument)throw Error('Usage: node portable/generate-thprac.mjs <path-to-thprac> [--check|--write]');
+const upstream=resolve(sourceArgument);
+if(!existsSync(resolve(upstream,'thprac/src/thprac/thprac_th08.cpp')))
+ throw Error('Missing upstream thprac checkout at '+upstream+'; pass its path explicitly: node portable/generate-thprac.mjs <path-to-thprac> --check');
 const read=p=>readFileSync(resolve(upstream,p),'utf8').replaceAll('\r\n','\n');
 const source=read('thprac/src/thprac/thprac_th08.cpp');
 const definitions=JSON.parse(read('thprac/src/thprac/thprac_games_def.json'));
@@ -26,11 +29,11 @@ const files={
  'th08_web/cpp/game/THPRAC-LICENSE.txt':read('LICENCE'),
 };
 if(process.argv.includes('--write')){
- for(const [path,content] of Object.entries(files))writeFileSync(resolve(root,'th08',path),content);
+ for(const [path,content] of Object.entries(files))writeFileSync(resolve(repository,path),content);
  console.log(JSON.stringify({written:Object.keys(files),source:digest}));process.exit(0);
 }
 if(process.argv.includes('--check')){
- for(const [path,content] of Object.entries(files))if(readFileSync(resolve(root,'th08',path),'utf8').replaceAll('\r\n','\n').trimEnd()!==content.trimEnd())throw Error('Generated thprac file is stale: '+path);
+ for(const [path,content] of Object.entries(files))if(readFileSync(resolve(repository,path),'utf8').replaceAll('\r\n','\n').trimEnd()!==content.trimEnd())throw Error('Generated thprac file is stale: '+path);
  console.log(JSON.stringify({passed:true,source:digest,sections:entries.length}));process.exit(0);
 }
-console.log('*** Begin Patch\n'+Object.entries(files).map(([path,content])=>'*** Add File: '+resolve(root,'th08',path).replaceAll('\\','/')+'\n'+content.trimEnd().split('\n').map(line=>'+'+line).join('\n')).join('\n')+'\n*** End Patch');
+console.log('*** Begin Patch\n'+Object.entries(files).map(([path,content])=>'*** Add File: '+resolve(repository,path).replaceAll('\\','/')+'\n'+content.trimEnd().split('\n').map(line=>'+'+line).join('\n')).join('\n')+'\n*** End Patch');

@@ -60,6 +60,16 @@ export function touchControls(core,options,message) {
  const axis=v=>Number.isFinite(Number(v))?Math.max(-32767,Math.min(32767,Number(v))):0;
  core.sdl_touch_controls(!!c.fireEnabled,!!c.focusEnabled,c.bombSerial>>>0,c.escapeSerial>>>0,axis(c.joystickX),axis(c.joystickY));
 }
+export async function resumeRuntimeAudio(Module,core,isForeground=()=>true) {
+ if(!core||!isForeground())return false;
+ const context=Module?.SDL3?.audioContext;
+ if(context&&context.state!=='running'){
+  try{await context.resume();}catch{}
+ }
+ if(!isForeground()||(context&&context.state!=='running'))return false;
+ core.sdl_loop_pause?.(0);
+ return true;
+}
 export function directTouch(core,canvas,message,viewport) {
  const type={down:0,move:1,up:2,cancel:2}[message.type??message.action];
  const x=Number(message.x),y=Number(message.y),id=Number(message.id);
@@ -103,11 +113,13 @@ export function observeMusicWrites(Module,core,game) {
   return result;
  };
 }
+export function isSupersededRuntimeError(error){
+ return error?.name==='AbortError'&&error?.message==='EAGLER_RUNTIME_SESSION_SUPERSEDED';
+}
 export async function mountManagedData(Module,{game,parentWindow,query,fetcher=globalThis.fetch,base=globalThis.location?.href,emit}){
  if(query.get('managedData')!=='1'||typeof parentWindow?.__eaglerPrepareManagedRuntimeDataV1!=='function')throw Error('请从 eagler-touhou 启动此运行时');
- const epoch=Number(query.get('runtimeEpoch'));
- if(!Number.isSafeInteger(epoch)||epoch<=0)throw Error('Invalid runtimeEpoch navigation binding');
- const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,epoch,generation:query.get('gameGeneration')});
+ const epoch=Number(query.get('runtimeEpoch'));if(!Number.isSafeInteger(epoch)||epoch<=0)throw Error('Runtime navigation epoch unavailable');
+ const result=await parentWindow.__eaglerPrepareManagedRuntimeDataV1({game,generation:query.get('gameGeneration'),epoch});
  // Cross-frame ArrayBuffers need not pass this realm's instanceof check.
  const bytes=new Uint8Array(result.buffer);
  if(bytes.byteLength<16||bytes.byteLength>128*1024*1024)throw Error('Invalid game DATA size');

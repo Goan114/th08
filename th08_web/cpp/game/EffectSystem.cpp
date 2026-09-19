@@ -81,7 +81,6 @@ void EffectSystem::presentation_geometry(const EffectState& source,EffectState& 
     draw.angle=angle(before.angle,source.angle);draw.angle_y=angle(before.angle_y,source.angle_y);
 }
 JobResult EffectSystem::update(){
-    snapshot_presentation();
     state.active_count=0;for(u32 i=0;i<5;++i){state.tails[i]=&state.sentinels[i];state.sentinels[i].next=nullptr;}
     for(u32 i=0;i<653;++i){auto& e=state.objects[i];if(!e.active){EffectGeometry::release(e);continue;}++state.active_count;
         if(!paused||e.ignore_pause){if((e.update&&e.update(e,*this)!=1)||anm.execute(e)){e.active=0;continue;}e.age.tick(anm.timing);}

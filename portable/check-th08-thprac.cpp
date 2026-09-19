@@ -90,19 +90,21 @@ int main(){
 
     // THGuiRep State(1/2/3) ownership lifecycle.
     PracticeState state;state.run=sample();
+    practice_replay_menu_reset(state);
+    assert(!state.replay_candidate_valid&&state.run.mode==0&&state.run.life==0&&state.run.bomb==0&&state.run.power==0&&state.run.value==0&&state.run.rank==0);
     assert(practice_replay_menu_check(state,replay.data(),u32(replay.size())));
-    assert(state.replay_candidate_valid&&state.replay_candidate.stage==5&&state.run.stage==5&&state.run.rank==40);
-    state.run.mode=0; // live menu selection must survive State(2) inspection
+    assert(state.replay_candidate_valid&&state.replay_candidate.stage==5&&state.run.mode==0&&state.run.rank==0);
     practice_replay_menu_activate(state);
     assert(state.run.mode==1&&state.run.stage==5&&state.run.section==original.section);
     // A vanilla replay Reset()s the candidate but keeps mParamStatus sticky;
     // State(3) then restores Original mode, exactly like upstream.
     assert(!practice_replay_menu_check(state,vanilla.data(),u32(vanilla.size())));
-    assert(state.replay_candidate_valid&&state.replay_candidate.mode==0);
+    assert(state.replay_candidate_valid&&state.replay_candidate.mode==0&&state.replay_candidate.life==0&&state.replay_candidate.value==0&&state.replay_candidate.rank==0);
     practice_replay_menu_activate(state);
-    assert(state.run.mode==0);
+    assert(state.run.mode==0&&state.run.life==0&&state.run.value==0&&state.run.rank==0);
+    state.run=sample();
     practice_replay_menu_reset(state);
-    assert(!state.replay_candidate_valid);
+    assert(!state.replay_candidate_valid&&state.run.mode==0&&state.run.rank==0);
     practice_replay_menu_activate(state);
-    assert(state.run.mode==0);
+    assert(state.run.mode==0&&state.run.rank==0);
 }

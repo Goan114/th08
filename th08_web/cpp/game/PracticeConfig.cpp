@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 namespace th08 {
+void PracticeConfig::reset(){std::memset(this,0,sizeof(*this));}
 bool PracticeConfig::valid()const {
     if(mode<0||mode>1||stage<0||stage>8||warp<0||warp>7||phase<0||phase>6||frame<0||dlg<0||dlg>1)return false;
     if(section>=10000){constexpr int portions[]{2,4,3,6,6,5,2,2,7};if((section-10000)/100!=stage+1||(section%100)<1||(section%100)>portions[stage])return false;}
@@ -80,7 +81,7 @@ bool practice_replay_parse(const char* json,u32 size,PracticeConfig& out){
     PracticeConfig p;
     // THPracParam::ReadJson() Reset()s (memset) before parsing: missing keys
     // stay zero and never inherit Practice menu defaults.
-    std::memset(&p,0,sizeof(p));
+    p.reset();
     p.mode=i32(json_number(text,"mode",0));
     p.stage=i32(json_number(text,"stage",0));
     p.section=i32(json_number(text,"section",0));
@@ -146,8 +147,9 @@ bool practice_replay_read(const u8* data,u32 size,PracticeConfig& out){
     return false;
 }
 void practice_replay_menu_reset(PracticeState& p){
-    // THGuiRep::State(1): mRepStatus=false, mParamStatus=false. State(1) does
-    // not reset mRepParam, and the live run belongs to the practice menu.
+    // THGuiRep::State(1): thPracParam.Reset(), mRepStatus=false and
+    // mParamStatus=false. mRepParam itself remains untouched.
+    p.run.reset();
     p.replay_candidate_valid=false;
 }
 bool practice_replay_menu_check(PracticeState& p,const u8* replay,u32 size){
@@ -158,8 +160,7 @@ bool practice_replay_menu_check(PracticeState& p,const u8* replay,u32 size){
         // CheckReplay() failure Reset()s mRepParam but leaves mParamStatus
         // untouched; the sticky flag is intentional source behavior. A Reset()
         // candidate means Original mode, so a later State(3) stays vanilla.
-        p.replay_candidate=PracticeConfig{};
-        p.replay_candidate.mode=0;
+        p.replay_candidate.reset();
         return false;
     }
     p.replay_candidate=candidate;
@@ -170,6 +171,5 @@ void practice_replay_menu_activate(PracticeState& p){
     // THGuiRep::State(3): only while mParamStatus holds is mRepParam copied
     // into the live parameters; a Reset() candidate copies as Original mode.
     if(p.replay_candidate_valid)p.run=p.replay_candidate;
-    else{p.run=PracticeConfig{};p.run.mode=0;}
 }
 }

@@ -10,6 +10,7 @@ if(!out.startsWith(resolve(root,'artifacts')+'/')&&!out.startsWith(resolve(root,
 const sha=b=>createHash('sha256').update(b).digest('hex'),write=(p,b)=>{mkdirSync(dirname(p),{recursive:true});writeFileSync(p,b);},copy=(a,b)=>{mkdirSync(dirname(b),{recursive:true});copyFileSync(a,b);};
 const walk=dir=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(resolve(dir,e.name)):[resolve(dir,e.name)]);
 const json=(p,v)=>write(p,JSON.stringify(v,null,2)+'\n');
+const requireInput=(label,candidates)=>{const path=candidates.find(candidate=>candidate&&existsSync(candidate));if(!path)throw Error('Missing '+label+'; set EAGLER_UNICODE_FONT or provide the workspace dependency');return path;};
 execFileSync(process.execPath,[resolve(workspace,'tools/architecture/typescript/node_modules/typescript/bin/tsc'),'-p',resolve(launcher,'tsconfig.launcher.json'),'--pretty','false'],{stdio:'inherit',windowsHide:true});
 const report=JSON.parse(readFileSync(resolve(root,'artifacts/sdl3/build.json')));
 if(!report.version.startsWith('3.')||report.architecture?.files!=='sdl-io-idbfs')throw Error('Build the native platform first');
@@ -29,7 +30,8 @@ for(const path of walk(resolve(root,'sdl-runtime')))copy(path,resolve(site,'runt
 copy(resolve(workspace,'portable/browser/motion-replay.mjs'),resolve(site,'runtime',game,'motion-replay.mjs'));
 for(const suffix of ['mjs','wasm']){const bytes=readFileSync(resolve(root,'artifacts/sdl3',game+'-sdl.'+suffix));if(sha(bytes)!==(suffix==='wasm'?report.sha256:report.loaderSha256))throw Error('Module hash mismatch');write(resolve(site,'runtime',game,game+'-sdl.'+suffix),bytes);if(suffix==='wasm')write(resolve(site,'runtime',game,game+'-sdl.wasm.gz'),gzipSync(bytes,{level:9}));}
 const original=resolve(workspace,game==='th10'?'[th10] 东方风神录 (汉化版+日文版)':'[th08] 东方永夜抄 (日文版)'),payload=[],files=[];let size=0;
-const dataInputs=game==='th10'?[...['th10.dat','th10c.dat'].map(n=>[resolve(original,n),'/game/'+n]),...['msgothic.ttc','simhei.ttf','blend.bin','codepages.bin'].map(n=>[resolve(native,n),'/fonts/'+n])]:[[resolve(original,'th08.dat'),'/game/th08.dat'],[resolve(native,'thbgm-header.dat'),'/game/thbgm.dat'],[resolve(root,'assets/native/gm.dls'),'/midi/gm.dls'],...['msgothic.ttc','blend.bin','cp932.bin'].map(n=>[resolve(native,n),'/fonts/'+n])];
+const unicodeFont=game==='th08'?requireInput('TH08 Unicode font',[process.env.EAGLER_UNICODE_FONT,resolve(workspace,'dependencies/unifont-15.1.05/unifont-15.1.05.otf'),resolve(workspace,'../dependencies/unifont-15.1.05/unifont-15.1.05.otf')]):null;
+const dataInputs=game==='th10'?[...['th10.dat','th10c.dat'].map(n=>[resolve(original,n),'/game/'+n]),...['msgothic.ttc','simhei.ttf','blend.bin','codepages.bin'].map(n=>[resolve(native,n),'/fonts/'+n])]:[[resolve(original,'th08.dat'),'/game/th08.dat'],[resolve(native,'thbgm-header.dat'),'/game/thbgm.dat'],[resolve(root,'assets/native/gm.dls'),'/midi/gm.dls'],[unicodeFont,'/unifont.otf'],...['msgothic.ttc','blend.bin','cp932.bin'].map(n=>[resolve(native,n),'/fonts/'+n])];
 for(const [path,target] of dataInputs){const b=readFileSync(path);files.push({filename:target,start:size,end:size+b.length});payload.push(b);size+=b.length;}
 const tracks=JSON.parse(readFileSync(resolve(native,'music-layout.json'))),musicNames=tracks.map((t,i)=>game==='th10'?String(i).padStart(2,'0')+'.flac':t.name.replace(/\.wav$/i,'.ogg'));
 const data=Buffer.concat(payload),dataHash=sha(data),index={files,remote_package_size:size,...(game==='th08'?{music:musicNames}:{})},layout='sha256-'+sha(JSON.stringify(index));

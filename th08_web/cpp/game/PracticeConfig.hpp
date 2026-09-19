@@ -11,6 +11,9 @@ struct PracticeConfig {
     i32 life=2,bomb=8,power=128,gauge=0,graze=0,point=0,point_total=0,point_stage=0;
     i32 time=0,value=60000,night=0,familiar=0,rank=12,rankLock=0;
     static constexpr u32 word_count=23;
+    // Upstream THPracParam::Reset() clears every field. This is distinct from
+    // the initialized Practice-menu defaults above.
+    void reset();
     bool decode(const double* words,u32 count);
     void encode(double* words)const;
     bool valid()const;

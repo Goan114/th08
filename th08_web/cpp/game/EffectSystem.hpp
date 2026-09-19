@@ -22,7 +22,6 @@ class EffectSystem {
         i32 age=0;u8 kind=0;bool active=false;
     };
     std::array<PresentationSample,654> presentation_previous{};
-    void snapshot_presentation();
     Vec3 presentation_position(EffectState&)const;
     void presentation_geometry(const EffectState& source,EffectState& draw)const;
     void begin(EffectState&,i32 kind,u32 color,bool depth);
@@ -36,6 +35,12 @@ public:
     ~EffectSystem(){release();}
     static const EffectDefinition& definition(u32 kind);
     void reset();void release();
+    // Capture the authoritative end state from the previous 60 Hz tick before
+    // any owner mutates shared effects during the next tick. Some effects,
+    // notably the spell-card boss ring, are driven by SpellSystem before the
+    // EffectSystem calculation job runs, so snapshotting inside update() is too
+    // late for presentation interpolation.
+    void snapshot_presentation();
     EffectState* spawn(i32 kind,Vec3 position,i32 count,u32 color,const Vec3* parameters=nullptr);
     EffectState* fixed(i32 kind,Vec3 position,i32 slot,u32 color,const Vec3* parameters=nullptr);
     EffectState* overlay(i32 kind,Vec3 position,i32 count,u32 color);

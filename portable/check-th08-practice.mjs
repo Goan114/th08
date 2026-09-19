@@ -21,6 +21,7 @@ for(const anchor of ["case 'thprac-mouse'","practice=createPractice",'practice.t
 const practice=readFileSync(resolve(import.meta.dirname,'../th08_web/sdl-runtime/practice.mjs'),'utf8');
 assert(!practice.includes("emit('thprac-session'"),'TH08 must keep live practice state Runtime-owned');
 const ui=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/sdl/ThpracUi.cpp'),'utf8');
+assert(ui.includes('Module.eaglerOptions?.thpracEnabled?1:0'),'disabled thprac must not initialize ImGui or require the optional Unicode font');
 assert(ui.includes('AddFontFromFileTTF("/unifont.otf",16,&config,range)'),'thprac UI must always use the Unicode font');
 assert(!ui.includes('AddFontFromFileTTF("/fonts/msgothic.ttc",16,&config,range)'),'thprac UI must not fall back to MS Gothic');
 assert(ui.includes('io.ConfigDragClickToInputText=desktop_pointer'),'desktop numeric controls must open text input on click-release');
@@ -37,4 +38,11 @@ assert(!config.includes('THPRAC08'),'practice replay metadata must use the upstr
 assert(config.includes('\\"version\\":\\"2.3.0.3\\",\\"game\\":\\"th08\\"'),'practice replay JSON must follow THPracParam::GetJson');
 const platform=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/platform/BrowserRuntime.cpp'),'utf8');
 assert(platform.indexOf('practice_replay_block')<platform.indexOf('motion.trailer(8)'),'the PRAC block must precede the THMOTION trailer so .rpyx detection keeps working');
+const packager=readFileSync(resolve(import.meta.dirname,'package-architecture.mjs'),'utf8');
+assert(packager.includes("[unicodeFont,'/unifont.otf']")&&packager.includes('EAGLER_UNICODE_FONT'),'the standalone TH08 package must resolve and mount the Unicode font required by thprac');
+const generator=readFileSync(resolve(import.meta.dirname,'generate-thprac.mjs'),'utf8');
+assert(generator.includes("const repository=resolve(import.meta.dirname,'..')"),'thprac generation must resolve the current repository rather than a workspace directory name');
+assert(!generator.includes("resolve(root,'th08',path)"),'thprac generation must not write to a hard-coded sibling checkout');
+const catalog=readFileSync(resolve(import.meta.dirname,'../th10_web/launcher/src/contracts/product-catalog.mts'),'utf8');
+assert(/th08:[\s\S]*?features:Object\.freeze\(\{thprac:true,replayManagement:true,languages:true,focusHitbox:false\}\)/.test(catalog),'the bundled launcher must expose TH08 thprac and language-pack capabilities');
 console.log(JSON.stringify({passed:true,sections:sections.length,fields:fields.length}));

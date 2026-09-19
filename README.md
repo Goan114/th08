@@ -37,9 +37,13 @@ Generated section tables and bytecode patch adapters are checked against the
 local `thprac` repository with:
 
 ```powershell
-node portable/generate-thprac.mjs --check
+node portable/generate-thprac.mjs <path-to-thprac> --check
 node portable/check-th08-practice.mjs
 ```
+
+The upstream checkout is explicit so worktrees and differently named local
+clones cannot silently select the wrong source. Generated files are always
+checked or written inside this repository.
 
 ## Assets and licensing
 

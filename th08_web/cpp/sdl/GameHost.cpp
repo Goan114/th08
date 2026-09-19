@@ -12,6 +12,7 @@
 #include <memory>
 EM_JS(int, th08_frame_ready, (), {return Module['runtimePrepare']?Module['runtimePrepare']():1;});
 EM_JS(void, th08_frame_finished, (int result,double ms), {if(Module['runtimeFinish'])Module['runtimeFinish'](result,ms);});
+EM_JS(int, th08_limit_presentation_to_60, (), {return Module['eaglerOptions']?.limitPresentationTo60?1:0;});
 namespace th08 {
 void sdl_validate_capture();
 namespace {
@@ -28,7 +29,10 @@ touhou::input::TouchState touch_state(){touhou::input::TouchState s;if(!runtime)
     s.x=p.motion.movement.position.x;s.y=p.motion.movement.position.y;s.fast=g.shots[0].settings().normal_speed*g.player.timing.rate;s.slow=g.shots[1].settings().focus_speed*g.player.timing.rate;
     s.min_x=p.input.minimum.x;s.min_y=p.input.minimum.y;s.max_x=s.min_x+p.input.extent.x;s.max_y=s.min_y+p.input.extent.y;return s;
 }
-void pointer(int type,int id,float x,float y){touch.pointer(type,id,x,y,SDL_GetTicks(),touch_state(),runtime&&runtime->keyboard_state()[16]);}
+int touch_stage(){return runtime&&runtime->app.in_game()?runtime->app.game.globals.stage:-1;}
+void sync_touch_context(const touhou::input::TouchState& state){const int previous=touch.current_context();if(runtime&&previous!=state.context&&(previous==1||previous==2))runtime->motion.touch_cancel(touch_stage());}
+void pointer(int type,int id,float x,float y){const auto state=touch_state();sync_touch_context(state);if(runtime&&(state.context==1||state.context==2))runtime->motion.touch_event(touch_stage(),type,id,x,y);touch.pointer(type,id,x,y,SDL_GetTicks(),state,runtime&&runtime->keyboard_state()[16]);}
+void cancel_touch(){if(runtime){runtime->motion.touch_cancel(touch_stage());runtime->motion.target(0,0,0);}touch.cancel_transient();}
 bool interpolation_ready(){
     if(!runtime||runtime->app.loading_game()||runtime->app.title.modal())return false;
     if(runtime->app.title.active())return true;
@@ -38,7 +42,7 @@ bool interpolation_ready(){
 }
 void poll(){if(!runtime)return;SDL_Event event;while(SDL_PollEvent(&event)){
     ThpracUi::process_event(event);
-    if(event.type==SDL_EVENT_FINGER_CANCELED){touch.cancel_transient();if(runtime)runtime->motion.target(0,0,0);}
+    if(event.type==SDL_EVENT_FINGER_CANCELED)cancel_touch();
     if(event.type==SDL_EVENT_FINGER_DOWN||event.type==SDL_EVENT_FINGER_MOTION||event.type==SDL_EVENT_FINGER_UP)pointer(event.type==SDL_EVENT_FINGER_DOWN?0:event.type==SDL_EVENT_FINGER_MOTION?1:2,int(event.tfinger.fingerID),event.tfinger.x,event.tfinger.y);
     if(event.type==SDL_EVENT_JOYSTICK_ADDED&&!joystick)joystick=SDL_OpenJoystick(event.jdevice.which);
     if(event.type==SDL_EVENT_JOYSTICK_REMOVED&&joystick&&SDL_GetJoystickID(joystick)==event.jdevice.which){SDL_CloseJoystick(joystick);joystick=nullptr;}
@@ -48,7 +52,7 @@ void poll(){if(!runtime)return;SDL_Event event;while(SDL_PollEvent(&event)){
     if(joystick&&SDL_JoystickConnected(joystick)){u8 buttons[128]{};for(int i=0;i<std::min(128,SDL_GetNumJoystickButtons(joystick));i++)buttons[i]=SDL_GetJoystickButton(joystick,i)?128:0;
         runtime->controller_state(SDL_GetJoystickAxis(joystick,0)*1000/32767,SDL_GetJoystickAxis(joystick,1)*1000/32767,buttons,128,true);
     }else runtime->controller_state(0,0,nullptr,0,false);
-    const auto input=touch.sample(touch_state(),SDL_GetTicks(),keys[16],keys[37]||keys[38]||keys[39]||keys[40]);for(int i=0;i<256;i++)if(input.keys[i])keys[i]=128;
+    const auto state=touch_state();sync_touch_context(state);const auto input=touch.sample(state,SDL_GetTicks(),keys[16],keys[37]||keys[38]||keys[39]||keys[40]);for(int i=0;i<256;i++)if(input.keys[i])keys[i]=128;
     runtime->motion.target(input.motion,input.x,input.y);
     ThpracUi::update_input(*runtime);
     if(ThpracUi::captures_game_input())for(const int vk:{16,27,37,38,39,40,88,90})keys[vk]=0;
@@ -56,20 +60,23 @@ void poll(){if(!runtime)return;SDL_Event event;while(SDL_PollEvent(&event)){
 int tick(){poll();return !runtime||!runtime->step(false)?runtime&&(runtime->status(2)||runtime->status(4))?2:1:0;}
 EM_BOOL frame(double now,void* epoch){if(!running||uintptr_t(epoch)!=loop_epoch)return EM_FALSE;const double delta=last<0?0:std::max(0.,(now-last)/1000.);last=now;frame_begin=emscripten_get_now();
     if(suspended||!th08_frame_ready()){sdl_audio_pause(true);cadence.reset();presentation.reset();presentation_primed=false;return EM_TRUE;}sdl_audio_pause(false);int result=0;
-    const bool ready=interpolation_ready(),fast=touhou::sdl::PresentationCadence::fast_sample(delta);if(ready)presentation.advance(delta);else presentation.reset();if(!presentation.high_refresh||!fast)presentation_primed=false;
-    const auto ticks=cadence.advance(delta);
-    const bool high=presentation.high_refresh&&interpolation_ready();if(high&&fast&&!presentation_primed&&ticks)presentation_primed=true;const bool interpolate=high&&fast&&presentation_primed;bool presented=false;
-    for(unsigned i=0;i<ticks&&!result;++i){
-        elapsed+=touhou::sdl::FrameCadence::interval;result=tick();if(result||!runtime)break;
-        // Preserve TH08's authoritative update+draw tick exactly. At high
-        // presentation rates every fixed-tick draw is semantic but hidden;
-        // the visible frame below is a second, side-effect-free presentation
-        // pass. Without high refresh, only catch-up intermediates are hidden.
-        const bool hidden=high||i+1<ticks;if(hidden)sdl_defer(1);
-        if(!runtime->app.draw(1.0f,false,false))result=(runtime->status(2)||runtime->status(4))?2:1;
-        else if(runtime->status(2)||runtime->status(4))result=2;
-        if(hidden)sdl_defer(0);else presented=true;
-        if(!result){++frames;if(!runtime->audio_tick(u32(elapsed*1000)))result=2;}
+    const bool limit60=th08_limit_presentation_to_60()!=0;
+    const bool ready=interpolation_ready()&&!limit60,fast=touhou::sdl::PresentationCadence::fast_sample(delta);if(ready)presentation.advance(delta);else presentation.reset();if(!presentation.high_refresh||!fast)presentation_primed=false;
+    const bool tick_due=cadence.advance(delta)!=0;
+    const bool high=presentation.high_refresh&&interpolation_ready();if(high&&fast&&!presentation_primed&&tick_due)presentation_primed=true;const bool interpolate=high&&fast&&presentation_primed;bool presented=false;
+    if(tick_due&&!result){
+        elapsed+=touhou::sdl::FrameCadence::interval;result=tick();
+        if(!result&&runtime){
+            // Preserve TH08's authoritative update+draw tick exactly. At high
+            // presentation rates every fixed-tick draw is semantic but hidden;
+            // the visible frame below is a second, side-effect-free presentation
+            // pass. Missed original deadlines are skipped rather than caught up.
+            const bool hidden=high;if(hidden)sdl_defer(1);
+            if(!runtime->app.draw(1.0f,false,false))result=(runtime->status(2)||runtime->status(4))?2:1;
+            else if(runtime->status(2)||runtime->status(4))result=2;
+            if(hidden)sdl_defer(0);else presented=true;
+            if(!result){++frames;if(!runtime->audio_tick(u32(elapsed*1000)))result=2;}
+        }
     }
     if(!result&&runtime&&high){
         const bool frozen=runtime->app.in_game()&&(runtime->app.game.paused||runtime->app.game.retrying||runtime->app.game.menus.context.pause_state||runtime->app.game.menus.context.show_retry);
@@ -108,9 +115,9 @@ EX("sdl_loop_tick") i32 sdl_loop_tick(BrowserRuntime* r,double seconds,u32){
 }
 EX("sdl_game_close") void sdl_game_close(){sdl_loop_stop();touch.reset();ThpracUi::shutdown();runtime.reset();if(joystick)SDL_CloseJoystick(joystick);joystick=nullptr;sdl_audio_shutdown();sdl_fonts_shutdown();sdl_detach();}
 EX("sdl_key") void sdl_key(const char* code,u32 down){for(auto& key:keyboard_map)if(!std::strcmp(key.code,code)){key.hosted=down!=0;break;}}
-EX("sdl_keys_clear") void sdl_keys_clear(){for(auto& key:keyboard_map)key.hosted=false;touch.reset();if(runtime)runtime->motion.target(0,0,0);}
+EX("sdl_keys_clear") void sdl_keys_clear(){for(auto& key:keyboard_map)key.hosted=false;cancel_touch();touch.reset();}
 EX("sdl_touch") void sdl_touch(u32 type,i32 id,float x,float y){pointer(type,id,x,y);}
-EX("sdl_touch_cancel") void sdl_touch_cancel(){touch.cancel_transient();if(runtime)runtime->motion.target(0,0,0);}
+EX("sdl_touch_cancel") void sdl_touch_cancel(){cancel_touch();}
 EX("sdl_thprac_mouse") void sdl_thprac_mouse(u32 type,float x,float y){ThpracUi::mouse(type,x,y);}
 EX("sdl_touch_options") void sdl_touch_options(u32 on,u32 free,float speed){touch.enabled=on;touch.unlimited=free;touch.sensitivity=std::clamp(speed,1.f,3.f);if(!on)sdl_touch_cancel();}
 EX("sdl_touch_gestures") void sdl_touch_gestures(u32 two,u32 taps){touch.two_finger=two;touch.double_tap=taps;}
