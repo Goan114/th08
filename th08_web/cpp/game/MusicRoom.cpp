@@ -72,9 +72,8 @@ i32 MusicRoom::process_input(){
     if(state.frames>=10&&state.frames<=22&&!(state.frames&1)&&context.text){const i32 line=(state.frames-10)/2;auto& vm=state.descriptions[line];start(vm,*context.text,10+line);vm.pendingInterrupt=1;
         const bool shown=state.selected==state.cursor||state.unlocked[state.cursor];
         char message[66]{};const void* bytes=shown?static_cast<void*>(state.tracks[state.cursor].descriptions[line]):static_cast<const void*>(music_locked_warnings[line]);std::memcpy(message,bytes,64);
-        const char* display=message;
+        const char* display=message;std::string formatted;
         if(Localization::Active()){
-            std::string formatted;
             display=shown?comment_for(state.tracks[state.cursor],state.cursor+1,line,message,formatted)
                          :Localization::StringById(spoiler_ids[line],message);
         }
