@@ -182,7 +182,7 @@ bool GameplayScene::prepare_frame(u16 buttons,float rate,bool force_unit){
     if(recording_game){recording.input.physical=buttons;publish_input(recording.input);}else if(playing_replay)publish_input(playback.input);
     synchronize();return !invalid();
 }
-bool GameplayScene::update(u16 buttons,float rate,bool force_unit){if(!prepare_frame(buttons,rate,force_unit))return false;failed|=chain.run()<0;return !invalid();}
+bool GameplayScene::update(u16 buttons,float rate,bool force_unit){if(!prepare_frame(buttons,rate,force_unit))return false;effect_system.snapshot_presentation();spell_drawing.snapshot_presentation();background_view.snapshot_spell_presentation();ascii.snapshot_presentation(ascii_context);failed|=chain.run()<0;return !invalid();}
 bool GameplayScene::draw(){if(!ready())return false;failed|=chain.run(true)<0;renderer.flush();return !invalid();}
 }
 

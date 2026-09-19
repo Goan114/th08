@@ -63,7 +63,15 @@ assert.match(title,/saved_name_positions/);
 assert.match(title,/if\(presentation::render_only\).*spellCardNameVms\[i\]\.pos=saved_name_positions\[i\]/s);
 
 const spell=read('th08_web/cpp/game/SpellDrawing.cpp');
-assert.match(spell,/if\(presentation::render_only\).*v\[10\]=saved10/s);
+assert.match(spell,/std::array<AnmVm,14> presented/);
+assert.match(spell,/return presentation::render_only\?presented\[i\]:v\[i\]/);
+assert.doesNotMatch(spell,/if\(presentation::render_only\).*v\[\d+\]\s*=/s);
+
+const spellBackground=read('th08_web/cpp/game/SpellBackground.cpp');
+assert.match(spellBackground,/AnmVm presented_a,presented_b/);
+assert.match(spellBackground,/if\(presentation::render_only\).*ap=&presented_a;bp=&presented_b/s);
+
+assert.match(backgroundView,/if\(presentation::render_only\)\{auto vm=presentation_spell_vm/);
 
 const loading=read('th08_web/cpp/game/LoadingScreen.cpp');
 assert.match(loading,/if\(!presentation::render_only\)phase=wrapping_add/);

@@ -31,7 +31,7 @@ void AsciiManager::direct_sprite(AnmVm& vm,i32 sprite){
 }
 void AsciiManager::reset(){
     auto& s=state;
-    presentation_boss_markers_valid=false;
+    presentation_state=PresentationState{};
     std::memset(score_popup_previous,0,sizeof(score_popup_previous));for(auto& p:score_popup_previous)p.timer=-2;
     std::memset(&s.small_score_text,0,sizeof(AnmVm));std::memset(&s.popup_text,0,sizeof(AnmVm));std::memset(&s.large_text,0,sizeof(AnmVm));
     std::memset(s.strings,0,sizeof(s.strings));std::memset(&s.pause,0,sizeof(s.pause));std::memset(&s.retry,0,sizeof(s.retry));
@@ -42,6 +42,11 @@ void AsciiManager::reset(){
     s.small_score_text.anchor=s.popup_text.anchor=3;
     set_sprite(s.small_score_text,0,true);set_sprite(s.popup_text,136,true);set_sprite(s.large_text,32,true);
     s.small_score_text.pos.z=.1f;s.space_width=13;
+}
+void AsciiManager::snapshot_presentation(const AsciiContext& c){
+    for(u32 i=0;i<4;++i)presentation_state.boss_markers[i]=state.boss_markers[i].pos;
+    presentation_state.player=c.player;presentation_state.gauge=c.gauge;
+    presentation_state.blindness_radius=state.blindness_radius;presentation_state.blindness_color=state.blindness_color;presentation_state.valid=true;
 }
 void AsciiManager::initialize_vms(const AsciiContext& c){
     if(!state.ascii)return;
@@ -63,7 +68,6 @@ void AsciiManager::tick_popups(const AsciiContext& c,const FrameTiming& timing){
 }
 void AsciiManager::tick_vms(bool demo){
     auto& s=state;
-    for(u32 i=0;i<4;++i)presentation_boss_markers[i]=s.boss_markers[i].pos;presentation_boss_markers_valid=true;
     for(auto* vm:{&s.gauge,&s.human_icon,&s.youkai_icon,&s.cursor,&s.percentage,&s.boss_markers[0],&s.boss_markers[1],&s.boss_markers[2],&s.boss_markers[3],&s.border})executor.execute(*vm);
     if(demo){if(s.demo.scriptIndex==0&&s.ascii)start(s.demo,*s.ascii,11);executor.execute(s.demo);}else s.demo.scriptIndex=0;
     ++s.frame;
@@ -103,6 +107,7 @@ void AsciiManager::create_time(const Vec3& position,i32 value,i32 multiplier,u32
 }
 void AsciiManager::draw_strings(const AsciiContext& c){
     auto& s=state;AnmVm text_copy;if(presentation::render_only)text_copy=s.large_text;auto& vm=presentation::render_only?text_copy:s.large_text;vm.visible=true;vm.anchor=3;bool gui=true;
+    Vec3 presented_player=c.player;if(presentation::active&&presentation_state.valid){const float dx=c.player.x-presentation_state.player.x,dy=c.player.y-presentation_state.player.y;if(dx*dx+dy*dy<16384.0f)presented_player={presentation::lerp_world(presentation_state.player.x,c.player.x),presentation::lerp_world(presentation_state.player.y,c.player.y),presentation::lerp_world(presentation_state.player.z,c.player.z)};}
     auto viewport=[&](bool arcade){auto v=renderer.viewport;v.x=arcade?u32(Scalar::truncate(c.arcade_origin.x)):0;v.y=arcade?u32(Scalar::truncate(c.arcade_origin.y)):0;
         v.width=arcade?u32(Scalar::truncate(c.arcade_size.x)):640;v.height=arcade?u32(Scalar::truncate(c.arcade_size.y)):480;renderer.set_viewport(v);};
     for(i32 i=0;i<s.string_count&&i<256;++i){const auto& str=s.strings[i];vm.pos=str.position;vm.scale={str.scale_x,str.scale_y};const float space=(integer(s.space_width)*number(str.scale_x)).to_float();
@@ -114,8 +119,8 @@ void AsciiManager::draw_strings(const AsciiContext& c){
     }
     if(gui)viewport(false);
     for(u32 i=0;i<4;++i){auto& source=s.boss_markers[i];if(source.pos.x<56||source.pos.x>392)continue;AnmVm marker_copy;if(presentation::render_only)marker_copy=source;auto& marker=presentation::render_only?marker_copy:source;
-        if(presentation::active&&presentation_boss_markers_valid){const auto& before=presentation_boss_markers[i];const float dx=source.pos.x-before.x;if(before.x>=56&&before.x<=392&&std::fabs(dx)<128)marker.pos.x=presentation::lerp_world(before.x,source.pos.x);}
-        const float distance=std::fabs((number(marker.pos.x)-number(32)-number(c.player.x)).to_float());direct_sprite(marker,157);
+        if(presentation::active&&presentation_state.valid){const auto& before=presentation_state.boss_markers[i];const float dx=source.pos.x-before.x;if(before.x>=56&&before.x<=392&&std::fabs(dx)<128)marker.pos.x=presentation::lerp_world(before.x,source.pos.x);}
+        const float distance=std::fabs((number(marker.pos.x)-number(32)-number(presented_player.x)).to_float());direct_sprite(marker,157);
         bool normal=false;
         switch(s.boss_states[i]){
         case 0:normal=true;break;
@@ -141,32 +146,38 @@ void AsciiManager::draw_percentage(const Vec3& position,i32 percentage,u32 color
 }
 void AsciiManager::draw_overlays(const AsciiContext& c){
     auto& s=state;overlay.begin(!c.fog_disabled);
+    Vec3 presented_player=c.player;float presented_gauge=float(c.gauge);float presented_blindness_radius=s.blindness_radius;u32 presented_blindness_color=s.blindness_color;
+    if(presentation::active&&presentation_state.valid){
+        const float dx=c.player.x-presentation_state.player.x,dy=c.player.y-presentation_state.player.y;if(dx*dx+dy*dy<16384.0f)presented_player={presentation::lerp_world(presentation_state.player.x,c.player.x),presentation::lerp_world(presentation_state.player.y,c.player.y),presentation::lerp_world(presentation_state.player.z,c.player.z)};
+        presented_gauge=presentation::lerp_world(float(presentation_state.gauge),float(c.gauge));
+        if(presentation_state.blindness_color&&s.blindness_color){presented_blindness_radius=presentation::lerp_world(presentation_state.blindness_radius,s.blindness_radius);presented_blindness_color=u32(std::clamp(presentation::lerp_world(float(presentation_state.blindness_color&255),float(s.blindness_color&255)),0.0f,255.0f));}
+    }
     AnmVm small_copy;if(presentation::render_only)small_copy=s.small_score_text;auto& small=presentation::render_only?small_copy:s.small_score_text;
     for(u32 popup_index=0;popup_index<723;++popup_index){const auto& p=s.score_popups[popup_index];if(!p.in_use)continue;Vec3 position=p.position;
         if(presentation::active){const auto& before=score_popup_previous[popup_index];if(before.in_use&&before.characters==p.characters&&p.timer.current>=before.timer&&p.timer.current-before.timer<=2)position={presentation::lerp_world(before.position.x,p.position.x),presentation::lerp_world(before.position.y,p.position.y),presentation::lerp_world(before.position.z,p.position.z)};}
         small.pos.x=(number(position.x)-integer(p.characters*4)).to_float();small.pos.y=position.y;small.color1.d3dColor=p.color;small.scale={s.scale_x,s.scale_y};
-        const i32 alpha=popup_alpha(c.player,position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(small,p.text[i]+(p.timer.current<52?0:p.timer.current<56?11:21));small.color1.a=u8(alpha);
+        const i32 alpha=popup_alpha(presented_player,position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(small,p.text[i]+(p.timer.current<52?0:p.timer.current<56?11:21));small.color1.a=u8(alpha);
             if(small.loadedSprite)small.spriteSize.x=small.loadedSprite->widthPx;renderer.draw_no_rotation(small);small.pos.x=add(small.pos.x,8);}}
     if(s.blindness_color){
-        const u32 color=(s.blindness_color&255)<<24;
-        const auto x=number(c.player.x)+number(32),y=number(c.player.y)+number(16),radius=number(s.blindness_radius);
+        const u32 color=(presented_blindness_color&255)<<24;
+        const auto x=number(presented_player.x)+number(32),y=number(presented_player.y)+number(16),radius=number(presented_blindness_radius);
         OverlayRect rect{32,16,(x-radius+number(renderer.shake.x)).to_float(),464};
         if(rect.right>rect.left)overlay.rectangle(rect,color);
         rect={(x+radius+number(renderer.shake.x)).to_float(),16,416,464};if(rect.right>rect.left)overlay.rectangle(rect,color);
         rect={std::max(32.f,(x-radius+number(renderer.shake.x)).to_float()),16,std::min(416.f,(x+radius+number(renderer.shake.x)).to_float()),(y-radius+number(renderer.shake.y)).to_float()};
         if(rect.bottom>rect.top)overlay.rectangle(rect,color);
         rect.top=(y+radius+number(renderer.shake.y)).to_float();rect.bottom=464;if(rect.bottom>rect.top)overlay.rectangle(rect,color);
-        if(c.effects){AnmVm blindness_copy;if(presentation::render_only)blindness_copy=s.blindness;auto& blindness=presentation::render_only?blindness_copy:s.blindness;start(blindness,*c.effects,105);blindness.scale.x=blindness.scale.y=(radius/number(63)).to_float();blindness.pos=c.player;blindness.pos.x=add(blindness.pos.x,32);blindness.pos.y=add(blindness.pos.y,16);blindness.color1.a=u8(s.blindness_color);renderer.draw_no_rotation(blindness);}
+        if(c.effects){AnmVm blindness_copy;if(presentation::render_only)blindness_copy=s.blindness;auto& blindness=presentation::render_only?blindness_copy:s.blindness;start(blindness,*c.effects,105);blindness.scale.x=blindness.scale.y=(radius/number(63)).to_float();blindness.pos=presented_player;blindness.pos.x=add(blindness.pos.x,32);blindness.pos.y=add(blindness.pos.y,16);blindness.color1.a=u8(presented_blindness_color);renderer.draw_no_rotation(blindness);}
     }
     AnmVm popup_copy;if(presentation::render_only)popup_copy=s.popup_text;auto& popup=presentation::render_only?popup_copy:s.popup_text;
     for(const auto& p:s.time_popups)if(p.in_use){popup.pos.x=(number(p.position.x)-integer(p.characters)*number(3.5f)).to_float();popup.pos.y=p.position.y;popup.color1.d3dColor=p.color;popup.scale={p.scale_x,p.scale_y};
-        const i32 alpha=popup_alpha(c.player,p.position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(popup,p.text[i]+136);popup.color1.a=u8(alpha);if(popup.loadedSprite)popup.spriteSize.x=popup.loadedSprite->widthPx;
+        const i32 alpha=popup_alpha(presented_player,p.position);for(i32 i=p.characters-1;i>=0;--i){direct_sprite(popup,p.text[i]+136);popup.color1.a=u8(alpha);if(popup.loadedSprite)popup.spriteSize.x=popup.loadedSprite->widthPx;
             renderer.draw_no_rotation(popup);popup.pos.x=(number(popup.pos.x)+number(7)*number(p.scale_x)).to_float();}}
     renderer.shake={};
     if(s.gauge.visible){
         AnmVm cursor_copy,percentage_copy,gauge_copy;if(presentation::render_only){cursor_copy=s.cursor;percentage_copy=s.percentage;gauge_copy=s.gauge;}auto& cursor=presentation::render_only?cursor_copy:s.cursor;auto& percentage_vm=presentation::render_only?percentage_copy:s.percentage;auto& gauge=presentation::render_only?gauge_copy:s.gauge;
-        cursor.pos.x=(integer(c.gauge)*number(112)/number(2)/number(10000)+number(gauge.pos.x)+number(64)).to_float();renderer.draw_2d(cursor,true);
-        percentage_vm.pos.x=(integer(c.gauge)*number(80)/number(2)/number(10000)+number(gauge.pos.x)+number(64)).to_float();percentage_vm.pos.y=sub(cursor.pos.y,7);percentage_vm.pos.z=cursor.pos.z;
+        cursor.pos.x=(number(presented_gauge)*number(112)/number(2)/number(10000)+number(gauge.pos.x)+number(64)).to_float();renderer.draw_2d(cursor,true);
+        percentage_vm.pos.x=(number(presented_gauge)*number(80)/number(2)/number(10000)+number(gauge.pos.x)+number(64)).to_float();percentage_vm.pos.y=sub(cursor.pos.y,7);percentage_vm.pos.z=cursor.pos.z;
         const u32 rgb=c.gauge<=c.human_effects?0x7070ff:c.gauge<=c.human_tint?0xb0b0ff:c.gauge>=c.youkai_effects?0xff7070:c.gauge>=c.youkai_tint?0xffb0b0:0xffffff;
         percentage_vm.color1.d3dColor=(gauge.color1.d3dColor&0xff000000)|rgb;gauge.color1=percentage_vm.color1;
         renderer.draw_no_rotation(gauge);renderer.draw_no_rotation(s.human_icon);renderer.draw_no_rotation(s.youkai_icon);draw_percentage(percentage_vm.pos,c.gauge,percentage_vm.color1.d3dColor);
