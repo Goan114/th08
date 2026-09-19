@@ -58,8 +58,14 @@ void select_current_section(PracticeConfig& p, int difficulty){
 }
 void draw_practice(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;auto& p=state.configured;
+ // Extra is its own difficulty. Every other stage needs a non-Extra difficulty,
+ // otherwise returning from an Extra run leaves difficulty 4 and the normal
+ // stages expose no valid sections (thprac's Extra names are empty for them).
+ static int non_extra_difficulty=1;int& difficulty=runtime.app.title.context.difficulty;
+ if(difficulty<4)non_extra_difficulty=difficulty;
+ difficulty=(p.stage==8)?4:non_extra_difficulty;
  if(!practice_was_open){
-  practice_was_open=true;practice_keys_armed=false;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);
+  practice_was_open=true;practice_keys_armed=false;practice_section_index=0;select_current_section(p,difficulty);
   // THGuiPrac::State(1): when the gauge type changes, reset the gauge to the
   // shottype's initial value.
   const int shot=runtime.app.title.context.character;
@@ -76,12 +82,12 @@ void draw_practice(BrowserRuntime& runtime){
   if(p.mode==1){
    const char* warps[]={tr("无","None","なし"),tr("道中","Stage Portion","道中"),tr("道中Boss","Mid Boss","道中ボス"),tr("关底Boss","End Boss","ボス"),tr("非符","Non Spell","通常"),tr("符卡","Spell Card","スペカ"),tr("帧","Frame","フレーム")};
    // Stages 4A/4B have no midboss: warp 2 is unavailable, like upstream.
-   if(p.stage==3||p.stage==4){if(p.warp==2)p.warp=0;const char* no_mid[]{warps[0],warps[1],warps[3],warps[4],warps[5],warps[6]};int wi=p.warp<2?p.warp:p.warp-1;if(ImGui::Combo(tr("传送","Warp","ワープ"),&wi,no_mid,6)){p.warp=wi<2?wi:wi+1;p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);}}
-   else if(ImGui::Combo(tr("传送","Warp","ワープ"),&p.warp,warps,7)){p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,runtime.app.title.context.difficulty);}
+   if(p.stage==3||p.stage==4){if(p.warp==2)p.warp=0;const char* no_mid[]{warps[0],warps[1],warps[3],warps[4],warps[5],warps[6]};int wi=p.warp<2?p.warp:p.warp-1;if(ImGui::Combo(tr("传送","Warp","ワープ"),&wi,no_mid,6)){p.warp=wi<2?wi:wi+1;p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,difficulty);}}
+   else if(ImGui::Combo(tr("传送","Warp","ワープ"),&p.warp,warps,7)){p.section=0;p.phase=0;p.frame=0;practice_section_index=0;select_current_section(p,difficulty);}
    if(p.warp==1){static constexpr int setup[9][2]{{1,1},{4,0},{2,1},{4,2},{4,2},{3,2},{2,0},{2,0},{3,4}};const auto& counts=setup[p.stage];int chapter=p.section>=10000?p.section%100:1;
     char portion[64];if(!counts[1])std::snprintf(portion,sizeof(portion),"#%d",chapter);else if(chapter<=counts[0])std::snprintf(portion,sizeof(portion),tr("前半 #%d","First Half #%d","前半 #%d"),chapter);else std::snprintf(portion,sizeof(portion),tr("后半 #%d","Second Half #%d","後半 #%d"),chapter-counts[0]);
     if(ImGui::SliderInt(tr("章节","Chapter","チャプター"),&chapter,1,counts[0]+counts[1],portion))p.section=10000+(p.stage+1)*100+chapter;}
-   else if(p.warp>=2&&p.warp<=5){auto matches=matching_sections(p,runtime.app.title.context.difficulty);if(!matches.empty()){select_current_section(p,runtime.app.title.context.difficulty);std::vector<const char*> names;for(auto* s:matches)names.push_back(s->names[std::clamp(runtime.app.title.context.difficulty,0,4)][locale]);if(ImGui::Combo(warps[p.warp],&practice_section_index,names.data(),int(names.size()))){p.section=matches[practice_section_index]->id;p.phase=0;}if(section_has_dialogue(p.section))ImGui::Checkbox(tr("对话","Dialog","会話"),reinterpret_cast<bool*>(&p.dlg));}}
+   else if(p.warp>=2&&p.warp<=5){auto matches=matching_sections(p,difficulty);if(!matches.empty()){select_current_section(p,difficulty);std::vector<const char*> names;for(auto* s:matches)names.push_back(s->names[std::clamp(difficulty,0,4)][locale]);if(ImGui::Combo(warps[p.warp],&practice_section_index,names.data(),int(names.size()))){p.section=matches[practice_section_index]->id;p.phase=0;}if(section_has_dialogue(p.section))ImGui::Checkbox(tr("对话","Dialog","会話"),reinterpret_cast<bool*>(&p.dlg));}}
    else if(p.warp==6)ImGui::DragInt(tr("帧","Frame","フレーム"),&p.frame,2,0,0x7fffffff);
    if(p.section==66)ImGui::SliderInt(tr("阶段","Phase","段階"),&p.phase,0,2);else if(p.section==104)ImGui::SliderInt(tr("阶段","Phase","段階"),&p.phase,0,6);else p.phase=0;
    ImGui::SliderInt(tr("残机","Life","残機"),&p.life,0,8);ImGui::SliderInt("Bomb",&p.bomb,0,8);ImGui::SliderInt(tr("火力","Power","霊力"),&p.power,0,128);
@@ -92,7 +98,7 @@ void draw_practice(BrowserRuntime& runtime){
    ImGui::DragInt(tr("擦弹","Graze","グレイズ"),&p.graze,2,0,0x7fffffff);ImGui::DragInt(tr("总计蓝点","Point (Total)","得点(合計)"),&p.point_total,2,0,9999);ImGui::DragInt(tr("本关蓝点","Point (Stage)","得点(ステージ)"),&p.point_stage,2,0,9999);ImGui::DragInt(tr("刻符","Time Orbs","刻符"),&p.time,2,0,0x7fffffff);ImGui::DragInt(tr("夜点","Point Value","夜点"),&p.value,20,0,9999999);p.value=p.value/10*10;
    char night[16];if(p.night<2)std::snprintf(night,sizeof(night),"11:%s",p.night%2?"30":"00");else std::snprintf(night,sizeof(night),"%02d:%s",(p.night-2)/2,p.night%2?"30":"00");ImGui::SliderInt(tr("夜晚","Night","時刻"),&p.night,0,11,night);
    // Upstream CheckIfBoss(): any midboss/boss section (warp 2-5) shows familiars.
-   if(p.warp>=2&&p.warp<=5)ImGui::SliderInt(tr("累计使魔","Familiars","累計使い魔"),&p.familiar,0,2000);const int rankMax=p.rankLock?99:(runtime.app.title.context.difficulty>1?12:16);p.rank=std::clamp(p.rank,8,rankMax);ImGui::SliderInt("Rank",&p.rank,8,rankMax);ImGui::Checkbox(tr("锁Rank","Rank Lock","ランク固定"),reinterpret_cast<bool*>(&p.rankLock));
+   if(p.warp>=2&&p.warp<=5)ImGui::SliderInt(tr("累计使魔","Familiars","累計使い魔"),&p.familiar,0,2000);const int rankMax=p.rankLock?99:(difficulty>1?12:16);p.rank=std::clamp(p.rank,8,rankMax);ImGui::SliderInt("Rank",&p.rank,8,rankMax);ImGui::Checkbox(tr("锁Rank","Rank Lock","ランク固定"),reinterpret_cast<bool*>(&p.rankLock));
   }
   ImGui::PopItemWidth();if(!ImGui::IsAnyItemActive()&&!ImGui::IsPopupOpen(nullptr,ImGuiPopupFlags_AnyPopupId|ImGuiPopupFlags_AnyPopupLevel))ImGui::SetWindowFocus();
  }
@@ -106,7 +112,7 @@ void draw_practice(BrowserRuntime& runtime){
  // to the widget, not the menu; use last frame's state so the confirming
  // keystroke itself is also swallowed.
  const bool widget_busy=text_editing;text_editing=ImGui::IsAnyItemActive();
- if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p,runtime.app.title.context.difficulty);state.run=p;state.run.warp=0;state.accepted=true;}
+ if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p,difficulty);state.run=p;state.run.warp=0;state.accepted=true;}
  if(practice_keys_armed&&!widget_busy&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
 }
 void draw_overlay(BrowserRuntime& runtime){

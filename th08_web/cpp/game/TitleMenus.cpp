@@ -1562,6 +1562,12 @@ i32 TitleMenus::OnUpdateCharacterSelect()
             actions.sound(SOUND_SELECT, 0);
             actions.process_sounds();
 
+            // The practice stage-select confirm owns this assignment for a
+            // vanilla run, but thprac's practice menu intercepts that screen,
+            // and the practice character select returns early below. Set the
+            // chosen difficulty here so a thprac run does not inherit a stale
+            // title difficulty.
+            context.difficulty = config.difficulty;
             if (state.currentScreen == TitleCurrentScreen_CharacterSelectPractice)
             {
                 state.cursor = context.currentStage;

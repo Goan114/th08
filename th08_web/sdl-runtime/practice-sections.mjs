@@ -29,9 +29,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST1_MID1",
-        "TH08_ST1_MID1",
-        "TH08_ST1_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -64,9 +64,9 @@ export const sections=[
         "蛍符「地上の彗星」"
       ],
       [
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2",
-        "TH08_ST1_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -99,9 +99,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST1_BOSS1",
-        "TH08_ST1_BOSS1",
-        "TH08_ST1_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -134,9 +134,9 @@ export const sections=[
         "灯符「ファイヤフライフェノメノン」"
       ],
       [
-        "TH08_ST1_BOSS2",
-        "TH08_ST1_BOSS2",
-        "TH08_ST1_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -169,9 +169,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST1_BOSS3",
-        "TH08_ST1_BOSS3",
-        "TH08_ST1_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -204,9 +204,9 @@ export const sections=[
         "蠢符「ナイトバグトルネード」"
       ],
       [
-        "TH08_ST1_BOSS4",
-        "TH08_ST1_BOSS4",
-        "TH08_ST1_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -239,9 +239,9 @@ export const sections=[
         "隠蟲「永夜蟄居」"
       ],
       [
-        "TH08_ST1_LS",
-        "TH08_ST1_LS",
-        "TH08_ST1_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -274,9 +274,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST2_MID1",
-        "TH08_ST2_MID1",
-        "TH08_ST2_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -309,9 +309,9 @@ export const sections=[
         "声符「木菟咆哮」"
       ],
       [
-        "TH08_ST2_MID2",
-        "TH08_ST2_MID2",
-        "TH08_ST2_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -344,9 +344,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST2_BOSS1",
-        "TH08_ST2_BOSS1",
-        "TH08_ST2_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -379,9 +379,9 @@ export const sections=[
         "猛毒「毒蛾の暗闇演舞」"
       ],
       [
-        "TH08_ST2_BOSS2",
-        "TH08_ST2_BOSS2",
-        "TH08_ST2_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -414,9 +414,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST2_BOSS3",
-        "TH08_ST2_BOSS3",
-        "TH08_ST2_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -449,9 +449,9 @@ export const sections=[
         "鷹符「イルスタードダイブ」"
       ],
       [
-        "TH08_ST2_BOSS4",
-        "TH08_ST2_BOSS4",
-        "TH08_ST2_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -484,9 +484,9 @@ export const sections=[
         "夜盲「夜雀の歌」"
       ],
       [
-        "TH08_ST2_BOSS5",
-        "TH08_ST2_BOSS5",
-        "TH08_ST2_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -519,9 +519,9 @@ export const sections=[
         "夜雀「真夜中のコーラスマスター」"
       ],
       [
-        "TH08_ST2_LS",
-        "TH08_ST2_LS",
-        "TH08_ST2_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -554,9 +554,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST3_MID1",
-        "TH08_ST3_MID1",
-        "TH08_ST3_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -589,9 +589,9 @@ export const sections=[
         "産霊「ファーストピラミッド」"
       ],
       [
-        "TH08_ST3_MID2",
-        "TH08_ST3_MID2",
-        "TH08_ST3_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -624,9 +624,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST3_BOSS1",
-        "TH08_ST3_BOSS1",
-        "TH08_ST3_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -659,9 +659,9 @@ export const sections=[
         "始符「エフェメラリティ137」"
       ],
       [
-        "TH08_ST3_BOSS2",
-        "TH08_ST3_BOSS2",
-        "TH08_ST3_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -694,9 +694,9 @@ export const sections=[
         "野符「GHQクライシス」"
       ],
       [
-        "TH08_ST3_BOSS3",
-        "TH08_ST3_BOSS3",
-        "TH08_ST3_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -729,9 +729,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST3_BOSS4",
-        "TH08_ST3_BOSS4",
-        "TH08_ST3_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -764,9 +764,9 @@ export const sections=[
         "国体「三種の神器　郷」"
       ],
       [
-        "TH08_ST3_BOSS5",
-        "TH08_ST3_BOSS5",
-        "TH08_ST3_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -799,9 +799,9 @@ export const sections=[
         "虚史「幻想郷伝説」"
       ],
       [
-        "TH08_ST3_BOSS6",
-        "TH08_ST3_BOSS6",
-        "TH08_ST3_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -834,9 +834,9 @@ export const sections=[
         "未来「高天原」"
       ],
       [
-        "TH08_ST3_LS",
-        "TH08_ST3_LS",
-        "TH08_ST3_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -869,9 +869,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST4A_BOSS1",
-        "TH08_ST4A_BOSS1",
-        "TH08_ST4A_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -904,9 +904,9 @@ export const sections=[
         "夢境「二重大結界」"
       ],
       [
-        "TH08_ST4A_BOSS2",
-        "TH08_ST4A_BOSS2",
-        "TH08_ST4A_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -939,9 +939,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST4A_BOSS3",
-        "TH08_ST4A_BOSS3",
-        "TH08_ST4A_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -974,9 +974,9 @@ export const sections=[
         "散霊「夢想封印　寂」"
       ],
       [
-        "TH08_ST4A_BOSS4",
-        "TH08_ST4A_BOSS4",
-        "TH08_ST4A_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1009,9 +1009,9 @@ export const sections=[
         "ボス 通常3"
       ],
       [
-        "TH08_ST4A_BOSS5",
-        "TH08_ST4A_BOSS5",
-        "TH08_ST4A_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1044,9 +1044,9 @@ export const sections=[
         "神技「八方龍殺陣」"
       ],
       [
-        "TH08_ST4A_BOSS6",
-        "TH08_ST4A_BOSS6",
-        "TH08_ST4A_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1079,9 +1079,9 @@ export const sections=[
         "ボス 通常4"
       ],
       [
-        "TH08_ST4A_BOSS7",
-        "TH08_ST4A_BOSS7",
-        "TH08_ST4A_BOSS7"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1114,9 +1114,9 @@ export const sections=[
         "回霊「夢想封印　侘」"
       ],
       [
-        "TH08_ST4A_BOSS8",
-        "TH08_ST4A_BOSS8",
-        "TH08_ST4A_BOSS8"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1149,9 +1149,9 @@ export const sections=[
         "大結界「博麗弾幕結界」"
       ],
       [
-        "TH08_ST4A_BOSS9",
-        "TH08_ST4A_BOSS9",
-        "TH08_ST4A_BOSS9"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1184,9 +1184,9 @@ export const sections=[
         "神霊「夢想封印　瞬」"
       ],
       [
-        "TH08_ST4A_LS",
-        "TH08_ST4A_LS",
-        "TH08_ST4A_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1219,9 +1219,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST4B_BOSS1",
-        "TH08_ST4B_BOSS1",
-        "TH08_ST4B_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1254,9 +1254,9 @@ export const sections=[
         "魔空「アステロイドベルト」"
       ],
       [
-        "TH08_ST4B_BOSS2",
-        "TH08_ST4B_BOSS2",
-        "TH08_ST4B_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1289,9 +1289,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST4B_BOSS3",
-        "TH08_ST4B_BOSS3",
-        "TH08_ST4B_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1324,9 +1324,9 @@ export const sections=[
         "黒魔「イベントホライズン」"
       ],
       [
-        "TH08_ST4B_BOSS4",
-        "TH08_ST4B_BOSS4",
-        "TH08_ST4B_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1359,9 +1359,9 @@ export const sections=[
         "ボス 通常3"
       ],
       [
-        "TH08_ST4B_BOSS5",
-        "TH08_ST4B_BOSS5",
-        "TH08_ST4B_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1394,9 +1394,9 @@ export const sections=[
         "恋風「スターライトタイフーン」"
       ],
       [
-        "TH08_ST4B_BOSS6",
-        "TH08_ST4B_BOSS6",
-        "TH08_ST4B_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1429,9 +1429,9 @@ export const sections=[
         "ボス 通常4"
       ],
       [
-        "TH08_ST4B_BOSS7",
-        "TH08_ST4B_BOSS7",
-        "TH08_ST4B_BOSS7"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1464,9 +1464,9 @@ export const sections=[
         "恋心「ダブルスパーク」"
       ],
       [
-        "TH08_ST4B_BOSS8",
-        "TH08_ST4B_BOSS8",
-        "TH08_ST4B_BOSS8"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1499,9 +1499,9 @@ export const sections=[
         "光撃「シュート・ザ・ムーン」"
       ],
       [
-        "TH08_ST4B_BOSS9",
-        "TH08_ST4B_BOSS9",
-        "TH08_ST4B_BOSS9"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1534,9 +1534,9 @@ export const sections=[
         "魔砲「ファイナルマスタースパーク」"
       ],
       [
-        "TH08_ST4B_LS",
-        "TH08_ST4B_LS",
-        "TH08_ST4B_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1569,9 +1569,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST5_MID1",
-        "TH08_ST5_MID1",
-        "TH08_ST5_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1604,9 +1604,9 @@ export const sections=[
         "道中 通常2"
       ],
       [
-        "TH08_ST5_MID2",
-        "TH08_ST5_MID2",
-        "TH08_ST5_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1639,9 +1639,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST5_BOSS1",
-        "TH08_ST5_BOSS1",
-        "TH08_ST5_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1674,9 +1674,9 @@ export const sections=[
         "幻波「赤眼催眠(マインドブローイング)」"
       ],
       [
-        "TH08_ST5_BOSS2",
-        "TH08_ST5_BOSS2",
-        "TH08_ST5_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1709,9 +1709,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST5_BOSS3",
-        "TH08_ST5_BOSS3",
-        "TH08_ST5_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1744,9 +1744,9 @@ export const sections=[
         "狂視「狂視調律(イリュージョンシーカー)」"
       ],
       [
-        "TH08_ST5_BOSS4",
-        "TH08_ST5_BOSS4",
-        "TH08_ST5_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1779,9 +1779,9 @@ export const sections=[
         "ボス 通常3"
       ],
       [
-        "TH08_ST5_BOSS5",
-        "TH08_ST5_BOSS5",
-        "TH08_ST5_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1814,9 +1814,9 @@ export const sections=[
         "懶惰「生神停止(マインドストッパー)」"
       ],
       [
-        "TH08_ST5_BOSS6",
-        "TH08_ST5_BOSS6",
-        "TH08_ST5_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1849,9 +1849,9 @@ export const sections=[
         "散符「真実の月(インビジブルフルムーン)」"
       ],
       [
-        "TH08_ST5_BOSS7",
-        "TH08_ST5_BOSS7",
-        "TH08_ST5_BOSS7"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1884,9 +1884,9 @@ export const sections=[
         "月眼「月兎遠隔催眠術(テレメスメリズム)」"
       ],
       [
-        "TH08_ST5_LS",
-        "TH08_ST5_LS",
-        "TH08_ST5_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1919,9 +1919,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST6A_MID1",
-        "TH08_ST6A_MID1",
-        "TH08_ST6A_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1954,9 +1954,9 @@ export const sections=[
         "天丸「壺中の天地」"
       ],
       [
-        "TH08_ST6A_MID2",
-        "TH08_ST6A_MID2",
-        "TH08_ST6A_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -1989,9 +1989,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST6A_BOSS1",
-        "TH08_ST6A_BOSS1",
-        "TH08_ST6A_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2024,9 +2024,9 @@ export const sections=[
         "神符「天人の系譜」"
       ],
       [
-        "TH08_ST6A_BOSS2",
-        "TH08_ST6A_BOSS2",
-        "TH08_ST6A_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2059,9 +2059,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST6A_BOSS3",
-        "TH08_ST6A_BOSS3",
-        "TH08_ST6A_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2094,9 +2094,9 @@ export const sections=[
         "蘇生「ライジングゲーム」"
       ],
       [
-        "TH08_ST6A_BOSS4",
-        "TH08_ST6A_BOSS4",
-        "TH08_ST6A_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2129,9 +2129,9 @@ export const sections=[
         "ボス 通常3"
       ],
       [
-        "TH08_ST6A_BOSS5",
-        "TH08_ST6A_BOSS5",
-        "TH08_ST6A_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2164,9 +2164,9 @@ export const sections=[
         "神脳「オモイカネブレイン」"
       ],
       [
-        "TH08_ST6A_BOSS6",
-        "TH08_ST6A_BOSS6",
-        "TH08_ST6A_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2199,9 +2199,9 @@ export const sections=[
         "ボス 通常4"
       ],
       [
-        "TH08_ST6A_BOSS7",
-        "TH08_ST6A_BOSS7",
-        "TH08_ST6A_BOSS7"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2234,9 +2234,9 @@ export const sections=[
         "天呪「アポロ１３」"
       ],
       [
-        "TH08_ST6A_BOSS8",
-        "TH08_ST6A_BOSS8",
-        "TH08_ST6A_BOSS8"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2269,9 +2269,9 @@ export const sections=[
         "秘術「天文密葬法」"
       ],
       [
-        "TH08_ST6A_BOSS9",
-        "TH08_ST6A_BOSS9",
-        "TH08_ST6A_BOSS9"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2304,9 +2304,9 @@ export const sections=[
         "禁薬「蓬莱の薬」"
       ],
       [
-        "TH08_ST6A_LS",
-        "TH08_ST6A_LS",
-        "TH08_ST6A_LS"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2339,9 +2339,9 @@ export const sections=[
         "道中 通常1"
       ],
       [
-        "TH08_ST6B_MID1",
-        "TH08_ST6B_MID1",
-        "TH08_ST6B_MID1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2374,9 +2374,9 @@ export const sections=[
         "薬符「壺中の大銀河」"
       ],
       [
-        "TH08_ST6B_MID2",
-        "TH08_ST6B_MID2",
-        "TH08_ST6B_MID2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2409,9 +2409,9 @@ export const sections=[
         "ボス 通常1"
       ],
       [
-        "TH08_ST6B_BOSS1",
-        "TH08_ST6B_BOSS1",
-        "TH08_ST6B_BOSS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2444,9 +2444,9 @@ export const sections=[
         "神宝「ブリリアントドラゴンバレッタ」"
       ],
       [
-        "TH08_ST6B_BOSS2",
-        "TH08_ST6B_BOSS2",
-        "TH08_ST6B_BOSS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2479,9 +2479,9 @@ export const sections=[
         "ボス 通常2"
       ],
       [
-        "TH08_ST6B_BOSS3",
-        "TH08_ST6B_BOSS3",
-        "TH08_ST6B_BOSS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2514,9 +2514,9 @@ export const sections=[
         "神宝「ブディストダイアモンド」"
       ],
       [
-        "TH08_ST6B_BOSS4",
-        "TH08_ST6B_BOSS4",
-        "TH08_ST6B_BOSS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2549,9 +2549,9 @@ export const sections=[
         "ボス 通常3"
       ],
       [
-        "TH08_ST6B_BOSS5",
-        "TH08_ST6B_BOSS5",
-        "TH08_ST6B_BOSS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2584,9 +2584,9 @@ export const sections=[
         "神宝「サラマンダーシールド」"
       ],
       [
-        "TH08_ST6B_BOSS6",
-        "TH08_ST6B_BOSS6",
-        "TH08_ST6B_BOSS6"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2619,9 +2619,9 @@ export const sections=[
         "ボス 通常4"
       ],
       [
-        "TH08_ST6B_BOSS7",
-        "TH08_ST6B_BOSS7",
-        "TH08_ST6B_BOSS7"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2654,9 +2654,9 @@ export const sections=[
         "神宝「ライフスプリングインフィニティ」"
       ],
       [
-        "TH08_ST6B_BOSS8",
-        "TH08_ST6B_BOSS8",
-        "TH08_ST6B_BOSS8"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2689,9 +2689,9 @@ export const sections=[
         "神宝「蓬莱の玉の枝　-夢色の郷-」"
       ],
       [
-        "TH08_ST6B_BOSS9",
-        "TH08_ST6B_BOSS9",
-        "TH08_ST6B_BOSS9"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2724,9 +2724,9 @@ export const sections=[
         "「永夜返し　-待宵-」"
       ],
       [
-        "TH08_ST6B_LS1",
-        "TH08_ST6B_LS1",
-        "TH08_ST6B_LS1"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2759,9 +2759,9 @@ export const sections=[
         "「永夜返し　-子の四つ-」"
       ],
       [
-        "TH08_ST6B_LS2",
-        "TH08_ST6B_LS2",
-        "TH08_ST6B_LS2"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2794,9 +2794,9 @@ export const sections=[
         "「永夜返し　-丑の四つ-」"
       ],
       [
-        "TH08_ST6B_LS3",
-        "TH08_ST6B_LS3",
-        "TH08_ST6B_LS3"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2829,9 +2829,9 @@ export const sections=[
         "「永夜返し　-寅の四つ-」"
       ],
       [
-        "TH08_ST6B_LS4",
-        "TH08_ST6B_LS4",
-        "TH08_ST6B_LS4"
+        "",
+        "",
+        ""
       ]
     ]
   },
@@ -2864,9 +2864,9 @@ export const sections=[
         "「永夜返し　-世明け-」"
       ],
       [
-        "TH08_ST6B_LS5",
-        "TH08_ST6B_LS5",
-        "TH08_ST6B_LS5"
+        "",
+        "",
+        ""
       ]
     ]
   },
