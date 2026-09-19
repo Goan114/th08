@@ -25,8 +25,10 @@ Build outputs are written below `th08_web/artifacts/` and are intentionally not 
 The TH08 Runtime contains a source-level port of thprac's practice parameters and
 section patches. Enable thprac in the Eagler Touhou Launcher, enter the game's
 Practice menu, then choose a stage section, boss phase, resources, gauge, time,
-night value, familiar count, and rank. Practice Replays embed a validated
-`THPRAC08` trailer; playback restores the same parameters. Backspace opens the
+night value, familiar count, and rank. Practice Replays embed the same
+`USER`/`PRAC` parameter block (THPracParam::GetJson()) that upstream thprac
+appends for th08, so replays interchange with the desktop tool; playback
+restores the same parameters while thprac is enabled. Backspace opens the
 in-game assist panel and F1-F7 operate its controls. A run that uses an assist is
 not eligible for Replay saving.
 

@@ -30,4 +30,11 @@ const runtime=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/Pra
 assert(!runtime.includes('std::swap(scene.globals.enemy_animation_files[0],scene.globals.enemy_animation_files[1])'),'source-level thprac must not swap ECL animation slots');
 const gameplay=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/GameplayScene.cpp'),'utf8');
 assert(gameplay.includes('SetSprite(&display.clock_intro,session.numbers.clock_time)'),'practice night must refresh the stage-entry clock');
+const replays=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/TitleReplays.cpp'),'utf8');
+for(const anchor of ['practice_replay_menu_reset','practice_replay_menu_check','practice_replay_menu_activate'])assert(replays.includes(anchor),'replay menu must drive the THGuiRep '+anchor+' lifecycle');
+const config=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/game/PracticeConfig.cpp'),'utf8');
+assert(!config.includes('THPRAC08'),'practice replay metadata must use the upstream USER/PRAC block, not a custom trailer');
+assert(config.includes('\\"version\\":\\"2.3.0.3\\",\\"game\\":\\"th08\\"'),'practice replay JSON must follow THPracParam::GetJson');
+const platform=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/platform/BrowserRuntime.cpp'),'utf8');
+assert(platform.indexOf('practice_replay_block')<platform.indexOf('motion.trailer(8)'),'the PRAC block must precede the THMOTION trailer so .rpyx detection keeps working');
 console.log(JSON.stringify({passed:true,sections:sections.length,fields:fields.length}));

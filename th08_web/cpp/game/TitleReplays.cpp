@@ -27,6 +27,9 @@ bool TitleMenus::open_replay(const char* path){
     if(!replay.decode(file.data(),file.size()))return false;
     std::memcpy(&selected_metadata,replay.decoded().data(),sizeof(selected_metadata));
     if(selected_metadata.shot_type>=12||selected_metadata.difficulty>=5||selected_metadata.spell_number>=222)return false;
+    // THGuiRep::State(2): inspect the opened replay's PRAC parameters into the
+    // candidate block without mutating the live practice run.
+    if(practice)practice_replay_menu_check(*practice,file.data(),u32(file.size()));
     selected_replay=replay.decoded();state.currentReplay=&selected_metadata;return true;
 }
 void TitleMenus::close_replay(){state.currentReplay=nullptr;selected_replay.clear();}
@@ -44,6 +47,8 @@ i32 TitleMenus::OnUpdateReplayMenu(){
     switch(state.currentScreenState){
     case 0:
         if(state.stateTimer2==0){
+            // th08_rep_menu_1 / THGuiRep::State(1).
+            if(practice)practice_replay_menu_reset(*practice);
             if(state.previousScreen!=TitleCurrentScreen_Replay&&actions.load_surface(0,"title/select00.png")!=0)return 0;
             SetInterruptArray(state.vms,state.vmCount,14);state.cursor=0;state.currentScreenState=0;state.stateTimer=0;state.currentHelpTextVm=nullptr;scan_replays();
         }
@@ -91,6 +96,8 @@ i32 TitleMenus::OnUpdateReplayMenu(){
             state.vms[state.cursor+108].pendingInterrupt=20;
         }
         if(pressed(4097)){
+            // th08_rep_menu_3 / THGuiRep::State(3).
+            if(practice)practice_replay_menu_activate(*practice);
             context.SetIsReplayWeird(true);std::snprintf(context.replayFilename,sizeof(context.replayFilename),"%s",state.replayFilePaths[state.selectedReplay]);
             context.difficulty=state.currentReplay->difficulty;context.character=state.currentReplay->shot_type;context.flags.isSpellPractice=state.currentReplay->spell_number>=0;context.currentSpellCardNumber=state.currentReplay->spell_number;
             close_replay();context.currentStage=state.selectedReplayStage;context.supervisor_state=2;context.replayMode=state.cursor;actions.stop_audio();return 0;

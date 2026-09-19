@@ -1,7 +1,7 @@
 #include "TitleScene.hpp"
 namespace th08 {
 TitleScene::TitleScene(GameplaySession& s,AnmLibrary& l,AnmRenderer& r,AsciiManager& a,const AsciiContext& ac,TextWriter& t,ScreenEffects& e,TitlePlatform& p)
- :session(s),library(l),renderer(r),platform(p),screen(e),animations(s.random),menus(context,s.display_config,animations,t,p),flow(menus,a,ac,*this),view(menus,a,r),information(r,context.input,p){}
+ :session(s),library(l),renderer(r),platform(p),screen(e),animations(s.random),menus(context,s.display_config,animations,t,p),flow(menus,a,ac,*this),view(menus,a,r),information(r,context.input,p){menus.practice=&s.practice;}
 AnmLoaded* TitleScene::preload_animation(i32 index,const char* path){const auto bytes=platform.read_asset(path);return library.load(index,bytes.data(),bytes.size());}
 void TitleScene::loading(bool capture){platform.show_loading(capture);}
 void TitleScene::begin_loading(){pending_load=true;}

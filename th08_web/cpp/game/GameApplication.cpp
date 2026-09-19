@@ -61,9 +61,13 @@ bool GameApplication::enter_game(){
     const auto request=GameplayLoad{i32(g.stage),i32(g.difficulty),g.shot,g.current_spell,g.game_flags,initial,supervisor.state.keep_resources,initial,i32(target)};
     if(from_title){
         auto& p=session.practice;p.cheats=0;p.assisted=false;p.replay=bool(g.game_flags&8);p.active=false;
-        if(p.replay){const auto bytes=platform.read(title.context.replayFilename);u32 size=bytes.size();bool found=false;PracticeConfig config;
-            if(!read_practice_trailer(bytes.data(),size,config,found)||(found&&(!p.enabled||config.stage!=i32(g.stage)))||!game.load_replay(bytes.data(),bytes.size())){platform.replay_error();return false;}
-            p.active=found&&config.mode==1;if(found)p.run=config;
+        if(p.replay){const auto bytes=platform.read(title.context.replayFilename);
+            // THGuiRep::State(3) already copied the replay's PRAC parameters
+            // into run at the title menu. Without them (vanilla replay, an
+            // unreadable block, or thprac disabled) playback is just Original;
+            // attract demos never go through the replay menu and stay vanilla.
+            if(!game.load_replay(bytes.data(),bytes.size())){platform.replay_error();return false;}
+            p.active=p.enabled&&p.run.mode==1&&!(g.game_flags&2);
         }else p.active=p.enabled&&(g.game_flags&1)&&!(g.game_flags&0x4002)&&p.run.mode==1;
     }
     title.detach();show_loading(from_title?Vec3{500,440,0}:Vec3{280,430,0},true);if(from_title)start_effect();
