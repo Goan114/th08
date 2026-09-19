@@ -148,7 +148,6 @@ bool GameApplication::save_score(){auto context=game_attached?result_context():l
 // ResultScreen indexes rows 0..14; replay filenames and the public save API use 1..15.
 std::vector<u8> GameApplication::ResultIo::read_replay(i32 slot){const auto path=replay_path(slot+1);return a.platform.read(path.c_str());}
 void GameApplication::save_replay(i32 slot,const char* name){
-    if(session.practice.assisted)return;
     if(slot<1||slot>15||!name||!game.recording.ready())return;ReplayExportContext context;std::memcpy(context.player_name,name,std::min<std::size_t>(8,std::strlen(name)));platform.calendar(context.date,context.timestamp);
     context.rendered_frames=last_game.rendered_frames;context.total_frames=last_game.total_frames;context.human_frames=last_game.human_frames;context.active_frames=last_game.active_frames;
     const auto bytes=export_replay(game.recording,session,game.globals,context);const auto path=replay_path(slot);failed|=bytes.empty()||!platform.write(path.c_str(),bytes.data(),bytes.size());

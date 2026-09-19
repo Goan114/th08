@@ -29,8 +29,9 @@ night value, familiar count, and rank. Practice Replays embed the same
 `USER`/`PRAC` parameter block (THPracParam::GetJson()) that upstream thprac
 appends for th08, so replays interchange with the desktop tool; playback
 restores the same parameters while thprac is enabled. Backspace opens the
-in-game assist panel and F1-F7 operate its controls. A run that uses an assist is
-not eligible for Replay saving.
+in-game assist panel and F1-F7 operate its controls. Matching upstream
+`th08_save_replay`, a practice run saves its Replay and `USER`/`PRAC` block
+whenever advanced mode is active, including when assists were used.
 
 Generated section tables and bytecode patch adapters are checked against the
 local `thprac` repository with:

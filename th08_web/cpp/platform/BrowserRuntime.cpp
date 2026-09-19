@@ -40,10 +40,11 @@ bool BrowserRuntime::write(const char* p,const u8* b,u32 size){
     const auto name=path(p);std::vector<u8> extended;
     // Upstream th08_save_replay appends the thprac 'USER'/'PRAC' block right
     // after the vanilla file; the touch movement trailer stays last so .rpyx
-    // detection keeps working. Original-mode runs carry no PRAC block, and a
+    // detection keeps working. Upstream saves whenever thPracParam.mode is set
+    // (advanced practice), with no assist/cheat gate, so assisted runs still
+    // carry their parameters. Original-mode runs carry no PRAC block, and a
     // config that cannot be serialized simply saves a vanilla replay.
     if(name.find("replay/")==0&&name.size()>4&&name.substr(name.size()-4)==".rpy"&&app.session.practice.active&&!app.session.practice.replay){
-        if(app.session.practice.assisted)return false;
         const auto tail=practice_replay_block(app.session.practice.run);
         if(!tail.empty()){extended.assign(b,b+size);extended.insert(extended.end(),tail.begin(),tail.end());b=extended.data();size=extended.size();}
     }
