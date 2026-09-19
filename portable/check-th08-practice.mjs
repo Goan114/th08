@@ -39,7 +39,8 @@ assert(config.includes('\\"version\\":\\"2.3.0.3\\",\\"game\\":\\"th08\\"'),'pra
 const platform=readFileSync(resolve(import.meta.dirname,'../th08_web/cpp/platform/BrowserRuntime.cpp'),'utf8');
 assert(platform.indexOf('practice_replay_block')<platform.indexOf('motion.trailer(8)'),'the PRAC block must precede the THMOTION trailer so .rpyx detection keeps working');
 const packager=readFileSync(resolve(import.meta.dirname,'package-architecture.mjs'),'utf8');
-assert(packager.includes("[unicodeFont,'/unifont.otf']")&&packager.includes('EAGLER_UNICODE_FONT'),'the standalone TH08 package must resolve and mount the Unicode font required by thprac');
+assert(packager.includes("['blend.bin','cp932.bin']")&&packager.includes("'resources.json'"),'the standalone TH08 package must publish the directory Runtime resource manifest');
+assert(packager.includes("['shared-unifont',unicodeFont,'/unifont.otf']")&&packager.includes('EAGLER_UNICODE_FONT'),'the standalone TH08 package must publish the Unicode font required by thprac as a Package base resource');
 const generator=readFileSync(resolve(import.meta.dirname,'generate-thprac.mjs'),'utf8');
 assert(generator.includes("const repository=resolve(import.meta.dirname,'..')"),'thprac generation must resolve the current repository rather than a workspace directory name');
 assert(!generator.includes("resolve(root,'th08',path)"),'thprac generation must not write to a hard-coded sibling checkout');
