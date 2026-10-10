@@ -87,6 +87,7 @@ const files={
  'th08_web/cpp/sdl/PracticeHitbox.inc':preamble+hitboxLayout+hitbox,
  'th08_web/cpp/game/PracticeRsqrtTables.hpp':preamble+'#pragma once\n#include <cstdint>\n#include <cstring>\n#include <cstdlib>\n#include <cmath>\n#include <vector>\nnamespace th08 {\n'+rsqrtData+'\n'+rsqrt+'}\n',
 };
+for(const p of Object.keys(files))files[p]=files[p].split('\n').map(line=>line.trimEnd()).join('\n').trimEnd()+'\n';
 if(process.argv.includes('--write')){for(const[p,v]of Object.entries(files))writeFileSync(resolve(root,p),v);console.log('Generated TH08 purple shared tools');}
 else if(process.argv.includes('--check')){for(const[p,v]of Object.entries(files))if(!existsSync(resolve(root,p))||readFileSync(resolve(root,p),'utf8').replaceAll('\r\n','\n').trimEnd()!==v.trimEnd())throw Error('Stale shared tools: '+p);console.log('Purple shared tool extraction verified');}
 else throw Error('Use --write or --check');
