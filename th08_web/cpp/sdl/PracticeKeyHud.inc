@@ -187,4 +187,3 @@ void KeysHUD(int ver, ImVec2 render_pos_arrow, ImVec2 render_pos_key, const KeyR
         }
     }
 }
-

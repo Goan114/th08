@@ -4,7 +4,7 @@
 #include <deque>
 #include <vector>
 #include <string>
-namespace th08 {enum THKey { 
+namespace th08 {enum THKey {
     Key_Up,
     Key_Down,
     Key_Left,
@@ -115,7 +115,7 @@ void record(int ver, uint32_t cur_key)
     } // not use zun's keycode
 
 
-    
+
     uint32_t key_last = 0;
     while (keys_per_sec.size() >= 60) {
         key_last = keys_per_sec.front();

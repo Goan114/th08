@@ -147,13 +147,12 @@ bool GameFPSOpt(PracticeSpeed& ctx, bool replay)
 
     ctx.fps = fpsStatic;
 
-    
+
 
     if (clickedApply)  {
-        
+
     }
-    
+
 
     return clickedApply;
 }
-

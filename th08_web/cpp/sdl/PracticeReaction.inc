@@ -73,17 +73,17 @@ bool THGuiTestReactionTest::GuiUpdate(bool ingame)
             ImGui::TextUnformatted(label(practice_THPRAC_TOOLS_REACTION_TEST));
             ImGui::Separator();
         }
-    
+
         ImGui::RadioButton(label(practice_THPRAC_TOOLS_REACTION_TEST_DOWN), (int*)&mTestType, PRESS);
         ImGui::SameLine();
         ImGui::RadioButton(label(practice_THPRAC_TOOLS_REACTION_TEST_UP), (int*)&mTestType, RELEASE);
-    
+
         ImGui::Checkbox(label(practice_THPRAC_TOOLS_REACTION_SHOW_PROC_BAR), &mShowProgressBar);
-    
+
         ImGui::DragInt(label(practice_THPRAC_TOOLS_REACTION_TEST_TIME), &mTestTime, 1.0f, 1, 20);
         ImGui::NewLine();
         if (ImGui::Button(label(practice_THPRAC_TOOLS_REACTION_TEST_BEGIN)) || ImGui::IsKeyPressed('Z') || ImGui::IsKeyPressed(16)) {
-            // in win 7, due to the initialize sequence, practice_counter_frequency might get 0 value at the beginning, 
+            // in win 7, due to the initialize sequence, practice_counter_frequency might get 0 value at the beginning,
             // so query it every time before test begin to avoid this problem
             practice_counter_frequency(&mTimeFreq);
             mTestState = WAIT_TIME;
@@ -97,7 +97,7 @@ bool THGuiTestReactionTest::GuiUpdate(bool ingame)
         }
         ImGui::InvisibleButton("inv", colorBtnSz);
     } break;
-    
+
     case TOO_EARLY: {
         ImGui::Text(label(practice_THPRAC_TOOLS_REACTION_TEST_TOO_EARLY));
         if (ImGui::Button(label(practice_THPRAC_TOOLS_REACTION_TEST_NEXT_TEST)) || ImGui::IsKeyPressed('Z') || ImGui::IsKeyPressed(16)) // press z(90)/shift(16)
@@ -138,13 +138,13 @@ bool THGuiTestReactionTest::GuiUpdate(bool ingame)
             avg /= (float)mTestTime;
             avg_frameCnt /= (float)mTestTime;
             ImGui::Separator();
-            ImGui::Text("%s: %s, %s", label(practice_THPRAC_TOOLS_REACTION_MODE), mTestType == PRESS ? label(practice_THPRAC_TOOLS_REACTION_MODE_DOWN) : label(practice_THPRAC_TOOLS_REACTION_MODE_UP), 
+            ImGui::Text("%s: %s, %s", label(practice_THPRAC_TOOLS_REACTION_MODE), mTestType == PRESS ? label(practice_THPRAC_TOOLS_REACTION_MODE_DOWN) : label(practice_THPRAC_TOOLS_REACTION_MODE_UP),
                 mShowProgressBar ? label(practice_THPRAC_TOOLS_REACTION_MODE_PROGRESSBAR) : label(practice_THPRAC_TOOLS_REACTION_MODE_NORMAL)
             );
             ImGui::Text("%s: %.1f ms (%.1f frame)(framecount: %.1f)", label(practice_THPRAC_TOOLS_REACTION_TEST_RESULT_AVG), avg, avg / 16.66667f, avg_frameCnt);
-            
+
             ImGui::PlotHistogram(label(practice_THPRAC_TOOLS_REACTION_TEST_RESULT), &mResults[0], mTestTime, 0, label(practice_THPRAC_TOOLS_REACTION_TEST_RESULT), minv-10.0f, maxv+20.0f, ImVec2(0, 200.0));
-            
+
             ImGui::PlotHistogram((std::string(label(practice_THPRAC_TOOLS_REACTION_TEST_RESULT))+"(framecount)").c_str(), &mFrameCounts[0], mTestTime, 0, (std::string(label(practice_THPRAC_TOOLS_REACTION_TEST_RESULT))+"(framecount)").c_str(), minfcnt-1.0f, maxfcnt + 10.0f, ImVec2(0, 200.0));
             if (ImGui::Button(label(practice_THPRAC_TOOLS_REACTION_TEST_NEXT_TEST)) || ImGui::IsKeyPressed('Z') || ImGui::IsKeyPressed(16)) {
                 mTestState = NOT_BEGIN;
@@ -160,7 +160,7 @@ bool THGuiTestReactionTest::GuiUpdate(bool ingame)
             }
         }
     } break;
-    
+
     case REACT_TIME:
     case WAIT_TIME:
     case WAIT_TIME_PRESSED:
@@ -252,7 +252,7 @@ bool THGuiTestReactionTest::GuiUpdate(bool ingame)
                 }
             }
         }
-    } 
+    }
     break;
     }
     return true;
@@ -270,5 +270,3 @@ void THGuiTestReactionTest::Reset()
     mResults = {};
     mFrameCounts = {};
 }
-
-
