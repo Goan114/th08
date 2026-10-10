@@ -41,24 +41,24 @@ unsigned input_generation=0,rendered_generation=~0u;bool frame_drawn=false;
 enum Vk {VK_BACK=8,VK_TAB=9,VK_RETURN=13,VK_SHIFT=16,VK_CONTROL=17,VK_MENU=18,VK_ESCAPE=27,VK_SPACE=32,VK_PRIOR=33,VK_NEXT=34,VK_END=35,VK_HOME=36,VK_LEFT=37,VK_UP=38,VK_RIGHT=39,VK_DOWN=40,VK_INSERT=45,VK_DELETE=46,VK_1=49,VK_2=50,VK_3=51,VK_X=88,VK_Z=90,VK_F1=112,VK_F7=118,VK_F12=123};
 const char* tr(const char* zh,const char* en,const char* ja){return locale==0?zh:locale==2?ja:en;}
 const char* label(const char* const* values){return values[locale];}
-PracticeKeyMonitor* current_key_monitor=nullptr;
+eagler::thprac::PracticeKeyMonitor* current_key_monitor=nullptr;
 // The generated renderer uses the original native name; bind it per session.
 #define key_monitor (*current_key_monitor)
-#include "PracticeKeyHud.inc"
+#include <eagler/thprac/PracticeKeyHud.inc>
 #undef key_monitor
 struct PracticeCounter {int64_t QuadPart=0;};
 void practice_counter_frequency(PracticeCounter* c){c->QuadPart=1000000000;}
 void practice_counter_now(PracticeCounter* c){c->QuadPart=int64_t(SDL_GetTicksNS());}
 std::function<unsigned()> practice_random_generator(unsigned minimum,unsigned maximum){return std::bind(std::uniform_int_distribution<unsigned>(minimum,maximum),std::mt19937(std::mt19937::result_type(std::time(nullptr))));}
-#include "PracticeReaction.inc"
+#include <eagler/thprac/PracticeReaction.inc>
 THGuiTestReactionTest reaction_test;
 #include "PracticeHitbox.inc"
-#include "PracticeSpeed.inc"
+#include <eagler/thprac/PracticeSpeed.inc>
 void help_marker(const char* const* values){ImGui::SameLine();ImGui::TextDisabled("(?)");if(ImGui::IsItemHovered())ImGui::SetTooltip("%s",label(values));}
 void draw_advanced(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;auto& input=state.input;
  ImGui::TextUnformatted(label(practice_TH_ADV_OPT));ImGui::Separator();ImGui::BeginChild("Adv. Options",{0,0});
- if(ImGui::CollapsingHeader(label(practice_TH_GAME_SPEED)))if(GameFPSOpt(state.speed,true))sdl_audio_music_speed(float(state.speed.fps)/60.f);
+ if(ImGui::CollapsingHeader(label(practice_TH_GAME_SPEED)))if(GameFPSOpt(state.speed,true,&reset_speed_ui))sdl_audio_music_speed(float(state.speed.fps)/60.f);
  if(ImGui::CollapsingHeader(label(practice_TH_GAMEPLAY),ImGuiTreeNodeFlags_DefaultOpen)){
   ImGui::Checkbox(label(practice_TH_ADV_DISABLE_X_KEY),&input.disable_xkey);help_marker(practice_TH_ADV_DISABLE_X_KEY_DESC);
   ImGui::Checkbox(label(practice_TH_ADV_DISABLE_SHIFT_KEY),&input.disable_shiftkey);help_marker(practice_TH_ADV_DISABLE_SHIFT_KEY_DESC);

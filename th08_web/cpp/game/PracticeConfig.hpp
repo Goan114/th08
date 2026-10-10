@@ -1,8 +1,9 @@
 #pragma once
 #include "Types.hpp"
-#include "PracticeInput.hpp"
-#include "PracticeKeyMonitor.hpp"
-#include "PracticeSpeed.hpp"
+#include <eagler/thprac/PracticeInput.hpp>
+#include <eagler/thprac/PracticeKeyMonitor.hpp>
+#include <eagler/thprac/PracticeSpeed.hpp>
+#include "PracticeCadence.hpp"
 #include <string>
 #include <vector>
 namespace th08 {
@@ -40,14 +41,14 @@ struct PracticeState {
     // Advanced Options owns these independently of the in-game F1-F7 flags,
     // exactly like THAdvOptWnd's persistent context in upstream thprac.
     bool all_clear_bonus=false,doswnc=false;
-    PracticeInput input;
-    PracticeKeyMonitor key_monitor;
+    eagler::thprac::PracticeInput input;
+    eagler::thprac::PracticeKeyMonitor key_monitor;
     bool show_keyboard_monitor=false,map_inf_life_to_no_continue=false,force_last_spell=false;
     bool show_lock_timer=false;
     bool disable_master=false;
     bool show_bullet_hitbox=false;
     bool use_custom_rsqrt=false;int rsqrt_cpu=0;
-    PracticeSpeed speed;
+    eagler::thprac::PracticeSpeed speed;
     // TH08's Tab tracker keeps this per-run counter separately from the
     // aggregate captured-spell value stored by the original game.
     u32 tracker_last_spell_captures=0,tracker_dissolve_count=0;

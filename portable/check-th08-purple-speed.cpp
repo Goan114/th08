@@ -1,4 +1,5 @@
-#include "../th08_web/cpp/game/PracticeSpeed.hpp"
+#include <eagler/thprac/PracticeSpeed.hpp>
+#include "../th08_web/cpp/game/PracticeCadence.hpp"
 #include <cassert>
 #include <cstring>
 #include "../th08_web/cpp/game/PracticeUiLabels.hpp"
@@ -8,7 +9,7 @@ int main(){
   for(int item=0;item<3;++item){assert(*cpu);cpu+=std::strlen(cpu)+1;}
   assert(!*cpu);
  }
- th08::PracticeSpeed s;
+ eagler::thprac::PracticeSpeed s;
  assert(s.interval(false,false,false,false)==1./60.);
  assert(s.interval(true,false,true,false)==1./15.);
  s.fps_replay_fast=120;assert(s.interval(true,true,true,false)==1./120.);
