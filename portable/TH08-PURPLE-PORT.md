@@ -103,8 +103,8 @@ experiment head; the base is recorded below.
   hooks map to GraphicsMath SIMD Vec3 normalization. The other ten D3DX paths
   have no game call sites in the audited retail executable; no substitute
   gameplay APIs were invented for them.
-- Final SDL3 build: 3,449,486 bytes;
-  SHA-256 `529ed20e32b7b8afda573a8ac4d28e36e9a09e76eaf3353c5458b1dee598a809`.
+- Canonical SDL3 build: 3,449,212 bytes;
+  SHA-256 `0dfba63705d9d15533863d7e4d77974a1a48e0c25c1b1821c1a9c7d24007c661`.
 - Shared touch lifecycle: 11 checks; frame cadence checks compiled with
   the local Emscripten toolchain because the script's relative WASI SDK
   path is unavailable in this worktree.
@@ -115,6 +115,19 @@ experiment head; the base is recorded below.
 
 These are unit/source/build checks, not a claim of physical-phone or real
 gameplay verification.
+
+Canonical promotion: experiment head `17a5460bccaaa82b81e1151fa09c2cd547790d6c`
+was integrated as `a26c4d6` / `1428ac2` on the local `eagler` branch. The
+canonical build, nine C++ groups, both section generators, shared-tool generator
+and TH08 practice/high-refresh source gates passed again after integration.
+
+Workspace checks are NOT green: the existing TH15 catalog/integration membership
+disagreement stops `check --workspace`. Separate runtime/replay contract checks
+also require absent `th11-eagler` / `th06-eagler` checkout paths. The existing
+TH08/TH10 portable TouchController byte-identity check fails on their baseline
+differences; neither TouchController was changed by this migration. Launcher
+touch-runtime and shell-protocol checks passed. These workspace failures were
+retained rather than changing unrelated titles or weakening their tests.
 
 ## Manual validation boundary
 
