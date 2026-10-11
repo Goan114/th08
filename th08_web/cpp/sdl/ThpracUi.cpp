@@ -12,6 +12,8 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_freetype.h"
+#include <eagler/thprac/PracticeMobilePanels.hpp>
+namespace MobileThprac = eagler::thprac::mobile;
 #include <emscripten.h>
 #include <algorithm>
 #include <array>
@@ -103,6 +105,7 @@ void toggle_cheat(BrowserRuntime& runtime,int bit){
  auto& p=runtime.app.session.practice;if(p.replay)return;p.cheats^=1u<<bit;if(p.cheats)p.assisted=true;
 }
 void hotkey_line(const char* key,const char* label,bool& value){
+ if(MobileThprac::enabled){MobileThprac::checkbox(key,label,value);return;}
  const auto cursor=ImGui::GetCursorPos();if(value)ImGui::TextColored({0,1,0,1},"[%s: %s]",key,label);else ImGui::Text("%s: %s",key,label);
  ImGui::SetCursorPos(cursor);const ImVec2 size{ImGui::GetWindowWidth()-ImGui::GetStyle().WindowPadding.x*2,ImGui::GetTextLineHeight()};if(ImGui::InvisibleButton(key,size))value=!value;
 }
@@ -183,28 +186,28 @@ void draw_practice(BrowserRuntime& runtime){
  // While an imgui item is active (text edit or drag), Enter/Escape/Z belong
  // to the widget, not the menu; use last frame's state so the confirming
  // keystroke itself is also swallowed.
- const bool widget_busy=text_editing;text_editing=ImGui::IsAnyItemActive();
+ const bool widget_busy=text_editing||MobileThprac::captures_advanced(advanced_open);text_editing=ImGui::IsAnyItemActive();
  if(practice_keys_armed&&!widget_busy&&(pressed(VK_Z)||pressed(VK_RETURN))){select_current_section(p,difficulty);state.run=p;state.run.warp=0;state.accepted=true;}
  if(practice_keys_armed&&!widget_busy&&(pressed(VK_X)||pressed(VK_ESCAPE))){state.menu=false;runtime.app.title.menus.state.cursor=runtime.app.title.context.character;runtime.app.title.menus.ChangeCurrentScreen(TitleCurrentScreen_CharacterSelectPractice);}
 }
 void draw_overlay(BrowserRuntime& runtime){
  auto& state=runtime.app.session.practice;if(!state.enabled)return;
  RenderBtHitbox(ImGui::GetOverlayDrawList(),runtime);
- if(state.show_lock_timer&&runtime.app.in_game()&&(state.cheats&16)){char text[32];std::snprintf(text,sizeof text,"%.2f",float(runtime.app.game.globals.practice_lock_frames)/60.f);const auto size=ImGui::CalcTextSize(text);auto* p=ImGui::GetOverlayDrawList();p->AddRectFilled({32,0},{110,size.y},0xffffffff);p->AddText({110-size.x,0},0xff000000,text);}
- if(state.show_keyboard_monitor&&runtime.app.in_game()){current_key_monitor=&state.key_monitor;KeyRectStyle style;style.text_color_press=style.text_color_release=IM_COL32(32,32,32,255);KeysHUD(8,{1280,0},{840,0},style,true,false);}
- if(menu_open){ImGui::SetNextWindowPos({10,10},ImGuiCond_Always);ImGui::SetNextWindowSize({0,0});ImGui::SetNextWindowBgAlpha(.5f);constexpr auto flags=ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoFocusOnAppearing|ImGuiWindowFlags_NoNav;
-  if(ImGui::Begin("Mod Menu###th08-thprac-overlay",nullptr,flags)){static const char* keys[]{"F1","F2","F3","F4","F5","F6"};const char* labels[]{tr("无敌","Invincibility","無敵"),tr("锁残","Inf. Lives","残機減らない"),tr("锁Bomb","Inf. Bombs","ボム減らない"),tr("锁火力","Inf. Power","霊力減らない"),tr("锁时","Time Lock","残り時間減らない"),tr("自动B","Auto Bomb","自動喰らいボム")};
-   ImGui::BeginDisabled(state.replay);for(int i=0;i<6;i++){bool value=state.cheats&(1u<<i);hotkey_line(keys[i],labels[i],value);if(value!=bool(state.cheats&(1u<<i)))toggle_cheat(runtime,i);}bool value=state.everlasting_bgm;hotkey_line("F7",tr("永续BGM","Everlasting BGM","永遠に続くBGM"),value);state.everlasting_bgm=value;bool enemy=state.cheats&64;hotkey_line("U",label(practice_TH_ENEMY_MUTEKI),enemy);if(enemy!=bool(state.cheats&64))toggle_cheat(runtime,6);ImGui::EndDisabled(state.replay);
+ if(state.show_lock_timer&&runtime.app.in_game()&&(state.cheats&16)&&MobileThprac::draw_tool(MobileThprac::Indicators,"Tools###th08-mobile-tools",{120,65},locale)){char text[32];std::snprintf(text,sizeof text,"%.2f",float(runtime.app.game.globals.practice_lock_frames)/60.f);const auto size=ImGui::CalcTextSize(text);auto* p=ImGui::GetOverlayDrawList();p->AddRectFilled({32,0},{110,size.y},0xffffffff);p->AddText({110-size.x,0},0xff000000,text);}
+ if(state.show_keyboard_monitor&&runtime.app.in_game()&&MobileThprac::draw_tool(MobileThprac::Keyboard,"Keys###th08-mobile-keys",{420,65},locale)){current_key_monitor=&state.key_monitor;KeyRectStyle style;style.text_color_press=style.text_color_release=IM_COL32(32,32,32,255);KeysHUD(8,{1280,0},{840,0},style,true,false);}
+ if(MobileThprac::show(MobileThprac::Cheats,menu_open)){ImGui::SetNextWindowPos({10,10},ImGuiCond_Always);ImGui::SetNextWindowSize({0,0});ImGui::SetNextWindowBgAlpha(.5f);constexpr auto flags=ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoFocusOnAppearing|ImGuiWindowFlags_NoNav;
+  if(MobileThprac::begin(MobileThprac::Cheats, "Mod Menu###th08-thprac-overlay", flags, locale)){static const char* keys[]{"F1","F2","F3","F4","F5","F6"};const char* labels[]{tr("无敌","Invincibility","無敵"),tr("锁残","Inf. Lives","残機減らない"),tr("锁Bomb","Inf. Bombs","ボム減らない"),tr("锁火力","Inf. Power","霊力減らない"),tr("锁时","Time Lock","残り時間減らない"),tr("自动B","Auto Bomb","自動喰らいボム")};
+   const bool cheat_disabled=state.replay||(MobileThprac::enabled&&!runtime.app.in_game());ImGui::BeginDisabled(cheat_disabled);for(int i=0;i<6;i++){bool value=state.cheats&(1u<<i);hotkey_line(keys[i],labels[i],value);if(value!=bool(state.cheats&(1u<<i)))toggle_cheat(runtime,i);}bool value=state.everlasting_bgm;hotkey_line("F7",tr("永续BGM","Everlasting BGM","永遠に続くBGM"),value);state.everlasting_bgm=value;bool enemy=state.cheats&64;hotkey_line("U",label(practice_TH_ENEMY_MUTEKI),enemy);if(enemy!=bool(state.cheats&64))toggle_cheat(runtime,6);ImGui::EndDisabled(cheat_disabled);
   }ImGui::End();
  }
- if(tracker_open&&runtime.app.in_game()){
+ if(MobileThprac::show(MobileThprac::Information,tracker_open)&&runtime.app.in_game()){
   static const char* shots[3][12]={{"结界组","咏唱组","红魔组","冥界组","灵梦","紫","魔理沙","爱丽丝","咲夜","蕾米莉亚","妖梦","幽幽子"},{"Border Team","Magic Team","Scarlet Team","Netherworld Team","Reimu","Yukari","Marisa","Alice","Sakuya","Remilia","Youmu","Yuyuko"},{"結界組","詠唱組","紅魔組","冥界組","霊夢","紫","魔理沙","アリス","咲夜","レミリア","妖夢","幽々子"}};
   ImGui::SetNextWindowSize({170,0},ImGuiCond_Always);ImGui::SetNextWindowPos({450,220},ImGuiCond_Always);constexpr auto flags=ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoFocusOnAppearing|ImGuiWindowFlags_NoNav;
-  if(ImGui::Begin("Tracker###th08-thprac-tracker",nullptr,flags)){const int shot=std::clamp(runtime.app.game.globals.shot,0,11);const char* title=shots[locale][shot];const auto size=ImGui::CalcTextSize(title);ImGui::SetCursorPosX(ImGui::GetWindowSize().x*.5f-size.x*.5f);ImGui::TextUnformatted(title);if(ImGui::BeginTable("Tracker table",2)){auto row=[](const char* label,const char* format,int a,int b=0){ImGui::TableNextRow();ImGui::TableNextColumn();ImGui::TextUnformatted(label);ImGui::TableNextColumn();ImGui::Text(format,a,b);};const auto& n=runtime.app.session.numbers;row("Miss","%d (%d)",Scalar::truncate(n.deaths),int(state.tracker_dissolve_count));row("Bomb","%d",Scalar::truncate(n.bombs_used));row(tr("收符卡数","Captured Spells","取得スペル"),"%d",n.captured_spells);row(tr("LSC数","Last Spells","ラストスペル"),"%d",int(state.tracker_last_spell_captures));ImGui::EndTable();}}
+  if(MobileThprac::begin(MobileThprac::Information, "Tracker###th08-thprac-tracker", flags, locale)){const int shot=std::clamp(runtime.app.game.globals.shot,0,11);const char* title=shots[locale][shot];const auto size=ImGui::CalcTextSize(title);ImGui::SetCursorPosX(ImGui::GetWindowSize().x*.5f-size.x*.5f);ImGui::TextUnformatted(title);if(ImGui::BeginTable("Tracker table",2)){auto row=[](const char* label,const char* format,int a,int b=0){ImGui::TableNextRow();ImGui::TableNextColumn();ImGui::TextUnformatted(label);ImGui::TableNextColumn();ImGui::Text(format,a,b);};const auto& n=runtime.app.session.numbers;row("Miss","%d (%d)",Scalar::truncate(n.deaths),int(state.tracker_dissolve_count));row("Bomb","%d",Scalar::truncate(n.bombs_used));row(tr("收符卡数","Captured Spells","取得スペル"),"%d",n.captured_spells);row(tr("LSC数","Last Spells","ラストスペル"),"%d",int(state.tracker_last_spell_captures));ImGui::EndTable();}}
   ImGui::End();
  }
- if(advanced_open){ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);ImGui::SetNextWindowSize({640,480},ImGuiCond_Always);ImGui::SetNextWindowBgAlpha(.8f);ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding,0);ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0);constexpr auto flags=ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove;
-  if(ImGui::Begin("Advanced Options###th08-thprac-advanced",nullptr,flags)){draw_advanced(runtime);}ImGui::End();ImGui::PopStyleVar(2);
+ if(MobileThprac::show(MobileThprac::Advanced,advanced_open)){ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);ImGui::SetNextWindowSize({640,480},ImGuiCond_Always);ImGui::SetNextWindowBgAlpha(.8f);ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding,0);ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0);constexpr auto flags=ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove;
+  if(MobileThprac::begin(MobileThprac::Advanced, "Advanced Options###th08-thprac-advanced", flags, locale)){draw_advanced(runtime);}ImGui::End();ImGui::PopStyleVar(2);
  }
 }
 }
@@ -249,7 +252,7 @@ void update_input(BrowserRuntime& runtime){
  if(!ImGui::IsAnyItemActive()&&key_down[VK_SHIFT]&&pressed('F'))state.input.enable_fast_retry=!state.input.enable_fast_retry;
  if(pressed(VK_ESCAPE)&&advanced_open)advanced_open=false;publish_menu(menu_open);
 }
-bool captures_game_input(){return advanced_open||practice_was_open;}
+bool captures_game_input(){return MobileThprac::captures_advanced(advanced_open)||practice_was_open;}
 double simulation_interval(BrowserRuntime& runtime){auto& state=runtime.app.session.practice;return state.enabled?state.speed.interval(state.replay,key_down[VK_CONTROL],key_down[VK_SHIFT],key_down[VK_SPACE]):1./60.;}
 void render(BrowserRuntime& runtime,touhou::sdl::Renderer& renderer){if(!initialized)return;
  if(EM_ASM_INT({const ready=!!Module.eaglerRsqrtImportReady;Module.eaglerRsqrtImportReady=false;return ready?1:0;})){if(auto* file=std::fopen("/thprac-rsqrt-import.bin","rb")){std::vector<char> data(PracticeRsqrtTables::custom_size);if(std::fread(data.data(),1,data.size(),file)==data.size())PracticeRsqrtTables::import_custom(data.data(),data.size());std::fclose(file);std::remove("/thprac-rsqrt-import.bin");}}
