@@ -1,8 +1,9 @@
-#include "../th08_web/cpp/game/PracticeInput.hpp"
+#include <eagler/thprac/PracticeInput.hpp>
+#include "../th08_web/cpp/game/Types.hpp"
 #include <cassert>
 using namespace th08;
 int main(){
-    PracticeInput input;u8 keys[256]{};
+    eagler::thprac::PracticeInput input;u8 keys[256]{};
     keys[90]=keys[88]=keys[160]=keys[161]=128;
     input.apply(keys);assert(keys[90]&&keys[88]&&keys[160]&&keys[161]);
     input.disable_xkey=input.disable_zkey=input.disable_shiftkey=true;
