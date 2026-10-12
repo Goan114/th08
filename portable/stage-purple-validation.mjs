@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 const root=resolve(process.env.TH08_RUNTIME_ROOT??resolve(import.meta.dirname,'..'));
-const workspace='C:/Users/w3051/Desktop/eagler';
+const workspace=resolve(process.env.EAGLER_WORKSPACE??resolve(import.meta.dirname,'../..'));
 const launcher=resolve(workspace,'eagler-touhou');
 const site=process.env.TH08_VALIDATION_SITE?resolve(process.env.TH08_VALIDATION_SITE):resolve(workspace,'prepared',`th08-purple-validation-${Date.now()}`);
 if(!process.env.TH08_VALIDATION_SITE){
